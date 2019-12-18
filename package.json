@@ -42,12 +42,14 @@
     "react-modal": "^3.10.1",
     "rwlock": "^5.0.0",
     "sass-loader": "^8.0.0",
+    "styled-components": "^4.4.1",
     "vis-timeline": "^5.1.0",
     "webpack": "^4.41.1",
     "webpack-cli": "^3.3.9"
   },
   "devDependencies": {
     "@babel/cli": "^7.6.4",
+    "@babel/plugin-proposal-class-properties": "^7.7.4",
     "babel-eslint": "^10.0.3",
     "eslint": "^6.5.1",
     "eslint-plugin-react": "^7.16.0",
