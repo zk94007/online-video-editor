@@ -11,7 +11,7 @@ import Timeline from "./Timeline";
 import { server } from "../../config";
 import timeManager from "../../models/timeManager";
 import FetchErrorDialog from "./FetchErrorDialog";
-import SideMenu from "../components/SideMenu";
+import SideMenu from "../components/SideMenu/SideMenu";
 import { Container, EditSection } from "./style";
 
 export default class Editor extends Component {
