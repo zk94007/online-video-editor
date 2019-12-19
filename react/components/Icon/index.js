@@ -1,7 +1,7 @@
 import React from "react";
 import { string, number, object, func } from "prop-types";
 
-import { Plus, Stock, File, Text, Background, Transition, Sheild, Help } from "./icons";
+import { Plus, Stock, File, Text, Background, Transition, Sheild, Help, Upload } from "./icons";
 
 const ICONS = {
   plus: Plus,
@@ -11,7 +11,8 @@ const ICONS = {
   background: Background,
   transition: Transition,
   sheild: Sheild,
-  help: Help
+  help: Help,
+  upload: Upload
 };
 
 const Icon = ({ name, size = 16, color = "white", style, onClick }) => {

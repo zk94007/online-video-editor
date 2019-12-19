@@ -37,7 +37,7 @@ export default class Editor extends Component {
       showSubmitDialog: false,
       showFetchError: false,
       fetchError: "",
-      activeState: "Add Media"
+      activeState: "Media"
     };
 
     this.loadData();
@@ -129,6 +129,8 @@ export default class Editor extends Component {
             <main>
               <div>
                 <Sources
+                  activeState={this.state.activeState}
+                  onChangeState = {this.onClickSide}
                   project={this.state.project}
                   items={this.state.resources}
                   onAddResource={this.addResource}
