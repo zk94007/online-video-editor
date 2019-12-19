@@ -1,7 +1,7 @@
 import React from "react";
 import { string, number, object, func } from "prop-types";
 
-import { Plus, Stock, File, Text, Background, Transition, Sheild, Help, Upload } from "./icons";
+import { Plus, Stock, File, Text, Background, Transition, Sheild, Help, Upload } from "./Icons";
 
 const ICONS = {
   plus: Plus,
