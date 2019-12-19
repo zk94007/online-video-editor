@@ -74,6 +74,81 @@ const MediaContainer = styled.div`
   cursor: pointer;
 `;
 
+const Card = styled.div`
+  width: 130.3px;
+  max-width: 100%;
+  margin-right: 20px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  border-radius: 3px;
+`;
+
+const Preview = styled.div`
+  color: #e5e6f1;
+  cursor: move;
+  display: flex;
+  width: 100%;
+  height: 75px;
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+  transition: opacity 0.2s ease-in-out;
+`;
+
+const DefaultWrapper = styled.div`
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(148deg, #5a5a72, #3d3d57);
+`;
+
+const ThumbnailText = styled.h4`
+  color: #e5e6f1;
+  font-size: 0.75rem;
+  opacity: 0.5;
+  padding: 4px 0;
+  font-kerning: auto;
+  text-rendering: optimizeLegibility;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+`;
+
+const DeleteContainer = styled.button`
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 32px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 0;
+  border-radius: 3px;
+  outline: 0;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+  animation: 0.2s ease-in-out fade-in;
+  padding: 0;
+  margin: 0;
+  &:hover {
+    background-color: #ffffff;
+  }
+  display: none;
+  ${Card}:hover & {
+    display: flex;
+  }
+`;
+
+const LibraryGrid = styled.div`
+  display: flex;
+  flex-wrao: wrap;
+`;
+
 export {
   Container,
   EditSection,
@@ -82,5 +157,11 @@ export {
   Title,
   Button,
   UploadIcon,
-  MediaContainer
+  MediaContainer,
+  Card,
+  Preview,
+  DefaultWrapper,
+  ThumbnailText,
+  DeleteContainer,
+  LibraryGrid
 };

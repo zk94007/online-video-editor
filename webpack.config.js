@@ -1,5 +1,5 @@
 module.exports = {
-	entry: ['./react/front.js', './views/style.scss'],
+	entry: ["@babel/polyfill",'./react/front.js'],
 	output: {
 		path: __dirname + '/public',
 		filename: '[name].js'

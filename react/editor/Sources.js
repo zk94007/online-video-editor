@@ -84,12 +84,19 @@ export default class Sources extends Component {
   __render = active => {
     switch (active) {
       case "Media":
-        return <Media onChangeState={this.props.onChangeState}/>;
+        return (
+          <Media
+            items={this.props.items}
+            onChangeState={this.props.onChangeState}
+            onRemove={this.delResource}
+          />
+        );
       case "Add Media":
         return (
           <Uploader
             onAdd={resource => this.props.onAddResource(resource)}
             project={this.props.project}
+            onChangeState={this.props.onChangeState}
           />
         );
       default:

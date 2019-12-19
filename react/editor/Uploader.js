@@ -16,6 +16,9 @@ export default class Uploader extends Component {
     super(props);
     this.handleChangeStatus = this.handleChangeStatus.bind(this);
     this.getUploadParams = this.getUploadParams.bind(this);
+    this.state = {
+      status: null
+    };
   }
 
   getUploadParams() {
@@ -33,9 +36,23 @@ export default class Uploader extends Component {
         duration: response.length,
         mime: response.resource_mime
       });
-      remove();
+      this.setState(
+        {
+          status: null
+        },
+        () => {
+          remove();
+        }
+      );
     } else if (status === "aborted") {
+      this.setState({
+        status: null
+      });
       alert(`${meta.name}, upload failed...`);
+    } else if (status === "uploading") {
+      this.setState({
+        status: "uploading"
+      });
     }
   }
 
@@ -49,32 +66,34 @@ export default class Uploader extends Component {
         transitionEnter={false}
         transitionLeave={false}
       >
-        <UploadContainer className={props.labelClassName}>
-          <UploadIcon>
-            <Icon name="upload" />
-          </UploadIcon>
+        {this.state.status !== "uploading" && (
+          <UploadContainer className={props.labelClassName}>
+            <UploadIcon>
+              <Icon name="upload" />
+            </UploadIcon>
 
-          <Title>
-            <span>Add files to start your project, </span>
-            <br />
-            <span>simply drag and drop!</span>
-          </Title>
-          <Button onClick={() => fileUploader.current.click()}>
-            Browse my files
-          </Button>
-          <input
-            type="file"
-            ref={fileUploader}
-            className={props.className}
-            accept={accept}
-            multiple
-            onChange={e => {
-              getFilesFromEvent(e).then(chosenFiles => {
-                onFiles(chosenFiles);
-              });
-            }}
-          />
-        </UploadContainer>
+            <Title>
+              <span>Add files to start your project, </span>
+              <br />
+              <span>simply drag and drop!</span>
+            </Title>
+            <Button onClick={() => fileUploader.current.click()}>
+              Browse my files
+            </Button>
+            <input
+              type="file"
+              ref={fileUploader}
+              className={props.className}
+              accept={accept}
+              multiple
+              onChange={e => {
+                getFilesFromEvent(e).then(chosenFiles => {
+                  onFiles(chosenFiles);
+                });
+              }}
+            />
+          </UploadContainer>
+        )}
       </CSSTransitionGroup>
     );
   };

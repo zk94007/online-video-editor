@@ -7,3 +7,4 @@ export { default as Transition } from "./Transition";
 export { default as Sheild } from "./Sheild";
 export { default as Help } from "./Help";
 export { default as Upload } from "./Upload";
+export { default as Delete } from "./Delete";

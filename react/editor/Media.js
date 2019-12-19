@@ -1,11 +1,18 @@
 import React from "react";
-import { MediaContainer, UploadIcon, Title } from "./style";
-import Icon from "../components/Icon";
-import { func } from "prop-types";
+import { MediaContainer, UploadIcon, Title, LibraryGrid } from "./style";
+import { func, any } from "prop-types";
 import { CSSTransitionGroup } from "react-transition-group";
+import { CardComponent } from "./Card";
+import Icon from "../components/Icon";
 
-const Media = ({ onChangeState }) => {
-  return (
+const Media = ({ onChangeState, items = [], onRemove }) => {
+  return Object.keys(items).length ? (
+    <LibraryGrid>
+      {Object.keys(items).map((val, ind) => (
+        <CardComponent onRemove={onRemove} item={items[val]} key={ind} />
+      ))}
+    </LibraryGrid>
+  ) : (
     <MediaContainer onClick={() => onChangeState("Add Media")}>
       <CSSTransitionGroup
         transitionName="animate"
@@ -28,7 +35,9 @@ const Media = ({ onChangeState }) => {
 };
 
 Media.prototype = {
-  onChangeState: func
+  onChangeState: func,
+  items: any,
+  onRemove: func
 };
 
 export default Media;
