@@ -167,8 +167,8 @@ exports.projectFileDELETE = (req, res, next) => {
 			fs.unlink(filepath, (err) => {
 				if (err) log.error(err);
 			});
-
-			delete renderer.resources[req.params.fildID];
+			
+			delete renderer.resources[req.params.fileID];
 
 			rendererManager.saveRenderer(req.params.projectID, renderer).then(
 				() => {
