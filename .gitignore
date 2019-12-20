@@ -81,3 +81,6 @@ public/front.js
 .idea/
 videoeditor.iml
 public/main.js
+
+config.js
+package-lock.json
