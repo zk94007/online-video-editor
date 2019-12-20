@@ -28,7 +28,8 @@ main {
     -webkit-box-direction: normal;
             flex-direction: row;
     align-content: stretch;
-    padding: 5px; }
+    padding: 5px;
+    height: 100%; }
 
 footer {
   width: 100%;
