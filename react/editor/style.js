@@ -161,7 +161,7 @@ const LibraryGrid = styled.div`
 const ScrollContainer = styled.div`
   height: 100%;
   overflow: auto;
-  max-height: 350px;
+  max-height: 250px;
 `;
 
 export {
