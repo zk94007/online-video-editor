@@ -32,6 +32,8 @@ export default class NewProjectDialog extends Component {
 		fetch(url, params)
 			.then(response => response.json())
 			.then(data => {
+				console.log(data);
+
 				if (typeof data.err === 'undefined') {
 					window.location = `${server.serverUrl}/project/${data.project}`;
 				}

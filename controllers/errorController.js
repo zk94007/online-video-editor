@@ -9,6 +9,7 @@ exports.default = (err, req, res, next) => {
 	log.error(err.stack);
 	res.status(500);
 	res.json({
+		err: err.stack,
 		msg: 'Internal server error occured.',
 	});
 };

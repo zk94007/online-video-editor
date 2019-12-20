@@ -4,9 +4,9 @@
   "description": "Web Based Video Editor For Desynger",
   "main": "index.js",
   "scripts": {
-    "start": "babel-node server.js",
+    "start": "babel-node server.js --ignore public/ --ignore WORKER/",
     "build": "./node_modules/.bin/webpack --mode production",
-    "dev-start": "nodemon --exec babel-node server.js --ignore public/",
+    "dev-start": "nodemon --exec babel-node server.js --ignore public/ --ignore WORKER/",
     "dev-build": "./node_modules/.bin/webpack -wd",
     "eslint": "npx eslint controllers/ models/ react/ config.js router.js server.js"
   },
@@ -32,6 +32,7 @@
     "html5-file-selector": "^2.1.0",
     "jsdom": "^15.1.1",
     "json-loader": "0.5.7",
+    "jsonfile": "^5.0.0",
     "log4js": "^5.2.2",
     "nanoid": "^2.1.3",
     "node-sass": "^4.12.0",

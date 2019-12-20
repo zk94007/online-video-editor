@@ -7,6 +7,7 @@ import config from '../config';
 import mltxmlManager from '../models/mltxmlManager';
 import fileManager from '../models/fileManager';
 import timeManager from '../models/timeManager';
+import rendererManager from '../models/rendererManager';
 import log from '../models/logger';
 
 const fs = require('fs');
@@ -24,26 +25,22 @@ exports.default = (req, res) => {
 
 
 exports.projectPOST = (req, res, next) => {
+    const renderer = {
+		projectName: '',
+		resources: {},
+		timeline: {
+			'audiotrack0': {},
+			'videotrack0': {}
+		}
+	};
 
-    const data = 
-        `<mlt>
-            <playlist id="videotrack0"/>
-            <playlist id="audiotrack0"/>
-                <tractor id="main">
-                <multitrack>
-                    <track producer="videotrack0" />
-                    <track producer="audiotrack0" />
-                </multitrack>
-            </tractor>
-        </mlt>`;
-
-    let projectID = nanoid(32);
+	let projectID = nanoid(32);
 
 	fs.mkdir(path.join(config.projectPath, projectID), { recursive: true }, (err) => {
 		if (err) return next(err);
     });
 
-	mltxmlManager.saveMLT(projectID, data).then(
+	rendererManager.saveRenderer(projectID, renderer).then(
 		() => {
 			res.json({
 				project: projectID,
@@ -51,132 +48,17 @@ exports.projectPOST = (req, res, next) => {
 		},
 		err => next(err)
 	);
-
 };
 
 
 exports.projectGET = (req, res) => {
-
-	mltxmlManager.loadMLT(req.params.projectID, 'r').then(
-		([dom]) => {
-			const document = dom.window.document;
-
-			// Resources
-			let resources = {};
-			const producerNodes = document.getElementsByTagName('producer');
-			for (let producer of producerNodes) {
-				let id = producer.id.replace(/^producer/, '');
-				let resource = {
-					id: id,
-					duration: null,
-					mime: null,
-					name: null,
-				};
-				const properties = producer.getElementsByTagName('property');
-				for (let property of properties) {
-					switch (property.getAttribute('name')) {
-						case 'musecut:mime_type':
-							resource.mime = property.innerHTML;
-							break;
-						case 'length':
-							resource.duration = property.innerHTML;
-							break;
-						case 'musecut:name':
-							resource.name = property.innerHTML;
-					}
-				}
-				resources[id] = resource;
-			}
-
-			// Timeline
-			const timeline = {
-				audio: [],
-				video: [],
-			};
-
-			const tracks = document.querySelectorAll('mlt>playlist[id*="track"]');
-			for (let track of tracks) {
-				const trackEntry = {
-					id: track.id,
-					items: [],
-				};
-
-				const entries = track.childNodes;
-				for (let entry of entries) {
-					if (entry.tagName === 'blank') {
-						trackEntry.items.push({
-							resource: 'blank',
-							length: entry.getAttribute('length'),
-						});
-					}
-					// Simple entry
-					else if (new RegExp(/^producer/).test(entry.getAttribute('producer'))) {
-						const duration = mltxmlManager.getDuration(entry, document);
-						trackEntry.items.push({
-							resource: entry.getAttribute('producer').replace(/^producer/, ''),
-							in: duration.in,
-							out: duration.out,
-							filters: [],
-							transitionTo: null,
-							transitionFrom: null,
-						});
-					}
-					// Tractor with playlist
-					else {
-						const tractor = document.getElementById(entry.getAttribute('producer'));
-						const tracks = tractor.getElementsByTagName('multitrack').item(0).childNodes;
-						const trackFilters = tractor.getElementsByTagName('filter');
-						let index = 0;
-						for (let track of tracks) {
-							const playlist = document.getElementById(track.getAttribute('producer'));
-							const playlistEntry = playlist.getElementsByTagName('entry').item(0);
-							const duration = mltxmlManager.getDuration(playlistEntry, document);
-							let filters = [];
-							for (let trackFilter of trackFilters) {
-								if (trackFilter.getAttribute('track') === index.toString()) {
-									let serviceAlias = null;
-									for (let param of trackFilter.childNodes) {
-										if (param.getAttribute('name') === 'musecut:filter') {
-											serviceAlias = param.innerHTML;
-										}
-									}
-									if (serviceAlias !== null) {
-										filters.push({
-											service: serviceAlias,
-										});
-									}
-									else {
-										filters.push({
-											service: trackFilter.getAttribute('mlt_service'),
-										});
-									}
-								}
-							}
-							trackEntry.items.push({
-								resource: playlistEntry.getAttribute('producer').replace(/^producer/, ''),
-								in: duration.in,
-								out: duration.out,
-								filters: filters,
-								transitionTo: null,
-								transitionFrom: null,
-							});
-							index++;
-						}
-					}
-				}
-
-				if (new RegExp(/^videotrack\d+/).test(track.id)) {
-					timeline.video.push(trackEntry);
-				}
-				else {
-					timeline.audio.push(trackEntry);
-				}
-			}
-
+	rendererManager.loadRenderer(req.params.projectID).then(
+		(renderer) => {
 			res.json({
 				project: req.params.projectID,
-				resources: resources,
-				timeline: timeline,
+				projectName: renderer.projectName,
+				resources: renderer.resources,
+				timeline: renderer.timeline,
 			});
 		},
 		err => fileErr(err, res)
