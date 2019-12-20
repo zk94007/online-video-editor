@@ -492,7 +492,7 @@ export default class Timeline extends Component {
 
 Timeline.propTypes = {
 	resources: PropTypes.object.isRequired,
-	items: PropTypes.object.isRequired,
+	items: PropTypes.array.isRequired,
 	project: PropTypes.string.isRequired,
 	onAddFilter: PropTypes.func.isRequired,
 	onDelFilter: PropTypes.func.isRequired,

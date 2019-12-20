@@ -32,7 +32,7 @@ export default class Editor extends Component {
     this.state = {
       project: window.location.href.match(/project\/([^/]*)/)[1],
       resources: {},
-      timeline: {},
+      timeline: [],
       loading: true,
       showSubmitDialog: false,
       showFetchError: false,
@@ -203,7 +203,6 @@ export default class Editor extends Component {
     fetch(url, params)
       .then(response => response.json())
       .then(data => {
-        console.log(data);
         if (typeof data.err === "undefined") {
           this.setState({
             resources: data.resources,

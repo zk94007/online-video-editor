@@ -16,16 +16,15 @@ const nanoid = require('nanoid');
 const { exec } = require('child_process');
 
 exports.default = (req, res) => {
-
 	res.json({
 		msg: 'For API documentation see https://github.com/',
 	});
-
 };
 
 
 exports.projectPOST = (req, res, next) => {
     const renderer = {
+		projectID: nanoid(32),
 		projectName: '',
 		resources: {},
 		timeline: [
@@ -40,16 +39,14 @@ exports.projectPOST = (req, res, next) => {
 		]
 	};
 
-	let projectID = nanoid(32);
-
-	fs.mkdir(path.join(config.projectPath, projectID), { recursive: true }, (err) => {
+	fs.mkdir(path.join(config.projectPath, renderer.projectID), { recursive: true }, (err) => {
 		if (err) return next(err);
     });
 
-	rendererManager.saveRenderer(projectID, renderer).then(
+	rendererManager.saveRenderer(renderer.projectID, renderer).then(
 		() => {
 			res.json({
-				project: projectID,
+				project: renderer.projectID,
 			});
 		},
 		err => next(err)
@@ -105,21 +102,17 @@ exports.projectFilePOST = (req, res, next) => {
 			fileManager.getDuration(filepath, mimeType).then(
 				length => {
 					if (length !== null) length += '0';
-					mltxmlManager.loadMLT(req.params.projectID, 'w').then(
-						([dom, , release]) => {
-							const document = dom.window.document;
+					rendererManager.loadRenderer(req.params.projectID).then(
+						(renderer) => {
+							renderer.resources[fileID] = {
+								id: fileID,
+								filepath: path.resolve(filepath),
+								mimeType,
+								name: filename,
+								length
+							};
 
-							const node = document.createElement('producer');
-							node.id = 'producer' + fileID;
-							node.innerHTML = `<property name="resource">${path.resolve(filepath)}</property>`;
-							node.innerHTML += `<property name="musecut:mime_type">${mimeType}</property>`;
-							node.innerHTML += `<property name="musecut:name">${filename}</property>`;
-							if (timeManager.isValidDuration(length))
-								node.innerHTML += `<property name="length">${length}</property>`;
-
-							const root = document.getElementsByTagName('mlt').item(0);
-							root.prepend(node);
-							mltxmlManager.saveMLT(req.params.projectID, root.outerHTML, release).then(
+							rendererManager.saveRenderer(req.params.projectID, renderer).then(
 								() => {
 									res.json({
 										msg: `Upload of "${filename}" OK`,
@@ -139,20 +132,14 @@ exports.projectFilePOST = (req, res, next) => {
 	});
 
 	req.pipe(req.busboy); // Pipe it trough busboy
-
 };
 
 
 exports.projectFileDELETE = (req, res, next) => {
-
-	mltxmlManager.loadMLT(req.params.projectID, 'w').then(
-		([dom, , release]) => {
-			const document = dom.window.document;
-			const root = document.getElementsByTagName('mlt').item(0);
-
-			const entries = document.querySelectorAll(`mlt>playlist>entry[producer="producer${req.params.fileID}"]`);
-			if (entries.length > 0) {
-				release();
+	rendererManager.loadRenderer(req.params.projectID).then(
+		(renderer) => {
+			const track = renderer.timeline.find(track => track.items.find(item => item.id === req.params.fildID));
+			if (track) {
 				res.status(403);
 				res.json({
 					err: 'Source in use.',
@@ -161,9 +148,8 @@ exports.projectFileDELETE = (req, res, next) => {
 				return;
 			}
 
-			const producer = document.querySelector(`mlt>producer[id="producer${req.params.fileID}"]`);
-			if (producer === null) {
-				release();
+			const resource = renderer.resources[req.params.fileID];
+			if (!resource) {
 				res.status(404);
 				res.json({
 					err: 'Source not found.',
@@ -172,20 +158,19 @@ exports.projectFileDELETE = (req, res, next) => {
 				return;
 			}
 
-			const filename = mltxmlManager.getProperty(producer.getElementsByTagName('property'), 'resource');
-			if (filename === null) {
-				release();
-				return next(`Project "${req.params.projectID}", producer${req.params.fileID} misses resource tag`);
+			const filepath = resource.filepath;
+			if (filepath === null) {
+				return next(`Project "${req.params.projectID}", resource ${req.params.fileID} misses filepath`);
 			}
 
 			// Try to remove file, log failure
-			fs.unlink(filename, (err) => {
+			fs.unlink(filepath, (err) => {
 				if (err) log.error(err);
 			});
 
-			producer.remove();
+			delete renderer.resources[req.params.fildID];
 
-			mltxmlManager.saveMLT(req.params.projectID, root.outerHTML, release).then(
+			rendererManager.saveRenderer(req.params.projectID, renderer).then(
 				() => {
 					res.json({
 						msg: 'Feed removed successfully',
@@ -196,7 +181,6 @@ exports.projectFileDELETE = (req, res, next) => {
 		},
 		err => fileErr(err, res)
 	);
-
 };
 
 
