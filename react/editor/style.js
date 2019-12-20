@@ -159,7 +159,7 @@ const LibraryGrid = styled.div`
 `;
 
 const ScrollContainer = styled.div`
-  height: 650px;
+  height: 100%;
 `;
 
 export {
