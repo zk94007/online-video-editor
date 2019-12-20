@@ -28,10 +28,16 @@ exports.projectPOST = (req, res, next) => {
     const renderer = {
 		projectName: '',
 		resources: {},
-		timeline: {
-			'audiotrack0': {},
-			'videotrack0': {}
-		}
+		timeline: [
+			{
+				id: 'audiotrack0',
+				items: []
+			},
+			{
+				id: 'videotrack0',
+				items: []
+			}
+		]
 	};
 
 	let projectID = nanoid(32);

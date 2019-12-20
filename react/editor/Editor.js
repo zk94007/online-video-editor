@@ -203,6 +203,7 @@ export default class Editor extends Component {
     fetch(url, params)
       .then(response => response.json())
       .then(data => {
+        console.log(data);
         if (typeof data.err === "undefined") {
           this.setState({
             resources: data.resources,

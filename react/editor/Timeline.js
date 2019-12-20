@@ -97,7 +97,7 @@ export default class Timeline extends Component {
 		const items = [];
 
 		let duration = '00:00:00,000';
-		const tracks = [...this.props.items.video, ...this.props.items.audio];
+		const tracks = [...this.props.items];
 		const videoMatch = new RegExp(/^videotrack\d+/);
 		for (let track of tracks) {
 			groups.push({
