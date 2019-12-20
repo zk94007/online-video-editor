@@ -12,7 +12,7 @@ import log from '../models/logger';
 
 const fs = require('fs');
 const path = require('path');
-const nanoid = require('nanoid');
+const generate = require('nanoid/generate');
 const { exec } = require('child_process');
 
 exports.default = (req, res) => {
@@ -24,7 +24,7 @@ exports.default = (req, res) => {
 
 exports.projectPOST = (req, res, next) => {
     const renderer = {
-		projectID: nanoid(32),
+		projectID: generate('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890', 32),
 		projectName: '',
 		resources: {},
 		timeline: [
@@ -82,7 +82,7 @@ exports.projectFilePOST = (req, res, next) => {
 
 	req.busboy.on('file', (fieldname, file, filename, transferEncoding, mimeType) => {
 
-		const fileID = nanoid();
+		const fileID = generate('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890', 16);
 		const extension = path.extname(filename);
 		let filepath = path.join(config.projectPath, req.params.projectID, fileID);
 		if (extension.length > 1) filepath += extension;
