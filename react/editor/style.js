@@ -21,6 +21,15 @@ const UploadContainer = styled.div`
   flex-direction: column;
   padding: 48px;
   cursor: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  font-size: 20px;
 `;
 
 const Title = styled.h3`
