@@ -155,7 +155,11 @@ const DeleteContainer = styled.button`
 
 const LibraryGrid = styled.div`
   display: flex;
-  flex-wrao: wrap;
+  flex-wrap: wrap;
+`;
+
+const ScrollContainer = styled.div`
+  height: 650px;
 `;
 
 export {
@@ -172,5 +176,6 @@ export {
   DefaultWrapper,
   ThumbnailText,
   DeleteContainer,
-  LibraryGrid
+  LibraryGrid,
+  ScrollContainer
 };
