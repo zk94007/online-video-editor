@@ -8,6 +8,7 @@ import ReactDOM from 'react-dom';
 import NewProjectDialog from './newProject/NewProjectDialog';
 import Editor from './editor/Editor';
 import "../views/style.scss";
+import 'react-perfect-scrollbar/dist/css/styles.css';
 
 if (document.getElementById('newProjectDialog') !== null) {
 	// Landing page
