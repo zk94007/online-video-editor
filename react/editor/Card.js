@@ -19,9 +19,10 @@ export const CardComponent = props => {
     /([a-zA-Z0-9\s_\\.\-\(\):])+(.mp3|.aac|.wav|.wma)$/i
   );
 
-  const url = (isAudio+1)
-    ? "https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3"
-    : "https://file-examples.com/wp-content/uploads/2017/04/file_example_MP4_480_1_5MG.mp4";
+  const url =
+    isAudio + 1
+      ? "https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3"
+      : "https://file-examples.com/wp-content/uploads/2017/04/file_example_MP4_480_1_5MG.mp4";
   const isMedia = props?.item?.length?.split(",")?.[0];
   const length = isMedia && moment.duration(isMedia);
   const refer = useRef(null);
@@ -35,6 +36,15 @@ export const CardComponent = props => {
         setShow(false);
       });
     }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (refer?.current) {
+        refer.current.removeEventListener("mouseover", null);
+        refer.current.removeEventListener("mouseleave", null);
+      }
+    };
   }, []);
   return (
     <Card>
