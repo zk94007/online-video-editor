@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import ReactPlayer from 'react-player'
 
 const Container = styled.div`
   display: flex;
@@ -164,6 +165,44 @@ const ScrollContainer = styled.div`
   max-height: 250px;
 `;
 
+const Image = styled.img`
+  object-fit: cover;
+  height: calc(100% + 2px);
+  transform: translate(-1px, -1px);
+  width: calc(100% + 2px);
+  background: black;
+  transition: opacity 0.2s ease-in-out 0s;
+`;
+
+const Time = styled.span`
+  position: absolute;
+  bottom: 7px;
+  left: 8px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: black 1px 1px 4px;
+`;
+
+const VideoContainer = styled.div`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  top: 0px;
+  left: 0px;
+`;
+
+const VideoWrapper = styled.div`
+  height: 100%;
+  opacity: 1;
+`;
+
+const Video = styled(ReactPlayer)`
+  width: 100% !important;
+  height: 100% !important; 
+`;
+
 export {
   Container,
   EditSection,
@@ -179,5 +218,10 @@ export {
   ThumbnailText,
   DeleteContainer,
   LibraryGrid,
-  ScrollContainer
+  ScrollContainer,
+  Image,
+  Time,
+  VideoContainer,
+  VideoWrapper,
+  Video
 };

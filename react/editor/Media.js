@@ -1,18 +1,18 @@
 import React from "react";
 import { MediaContainer, UploadIcon, Title, LibraryGrid, ScrollContainer } from "./style";
-import { func, any } from "prop-types";
+import { func, any, string } from "prop-types";
 import { CSSTransitionGroup } from "react-transition-group";
 import { CardComponent } from "./Card";
 import Icon from "../components/Icon";
 import PerfectScrollbar from "react-perfect-scrollbar";
 
-const Media = ({ onChangeState, items = [], onRemove }) => {
+const Media = ({ onChangeState, items = [], onRemove, projectId }) => {
   return Object.keys(items).length ? (
     <ScrollContainer>
       <PerfectScrollbar component="div">
         <LibraryGrid>
           {Object.keys(items).map((val, ind) => (
-            <CardComponent onRemove={onRemove} item={items[val]} key={ind} />
+            <CardComponent projectId={projectId} onRemove={onRemove} item={items[val]} key={ind} />
           ))}
         </LibraryGrid>
       </PerfectScrollbar>
@@ -42,7 +42,8 @@ const Media = ({ onChangeState, items = [], onRemove }) => {
 Media.prototype = {
   onChangeState: func,
   items: any,
-  onRemove: func
+  onRemove: func,
+  projectId: string
 };
 
 export default Media;

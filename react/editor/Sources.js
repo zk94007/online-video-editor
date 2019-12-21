@@ -89,6 +89,7 @@ export default class Sources extends Component {
             items={this.props.items}
             onChangeState={this.props.onChangeState}
             onRemove={this.delResource}
+            projectId={this.props.project}
           />
         );
       case "Add Media":
