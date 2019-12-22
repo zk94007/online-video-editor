@@ -145,6 +145,7 @@ const DefaultWrapper = styled.div`
   width: 100%;
   height: 100%;
   background: linear-gradient(148deg, #5a5a72, #3d3d57);
+  ${({ color }) => color && `background: ${color}`}
 `;
 
 const ThumbnailText = styled.h4`

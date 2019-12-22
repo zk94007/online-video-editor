@@ -11,6 +11,7 @@ import PropTypes from "prop-types";
 import { SourcesContainer } from "./style";
 import Media from "./Media";
 import Logo from "./Logo";
+import Background from "./Background";
 
 export default class Sources extends Component {
   constructor(props) {
@@ -94,6 +95,8 @@ export default class Sources extends Component {
         );
       case "Logo":
         return <Logo />;
+      case "Background":
+        return <Background />;
       case "Add Media":
         return (
           <Uploader
