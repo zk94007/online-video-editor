@@ -12,6 +12,7 @@ import { SourcesContainer } from "./style";
 import Media from "./Media";
 import Logo from "./Logo";
 import Background from "./Background";
+import Text from "./Text";
 
 export default class Sources extends Component {
   constructor(props) {
@@ -97,6 +98,8 @@ export default class Sources extends Component {
         return <Logo />;
       case "Background":
         return <Background />;
+      case "Text":
+        return <Text />;
       case "Add Media":
         return (
           <Uploader

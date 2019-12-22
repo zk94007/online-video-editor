@@ -22,8 +22,10 @@ const Background = () => {
     <ScrollContainer>
       <PerfectScrollbar component="div">
         <LibraryGrid>
-          {colors.map(val => {
-            return <BackgroundCard name={val.name} color={val.color} />;
+          {colors.map((val, key) => {
+            return (
+              <BackgroundCard key={key} name={val.name} color={val.color} />
+            );
           })}
         </LibraryGrid>
       </PerfectScrollbar>

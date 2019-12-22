@@ -148,6 +148,18 @@ const DefaultWrapper = styled.div`
   ${({ color }) => color && `background: ${color}`}
 `;
 
+const TextHeader = styled.div`
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 0.75rem;
+  line-height: 150%;
+  color: #fff;
+  font-kerning: auto;
+  text-rendering: optimizeLegibility;
+  margin-bottom: 8px;
+`;
+
 const ThumbnailText = styled.h4`
   color: #e5e6f1;
   font-size: 0.75rem;
@@ -265,5 +277,6 @@ export {
   VideoWrapper,
   Video,
   LogoButton,
-  Note
+  Note,
+  TextHeader
 };
