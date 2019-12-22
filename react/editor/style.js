@@ -96,7 +96,7 @@ const LogoButton = styled.button`
   background-color: #665dc3;
   margin-top: 20px;
   margin-bottom: 30px;
-  &:hover{
+  &:hover {
     background-color: #665dc3;
   }
 `;
@@ -235,6 +235,13 @@ const Video = styled(ReactPlayer)`
   height: 100% !important;
 `;
 
+const Note = styled.p`
+  text-align: center;
+  opacity: 0.5;
+  position: absolute;
+  bottom: 22px;
+`;
+
 export {
   Container,
   EditSection,
@@ -256,5 +263,6 @@ export {
   VideoContainer,
   VideoWrapper,
   Video,
-  LogoButton
+  LogoButton,
+  Note
 };
