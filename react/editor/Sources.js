@@ -13,6 +13,7 @@ import Media from "./Media";
 import Logo from "./Logo";
 import Background from "./Background";
 import Text from "./Text";
+import Transition from "./Transition";
 
 export default class Sources extends Component {
   constructor(props) {
@@ -100,6 +101,8 @@ export default class Sources extends Component {
         return <Background />;
       case "Text":
         return <Text />;
+      case "Transition":
+        return <Transition />;
       case "Add Media":
         return (
           <Uploader
