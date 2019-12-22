@@ -11,7 +11,8 @@ import {
   Sheild,
   Help,
   Upload,
-  Delete
+  Delete,
+  Star
 } from "./Icons";
 
 const ICONS = {
@@ -24,7 +25,8 @@ const ICONS = {
   sheild: Sheild,
   help: Help,
   upload: Upload,
-  delete: Delete
+  delete: Delete,
+  star: Star
 };
 
 const Icon = ({ name, size = 16, color = "white", style, onClick }) => {

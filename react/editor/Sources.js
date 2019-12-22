@@ -7,10 +7,10 @@ import React, { Component } from "react";
 import { server } from "../../config";
 import timeManager from "../../models/timeManager";
 import Uploader from "./Uploader";
-import SourcesTableRow from "./SourcesTableRow";
 import PropTypes from "prop-types";
 import { SourcesContainer } from "./style";
 import Media from "./Media";
+import Logo from "./Logo";
 
 export default class Sources extends Component {
   constructor(props) {
@@ -92,6 +92,8 @@ export default class Sources extends Component {
             projectId={this.props.project}
           />
         );
+      case "Logo":
+        return <Logo />;
       case "Add Media":
         return (
           <Uploader

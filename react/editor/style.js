@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import ReactPlayer from 'react-player'
+import ReactPlayer from "react-player";
 
 const Container = styled.div`
   display: flex;
@@ -67,6 +67,38 @@ const UploadIcon = styled.div`
   height: 50%;
   max-height: 100px;
   margin-bottom: 2vh;
+  ${({ logo }) =>
+    logo &&
+    `
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 4vh;
+  `}
+`;
+
+const LogoButton = styled.button`
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  height: 40px;
+  min-height: 40px;
+  max-height: 40px;
+  border-radius: 100px;
+  transition: background-color 0.2s ease-in-out;
+  border: 2px solid #665dc3;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0 28px;
+  min-width: 140px;
+  color: #fff;
+  background-color: #665dc3;
+  margin-top: 20px;
+  margin-bottom: 30px;
+  &:hover{
+    background-color: #665dc3;
+  }
 `;
 
 const MediaContainer = styled.div`
@@ -200,7 +232,7 @@ const VideoWrapper = styled.div`
 
 const Video = styled(ReactPlayer)`
   width: 100% !important;
-  height: 100% !important; 
+  height: 100% !important;
 `;
 
 export {
@@ -223,5 +255,6 @@ export {
   Time,
   VideoContainer,
   VideoWrapper,
-  Video
+  Video,
+  LogoButton
 };
