@@ -32,6 +32,10 @@ router.post('/api/project/:projectID/file', apiController.projectFilePOST);
 
 router.delete('/api/project/:projectID/file/:fileID', apiController.projectFileDELETE);
 
+router.post('/api/project/:projectID/logo', apiController.projectLogoPOST);
+
+router.delete('/api/project/:projectID/logo/:fileID', apiController.projectLogoDELETE);
+
 router.put('/api/project/:projectID/file/:fileID', apiController.projectFilePUT);
 
 router.post('/api/project/:projectID/filter', apiController.projectFilterPOST);
