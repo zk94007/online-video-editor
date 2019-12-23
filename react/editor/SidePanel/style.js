@@ -282,6 +282,7 @@ const Time = styled.span`
   font-weight: bold;
   color: white;
   text-shadow: black 1px 1px 4px;
+  z-index: 10;
 `;
 
 const VideoContainer = styled.div`
