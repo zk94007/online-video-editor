@@ -6,14 +6,14 @@
 import React, { Component } from "react";
 import { server } from "../../config";
 import timeManager from "../../models/timeManager";
-import Uploader from "./Uploader";
+import Uploader from "../components/SideMenu/Uploader";
 import PropTypes from "prop-types";
-import { SourcesContainer } from "./style";
-import Media from "./Media";
-import Logo from "./Logo";
-import Background from "./Background";
-import Text from "./Text";
-import Transition from "./Transition";
+import { SourcesContainer } from "../components/SideMenu/style";
+import Media from "../components/SideMenu/Media";
+import Logo from "../components/SideMenu/Logo";
+import Background from "../components/SideMenu/Background";
+import Text from "../components/SideMenu/Text";
+import Transition from "../components/SideMenu/Transition";
 
 export default class Sources extends Component {
   constructor(props) {

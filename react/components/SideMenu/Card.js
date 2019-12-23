@@ -11,8 +11,8 @@ import {
   VideoWrapper,
   Video
 } from "./style";
-import Icon from "../components/Icon";
 import moment from "moment";
+import Icon from "../Icon";
 
 export const CardComponent = props => {
   const isAudio = props?.item?.name?.search(

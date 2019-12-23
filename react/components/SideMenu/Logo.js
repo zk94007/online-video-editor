@@ -1,7 +1,7 @@
 import { MediaContainer, UploadIcon, LogoButton, Note } from "./style";
 import React, { useRef } from "react";
 import { CSSTransitionGroup } from "react-transition-group";
-import Icon from "../components/Icon";
+import Icon from "../Icon";
 
 const Logo = () => {
   const inputRef = useRef(null);

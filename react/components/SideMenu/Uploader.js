@@ -7,9 +7,9 @@ import React, { Component, useRef } from "react";
 import Dropzone from "react-dropzone-uploader";
 import PropTypes from "prop-types";
 import { UploadContainer, Title, Button, UploadIcon } from "./style";
-import Icon from "../components/Icon";
 import { getDroppedOrSelectedFiles } from "html5-file-selector";
 import { CSSTransitionGroup } from "react-transition-group";
+import Icon from "../Icon";
 
 export default class Uploader extends Component {
   constructor(props) {

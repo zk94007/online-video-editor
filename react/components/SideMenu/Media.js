@@ -3,8 +3,8 @@ import { MediaContainer, UploadIcon, Title, LibraryGrid, ScrollContainer } from 
 import { func, any, string } from "prop-types";
 import { CSSTransitionGroup } from "react-transition-group";
 import { CardComponent } from "./Card";
-import Icon from "../components/Icon";
 import PerfectScrollbar from "react-perfect-scrollbar";
+import Icon from "../Icon";
 
 const Media = ({ onChangeState, items = [], onRemove, projectId }) => {
   return Object.keys(items).length ? (
