@@ -99,7 +99,7 @@ exports.projectFilePOST = (req, res, next) => {
 		fstream.on('close', () => {
 			log.info(`Upload of "${filename}" finished`);
 
-			fileManager.copyFile(filepath, config.publicUploadPath, `${fileID}.${extension}`).then(
+			fileManager.copyFile(filepath, config.publicUploadPath, `${fileID}${extension}`).then(
 				() => {
 					fileManager.getDuration(filepath, mimeType).then(
 						length => {
