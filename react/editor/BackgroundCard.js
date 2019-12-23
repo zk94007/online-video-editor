@@ -12,7 +12,7 @@ import {
 
 export const BackgroundCard = ({
   name,
-  color = false,
+  color = "false",
   image,
   video = false
 }) => {
