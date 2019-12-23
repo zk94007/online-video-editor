@@ -8,7 +8,6 @@
   src: url("/fonts/sans/SourceSansPro-Regular.ttf");
 }
 
-
 body {
   font-family: SourceSans;
   background: #1f1f1f;
@@ -101,6 +100,10 @@ a {
 #preview {
   width: 490px;
   text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
 
   video {
     width: 480px;
@@ -305,12 +308,12 @@ tr:nth-child(even) {
 }
 
 .animate-appear {
-	opacity: 0.01;
-	transition: opacity .5s ease-in;
+  opacity: 0.01;
+  transition: opacity 0.5s ease-in;
 }
 
 .animate-appear.animate-appear-active {
-	opacity: 1;
+  opacity: 1;
 }
 
 /*
