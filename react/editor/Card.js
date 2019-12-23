@@ -15,8 +15,9 @@ import Icon from "../components/Icon";
 import moment from "moment";
 
 export const CardComponent = props => {
-  console.log(props.item);
-
+  const isAudio = props?.item?.name?.search(
+    /([a-zA-Z0-9\s_\\.\-\(\):])+(.mp3|.aac|.wav|.wma)$/i
+  );
   const url = props?.item?.url;  
   const isMedia = props?.item?.length?.split(",")?.[0];
   const length = isMedia && moment.duration(isMedia);
@@ -44,7 +45,15 @@ export const CardComponent = props => {
   return (
     <Card>
       <Preview ref={refer}>
-        <DefaultWrapper>{/* <Image src={image} /> */}</DefaultWrapper>
+        <DefaultWrapper>
+          {!isMedia && !isAudio + 1 && (
+            <Image
+              src={
+                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSPcFgnKBEE7-9nKEPL82vbbq8ntYIAfibQT8Anb9HT3cZkcrxcbw&s"
+              }
+            />
+          )}
+        </DefaultWrapper>
         {isMedia && (
           <>
             <Time>{`${
