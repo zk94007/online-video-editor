@@ -11,28 +11,23 @@ const Text = () => {
         <LibraryGrid>
           <BackgroundCard
             name="Plunging"
-            video="https://public-stock-data.clipchamp.com/raw-data/content/previews/cc_m9426fdfd.mp4"
+            video="http://54.173.175.102/assets/video/plunging.mp4"
             image="https://public-stock-data.clipchamp.com/raw-data/content/thumbs/cc_m9426fdfd.jpg"
           />
           <BackgroundCard
             name="Clean"
-            video="https://public-stock-data.clipchamp.com/raw-data/content/previews/cc_m1306e99c.mp4"
+            video="http://54.173.175.102/assets/video/clean.mp4"
             image="https://public-stock-data.clipchamp.com/raw-data/content/thumbs/cc_m1306e99c.jpg"
           />
           <BackgroundCard
             name="Mirror"
-            video="https://public-stock-data.clipchamp.com/raw-data/content/previews/cc_mb050aee.mp4"
+            video="http://54.173.175.102/assets/video/mirror.mp4"
             image="https://public-stock-data.clipchamp.com/raw-data/content/thumbs/cc_mb050aee.jpg"
           />
           <BackgroundCard
             name="Funky"
-            video="https://public-stock-data.clipchamp.com/raw-data/content/previews/cc_m806cfa9.mp4"
+            video="http://54.173.175.102/assets/video/funky.mp4"
             image="https://public-stock-data.clipchamp.com/raw-data/content/thumbs/cc_m806cfa9.jpg"
-          />
-          <BackgroundCard
-            name="Plunging (Right)"
-            video="https://public-stock-data.clipchamp.com/raw-data/content/previews/cc_md6338793.mp4"
-            image="https://public-stock-data.clipchamp.com/raw-data/content/thumbs/cc_md6338793.jpg"
           />
         </LibraryGrid>
       </PerfectScrollbar>
