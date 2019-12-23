@@ -99,35 +99,41 @@ exports.projectFilePOST = (req, res, next) => {
 		fstream.on('close', () => {
 			log.info(`Upload of "${filename}" finished`);
 
-			fileManager.getDuration(filepath, mimeType).then(
-				length => {
-					if (length !== null) length += '0';
-					rendererManager.loadRenderer(req.params.projectID).then(
-						(renderer) => {
-							renderer.resources[fileID] = {
-								id: fileID,
-								filepath: path.resolve(filepath),
-								mimeType,
-								name: filename,
-								length
-							};
-
-							rendererManager.saveRenderer(req.params.projectID, renderer).then(
-								() => {
-									res.json({
-										msg: `Upload of "${filename}" OK`,
-										resource_id: fileID,
-										resource_mime: mimeType,
-										length: length,
-									});
+			fileManager.copyFile(filepath, config.publicUploadPath, `${fileID}.${extension}`).then(
+				() => {
+					fileManager.getDuration(filepath, mimeType).then(
+						length => {
+							if (length !== null) length += '0';
+							rendererManager.loadRenderer(req.params.projectID).then(
+								(renderer) => {
+									renderer.resources[fileID] = {
+										id: fileID,
+										filepath: path.resolve(filepath),
+										mimeType,
+										name: filename,
+										length
+									};
+		
+									rendererManager.saveRenderer(req.params.projectID, renderer).then(
+										() => {
+											res.json({
+												msg: `Upload of "${filename}" OK`,
+												url: `http://54.173.175.102/assets/video/${filename}`, // temporary url
+												resource_id: fileID,
+												resource_mime: mimeType,
+												length: length,
+											});
+										},
+										err => next(err)
+									);
 								},
-								err => next(err)
+								err => fileErr(err, res)
 							);
-						},
-						err => fileErr(err, res)
+						}
 					);
 				}
 			);
+			
 		});
 	});
 

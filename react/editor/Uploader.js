@@ -29,13 +29,6 @@ export default class Uploader extends Component {
 
   handleChangeStatus({ meta, xhr, remove }, status) {
     if (status === "done") {
-      const response = JSON.parse(xhr.response);
-      this.props.onAdd({
-        id: response.resource_id,
-        name: meta.name,
-        duration: response.length,
-        mime: response.resource_mime
-      });
       this.setState(
         {
           status: null
@@ -44,6 +37,15 @@ export default class Uploader extends Component {
           remove();
         }
       );
+
+      const response = JSON.parse(xhr.response);
+      this.props.onAdd({
+        id: response.resource_id,
+        name: meta.name,
+        url: response.url,
+        length: response.length,
+        mime: response.resource_mime
+      });
     } else if (status === "aborted") {
       this.setState({
         status: null

@@ -217,10 +217,9 @@ export default class Editor extends Component {
   }
 
   addResource(resource) {
-    // const resources = Object.assign({}, this.state.resources);
-    // resources[resource.id] = resource;
-    this.loadData();
-    this.setState({activeState: "Media"});
+    const resources = Object.assign({}, this.state.resources);
+    resources[resource.id] = resource;
+    this.setState({activeState: "Media", resources: resources});
   }
 
   delResource(id) {

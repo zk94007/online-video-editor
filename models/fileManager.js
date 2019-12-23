@@ -27,6 +27,21 @@ export default {
 				resolve(null);
 			}
 		});
+	},
+
+	/**
+	 * 
+	 * @param {*} filepath 
+	 * @param {*} destpath 
+	 * @param {*} filename 
+	 */
+	copyFile(filepath, destpath, filename) {
+		return new Promise((resolve) => {
+			exec(`cp ${filepath} ${destpath}/${filename}`, (err, stdout) => {
+				if (err) log.error(err);
+				else resolve(stdout.trim());
+			});
+		});
 	}
 
 };

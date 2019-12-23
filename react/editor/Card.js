@@ -15,14 +15,9 @@ import Icon from "../components/Icon";
 import moment from "moment";
 
 export const CardComponent = props => {
-  const isAudio = props?.item?.name?.search(
-    /([a-zA-Z0-9\s_\\.\-\(\):])+(.mp3|.aac|.wav|.wma)$/i
-  );
+  console.log(props.item);
 
-  const url =
-    isAudio + 1
-      ? "https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3"
-      : "https://file-examples.com/wp-content/uploads/2017/04/file_example_MP4_480_1_5MG.mp4";
+  const url = props?.item?.url;  
   const isMedia = props?.item?.length?.split(",")?.[0];
   const length = isMedia && moment.duration(isMedia);
   const refer = useRef(null);

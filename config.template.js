@@ -23,6 +23,7 @@ export default {
 	adminEmail: '',
 
 	projectPath: 'WORKER',
+	publicUploadPath: '/home/ubuntu/public/upload',
 
 	declareXML: '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE mlt SYSTEM "https://raw.githubusercontent.com/mltframework/mlt/master/src/modules/xml/mlt-xml.dtd">',
 
