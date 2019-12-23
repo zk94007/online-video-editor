@@ -35,9 +35,9 @@ export default {
 	 * @param {*} destpath 
 	 * @param {*} filename 
 	 */
-	copyFile(filepath, destpath, filename) {
+	copyFile(filepath, destpath) {
 		return new Promise((resolve) => {
-			exec(`cp ${filepath} ${destpath}/${filename}`, (err, stdout) => {
+			exec(`cp ${filepath} ${destpath}`, (err, stdout) => {
 				if (err) log.error(err);
 				else resolve(stdout.trim());
 			});

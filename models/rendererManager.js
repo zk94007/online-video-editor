@@ -10,7 +10,6 @@ import log from './logger';
 const fs = require('fs');
 const path = require('path');
 const RWlock = require('rwlock');
-const jsonfile = require('jsonfile');
 
 const lock = new RWlock();
 
@@ -23,10 +22,10 @@ export default {
      * @return {Promise<any>}
      */
     saveRenderer(project, renderer, release = undefined) {
-        const filepath = path.join(config.projectPath, project, 'renderer.json');
+        const filepath = path.join(path.dirname(require.main.filename), config.projectPath, project, 'renderer.json');
 
         return new Promise((resolve, reject) => {
-            jsonfile.writeFile(filepath, renderer, (err) => {
+            fs.writeFile(filepath, JSON.stringify(renderer), (err) => {
                 if (typeof release !== 'undefined') release();
 
                 if (err) {
@@ -43,13 +42,13 @@ export default {
     loadRenderer(project) {
         const filepath = this.getRendererpath(project);
         return new Promise((resolve, reject) => {
-            jsonfile.readFile(filepath, (err, renderer) => {
+            fs.readFile(filepath, (err, data) => {
                 if (err) {
                     log.error(`Unable to open file ${filepath}`); 
                     reject(err);
                 }
 
-                resolve(renderer);
+                resolve(JSON.parse(data));
             });
 		});
     },

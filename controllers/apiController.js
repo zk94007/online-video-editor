@@ -101,7 +101,7 @@ exports.projectFilePOST = (req, res, next) => {
 		fstream.on('close', () => {
 			log.info(`Upload of "${filename}" finished`);
 
-			fileManager.copyFile(filepath, config.publicUploadPath, `${nfilename}`).then(
+			fileManager.copyFile(filepath, path.join(path.dirname(require.main.filename), config.publicUploadPath, `${nfilename}`)).then(
 				() => {
 					fileManager.getDuration(filepath, mimeType).then(
 						length => {
@@ -222,7 +222,7 @@ exports.projectLogoPOST = (req, res, next) => {
 		fstream.on('close', () => {
 			log.info(`Upload of "${filename}" finished`);
 
-			fileManager.copyFile(filepath, config.publicUploadPath, `${nfilename}`).then(
+			fileManager.copyFile(filepath, path.join(path.dirname(require.main.filename), config.publicUploadPath, `${nfilename}`)).then(
 				() => {
 					rendererManager.loadRenderer(req.params.projectID).then(
 						(renderer) => {
