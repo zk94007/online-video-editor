@@ -4,12 +4,14 @@
  */
 
 import React, { Component } from 'react';
-import vis from 'vis-timeline';
-import timeManager from '../../models/timeManager';
-import AddFilterDialog from './AddFilterDialog';
-import Editor from './Editor';
-import {server} from '../../config';
 import PropTypes from 'prop-types';
+import vis from 'vis-timeline';
+
+import {server} from '../../../config';
+import timeManager from '../../../models/timeManager';
+
+import Editor from '../Editor';
+import AddFilterDialog from './AddFilterDialog';
 
 export default class Timeline extends Component {
 	constructor(props) {

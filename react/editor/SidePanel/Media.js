@@ -4,7 +4,7 @@ import { func, any, string } from "prop-types";
 import { CSSTransitionGroup } from "react-transition-group";
 import { CardComponent } from "./Card";
 import PerfectScrollbar from "react-perfect-scrollbar";
-import Icon from "../Icon";
+import Icon from "../../_core/Icon";
 
 const Media = ({ onChangeState, items = [], onRemove, projectId }) => {
   return Object.keys(items).length ? (

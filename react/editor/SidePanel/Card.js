@@ -12,7 +12,7 @@ import {
   Video
 } from "./style";
 import moment from "moment";
-import Icon from "../Icon";
+import Icon from "../../_core/Icon";
 
 export const CardComponent = props => {
   const isAudio = props?.item?.name?.search(
@@ -48,9 +48,7 @@ export const CardComponent = props => {
         <DefaultWrapper>
           {!isMedia && !isAudio + 1 && (
             <Image
-              src={
-                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSPcFgnKBEE7-9nKEPL82vbbq8ntYIAfibQT8Anb9HT3cZkcrxcbw&s"
-              }
+              src={url}
             />
           )}
         </DefaultWrapper>

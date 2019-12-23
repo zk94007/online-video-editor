@@ -26,6 +26,7 @@ exports.projectPOST = (req, res, next) => {
     const renderer = {
 		projectID: generate('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890', 32),
 		projectName: '',
+		logos: {},
 		resources: {},
 		timeline: [
 			{
@@ -60,6 +61,7 @@ exports.projectGET = (req, res) => {
 			res.json({
 				project: req.params.projectID,
 				projectName: renderer.projectName,
+				logos: renderer.logos,
 				resources: renderer.resources,
 				timeline: renderer.timeline,
 			});
@@ -81,11 +83,11 @@ exports.projectFilePOST = (req, res, next) => {
 	}
 
 	req.busboy.on('file', (fieldname, file, filename, transferEncoding, mimeType) => {
-
 		const fileID = generate('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890', 16);
 		const extension = path.extname(filename);
-		let filepath = path.join(config.projectPath, req.params.projectID, fileID);
-		if (extension.length > 1) filepath += extension;
+		let nfilename = fileID;
+		if (extension.length > 1) nfilename += extension;
+		let filepath = path.join(config.projectPath, req.params.projectID, nfilename);
 
 		// Create a write stream of the new file
 		const fstream = fs.createWriteStream(filepath);
@@ -99,7 +101,7 @@ exports.projectFilePOST = (req, res, next) => {
 		fstream.on('close', () => {
 			log.info(`Upload of "${filename}" finished`);
 
-			fileManager.copyFile(filepath, config.publicUploadPath, `${fileID}${extension}`).then(
+			fileManager.copyFile(filepath, config.publicUploadPath, `${nfilename}`).then(
 				() => {
 					fileManager.getDuration(filepath, mimeType).then(
 						length => {
@@ -108,20 +110,21 @@ exports.projectFilePOST = (req, res, next) => {
 								(renderer) => {
 									renderer.resources[fileID] = {
 										id: fileID,
-										filepath: path.resolve(filepath),
-										mimeType,
 										name: filename,
-										length
+										filepath: path.resolve(filepath),
+										mimeType,										
+										length,
+										url: `/upload/${nfilename}`
 									};
 		
 									rendererManager.saveRenderer(req.params.projectID, renderer).then(
 										() => {
 											res.json({
 												msg: `Upload of "${filename}" OK`,
-												url: `http://54.173.175.102/assets/video/${filename}`, // temporary url
 												resource_id: fileID,
 												resource_mime: mimeType,
 												length: length,
+												url: `/upload/${nfilename}`
 											});
 										},
 										err => next(err)
@@ -175,6 +178,118 @@ exports.projectFileDELETE = (req, res, next) => {
 			});
 			
 			delete renderer.resources[req.params.fileID];
+
+			rendererManager.saveRenderer(req.params.projectID, renderer).then(
+				() => {
+					res.json({
+						msg: 'Feed removed successfully',
+					});
+				},
+				err => next(err)
+			);
+		},
+		err => fileErr(err, res)
+	);
+};
+
+exports.projectLogoPOST = (req, res, next) => {
+
+	if (!isset(req.busboy)) {
+		res.status(400);
+		res.json({
+			err: 'File is missing.',
+			msg: 'The request body must contain a file to upload.',
+		});
+		return;
+	}
+
+	req.busboy.on('file', (fieldname, file, filename, transferEncoding, mimeType) => {
+		const fileID = generate('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890', 16);
+		const extension = path.extname(filename);
+		let nfilename = fileID;
+		if (extension.length > 1) nfilename += extension;
+		let filepath = path.join(config.projectPath, req.params.projectID, nfilename);
+
+		// Create a write stream of the new file
+		const fstream = fs.createWriteStream(filepath);
+
+		log.info(`Upload of "${filename}" started`);
+
+		// Pipe it trough
+		file.pipe(fstream);
+
+		// On finish of the upload
+		fstream.on('close', () => {
+			log.info(`Upload of "${filename}" finished`);
+
+			fileManager.copyFile(filepath, config.publicUploadPath, `${nfilename}`).then(
+				() => {
+					rendererManager.loadRenderer(req.params.projectID).then(
+						(renderer) => {
+							renderer.logos[fileID] = {
+								id: fileID,
+								name: filename,
+								filepath: path.resolve(filepath),
+								url: `/upload/${nfilename}`
+							};
+
+							rendererManager.saveRenderer(req.params.projectID, renderer).then(
+								() => {
+									res.json({
+										msg: `Upload of "${filename}" OK`,
+										logo_id: fileID,
+										url: `/upload/${nfilename}`
+									});
+								},
+								err => next(err)
+							);
+						},
+						err => fileErr(err, res)
+					);
+				}
+			);
+			
+		});
+	});
+
+	req.pipe(req.busboy); // Pipe it trough busboy
+};
+
+
+exports.projectLogoDELETE = (req, res, next) => {
+	rendererManager.loadRenderer(req.params.projectID).then(
+		(renderer) => {
+			const track = renderer.timeline.find(track => track.items.find(item => item.id === req.params.fildID));
+			if (track) {
+				res.status(403);
+				res.json({
+					err: 'Source in use.',
+					msg: 'The logo is being used in the project. Remove it from the timeline before deleting it from the project.',
+				});
+				return;
+			}
+
+			const logo = renderer.logos[req.params.fileID];
+			if (!logo) {
+				res.status(404);
+				res.json({
+					err: 'Source not found.',
+					msg: 'The logo is not in the project.'
+				});
+				return;
+			}
+
+			const filepath = logo.filepath;
+			if (filepath === null) {
+				return next(`Project "${req.params.projectID}", resource ${req.params.fileID} misses filepath`);
+			}
+
+			// Try to remove file, log failure
+			fs.unlink(filepath, (err) => {
+				if (err) log.error(err);
+			});
+			
+			delete renderer.logos[req.params.fileID];
 
 			rendererManager.saveRenderer(req.params.projectID, renderer).then(
 				() => {

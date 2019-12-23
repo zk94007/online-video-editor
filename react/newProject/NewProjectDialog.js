@@ -6,7 +6,7 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
 import {server} from '../../config';
-import FetchErrorDialog from '../editor/FetchErrorDialog';
+import { FetchErrorDialog } from '../_core/Dialog';
 
 Modal.setAppElement(document.body);
 

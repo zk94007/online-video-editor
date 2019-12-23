@@ -9,7 +9,7 @@ import PropTypes from "prop-types";
 import { UploadContainer, Title, Button, UploadIcon } from "./style";
 import { getDroppedOrSelectedFiles } from "html5-file-selector";
 import { CSSTransitionGroup } from "react-transition-group";
-import Icon from "../Icon";
+import Icon from "../../_core/Icon";
 
 export default class Uploader extends Component {
   constructor(props) {

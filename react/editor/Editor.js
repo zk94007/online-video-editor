@@ -4,14 +4,17 @@
  */
 
 import React, { Component } from "react";
-import LoadingDialog from "./LoadingDialog";
-import SubmitDialog from "./SubmitDialog";
-import Sources from "./Sources";
-import Timeline from "./Timeline";
+
 import { server } from "../../config";
 import timeManager from "../../models/timeManager";
-import FetchErrorDialog from "./FetchErrorDialog";
-import SideMenu from "../components/SideMenu/SideMenu";
+
+import { LoadingDialog, FetchErrorDialog } from "../_core/Dialog";
+import SubmitDialog from "./SubmitDialog";
+
+import SidePanel from "./SidePanel/SidePanel";
+import Timeline from "./Timeline/Timeline";
+import SideMenu from "./SideMenu/SideMenu";
+
 import { Container, EditSection } from "./style";
 
 export default class Editor extends Component {
@@ -128,7 +131,7 @@ export default class Editor extends Component {
           <EditSection>
             <main>
               <div>
-                <Sources
+                <SidePanel
                   activeState={this.state.activeState}
                   onChangeState = {this.onClickSide}
                   project={this.state.project}

@@ -5,10 +5,11 @@
 
 import React, { Component } from 'react';
 import Modal from 'react-modal';
-import filters from '../filters';
-import timeManager from '../../models/timeManager';
-import {server} from '../../config';
 import PropTypes from 'prop-types';
+
+import {server} from '../../../config';
+import timeManager from '../../../models/timeManager';
+import filters from '../../filters';
 
 Modal.setAppElement(document.body);
 

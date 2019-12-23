@@ -1,6 +1,6 @@
 import React from "react";
 import { ItemContainer, ItemText, ActiveLine } from "./style";
-import Icon from "../Icon";
+import Icon from "../../_core/Icon";
 import { string, bool, func } from "prop-types";
 
 const Item = ({ name, icon, isActive = false, onClickSide }) => {

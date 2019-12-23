@@ -1,21 +1,24 @@
 /**
- * @file Sources.js
+ * @file SidePanel.js
  * @author Ervis Semanaj
  */
 
 import React, { Component } from "react";
-import { server } from "../../config";
-import timeManager from "../../models/timeManager";
-import Uploader from "../components/SideMenu/Uploader";
 import PropTypes from "prop-types";
-import { SourcesContainer } from "../components/SideMenu/style";
-import Media from "../components/SideMenu/Media";
-import Logo from "../components/SideMenu/Logo";
-import Background from "../components/SideMenu/Background";
-import Text from "../components/SideMenu/Text";
-import Transition from "../components/SideMenu/Transition";
 
-export default class Sources extends Component {
+import { server } from "../../../config";
+import timeManager from "../../../models/timeManager";
+
+import { SourcesContainer } from "./style";
+
+import Media from "./Media";
+import Uploader from "./Uploader";
+import Text from "./Text";
+import Transition from "./Transition";
+import Background from "./Background";
+import Logo from "./Logo";
+
+export default class SidePanel extends Component {
   constructor(props) {
     super(props);
 
@@ -120,21 +123,13 @@ export default class Sources extends Component {
     const { activeState } = this.props;
     return (
       <SourcesContainer id={"sources"}>
-        {/* {Object.keys(this.props.items).map(key =>
-							<SourcesTableRow
-								key={key}
-								item={this.props.items[key]}
-								onRemove={this.delResource}
-								onInsert={this.putResource}
-							/>)
-						} */}
         {this.__render(activeState)}
       </SourcesContainer>
     );
   }
 }
 
-Sources.propTypes = {
+SidePanel.propTypes = {
   project: PropTypes.string.isRequired,
   items: PropTypes.object.isRequired,
   onAddResource: PropTypes.func.isRequired,

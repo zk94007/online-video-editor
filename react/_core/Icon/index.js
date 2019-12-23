@@ -1,19 +1,17 @@
 import React from "react";
 import { string, number, object, func } from "prop-types";
 
-import {
-  Plus,
-  Stock,
-  File,
-  Text,
-  Background,
-  Transition,
-  Sheild,
-  Help,
-  Upload,
-  Delete,
-  Star
-} from "./Icons";
+import Plus from "./Icons/Plus";
+import Stock from "./Icons/Stock";
+import File from "./Icons/File";
+import Text from "./Icons/Text";
+import Background from "./Icons/Background";
+import Transition from "./Icons/Transition";
+import Sheild from "./Icons/Sheild";
+import Help from "./Icons/Help";
+import Upload from "./Icons/Upload";
+import Delete from "./Icons/Delete";
+import Star from "./Icons/Star";
 
 const ICONS = {
   plus: Plus,
