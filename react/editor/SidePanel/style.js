@@ -310,6 +310,19 @@ const Note = styled.p`
   bottom: 22px;
 `;
 
+const AddLogoButton = styled.button`
+  height: 30px;
+  margin-bottom: 20px;
+  width: 130px;
+  transition: background-color .2s ease-in-out;
+  height: 30px;
+  border-radius: 4px;
+  border: 1px solid #fff;
+  &:hover {
+    background: transparent;
+  }
+`;
+
 export {
   MainContainer,
   Content,
@@ -339,5 +352,6 @@ export {
   Video,
   LogoButton,
   Note,
-  TextHeader
+  TextHeader,
+  AddLogoButton
 };

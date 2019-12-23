@@ -1,11 +1,64 @@
-import { MediaContainer, UploadIcon, LogoButton, Note } from "./style";
-import React, { useRef } from "react";
+import {
+  MediaContainer,
+  UploadIcon,
+  LogoButton,
+  Note,
+  ScrollContainer,
+  LibraryGrid,
+  AddLogoButton
+} from "./style";
+import React, { useRef, useCallback } from "react";
 import { CSSTransitionGroup } from "react-transition-group";
 import Icon from "../../_core/Icon";
+import axios from "axios";
+import { CardComponent } from "./Card";
+import PerfectScrollbar from "react-perfect-scrollbar";
 
-const Logo = () => {
+const Logo = ({ id, logos, onRemove, loadData }) => {
   const inputRef = useRef(null);
-  return (
+
+  const onAddLogo = useCallback(event => {
+    const file = event?.target?.files?.[0];
+    const formData = new FormData();
+    formData.append("file", file);
+    axios
+      .post(`/api/project/${id}/logo`, formData)
+      .then(val => {
+        loadData();
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  });
+
+  return Object.keys(logos).length ? (
+    <>
+      <AddLogoButton onClick={() => inputRef.current.click()}>
+        Add Logo
+        <input
+          accept="image/x-png,image/jpeg"
+          ref={inputRef}
+          type="file"
+          onChange={onAddLogo}
+          style={{ display: "none" }}
+        />
+      </AddLogoButton>
+      <ScrollContainer>
+        <PerfectScrollbar component="div">
+          <LibraryGrid>
+            {Object.keys(logos).map((val, ind) => (
+              <CardComponent
+                projectId={id}
+                onRemove={onRemove}
+                item={logos[val]}
+                key={ind}
+              />
+            ))}
+          </LibraryGrid>
+        </PerfectScrollbar>
+      </ScrollContainer>
+    </>
+  ) : (
     <MediaContainer>
       <CSSTransitionGroup
         transitionName="animate"
@@ -31,6 +84,7 @@ const Logo = () => {
             accept="image/x-png,image/jpeg"
             ref={inputRef}
             type="file"
+            onChange={onAddLogo}
             style={{ display: "none" }}
           />
         </LogoButton>

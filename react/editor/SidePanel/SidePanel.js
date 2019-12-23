@@ -17,6 +17,7 @@ import Text from "./Text";
 import Transition from "./Transition";
 import Background from "./Background";
 import Logo from "./Logo";
+import axios from "axios";
 
 export default class SidePanel extends Component {
   constructor(props) {
@@ -43,6 +44,19 @@ export default class SidePanel extends Component {
       })
       .catch(error => this.props.fetchError(error.message));
   }
+
+  delLogo = id => {
+    const url = `${server.apiUrl}/project/${this.props.project}/logo/${id}`;
+
+    axios
+      .delete(url)
+      .then(val => {
+        this.props.loadData();
+      })
+      .catch(err => {
+        this.props.fetchError(error.message);
+      });
+  };
 
   putResource(id) {
     // Get duration for image files
@@ -99,7 +113,14 @@ export default class SidePanel extends Component {
           />
         );
       case "Logo":
-        return <Logo />;
+        return (
+          <Logo
+            loadData={this.props.loadData}
+            onRemove={this.delLogo}
+            id={this.props.project}
+            logos={this.props.logos}
+          />
+        );
       case "Background":
         return <Background />;
       case "Text":

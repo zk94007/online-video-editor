@@ -40,7 +40,8 @@ export default class Editor extends Component {
       showSubmitDialog: false,
       showFetchError: false,
       fetchError: "",
-      activeState: "Media"
+      activeState: "Media",
+      logos: {}
     };
 
     this.loadData();
@@ -132,9 +133,11 @@ export default class Editor extends Component {
             <main>
               <div>
                 <SidePanel
+                  loadData={this.loadData}
                   activeState={this.state.activeState}
-                  onChangeState = {this.onClickSide}
+                  onChangeState={this.onClickSide}
                   project={this.state.project}
+                  logos={this.state.logos}
                   items={this.state.resources}
                   onAddResource={this.addResource}
                   onDelResource={this.delResource}
@@ -209,7 +212,8 @@ export default class Editor extends Component {
         if (typeof data.err === "undefined") {
           this.setState({
             resources: data.resources,
-            timeline: data.timeline
+            timeline: data.timeline,
+            logos: data.logos
           });
           this.setState({ loading: false });
         } else {
@@ -222,7 +226,7 @@ export default class Editor extends Component {
   addResource(resource) {
     const resources = Object.assign({}, this.state.resources);
     resources[resource.id] = resource;
-    this.setState({activeState: "Media", resources: resources});
+    this.setState({ activeState: "Media", resources: resources });
   }
 
   delResource(id) {
