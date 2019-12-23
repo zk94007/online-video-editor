@@ -7,7 +7,6 @@ const Text = () => {
   return (
     <ScrollContainer>
       <PerfectScrollbar component="div">
-        <TextHeader>Intro/Outros</TextHeader>
         <LibraryGrid>
           <BackgroundCard
             name="Plunging"
