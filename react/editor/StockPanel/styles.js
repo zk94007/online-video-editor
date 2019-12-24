@@ -116,60 +116,112 @@ const VideosListContainer = styled(PerfectScrollbar)`
 
 const CollectionContainer = styled.div``;
 
-const CollectionHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  text-align: left;
-  padding: 53px 50px 32px;
-`;
-
-const CollectionHeaderTitle = styled.h2`
-  font-weight: 600;
-  color: #fff;
-  text-transform: capitalize;
-`;
-
-const CollectionHeaderSeeAll = styled.div`
-  transition: opacity 0.2s ease-in-out;
-  font-size: 1rem;
-  outline: 0;
-  align-items: flex-end;
-  display: flex;
-  opacity: 0.6;
-  cursor: pointer;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #e5e6f1;
-  &:hover {
-    opacity: 1;
+const CollectionGrid = styled.div`
+  top: 0;
+  height: 100%;
+  align-content: start;
+  display: grid;
+  grid-gap: 16px;
+  grid-template-columns: repeat(auto-fill, 246px);
+  grid-template-rows: auto;
+  padding-right: 50px;
+  padding-left: 50px;
+  align-content: start;
+  display: grid;
+  grid-area: results-grid;
+  grid-gap: 26px;
+  grid-template-rows: auto;
+  padding-bottom: 30px;
+  grid-template-columns: 1fr;
+  flex-grow: 1;
+  @media (min-width: 1000px) {
+    grid-template-columns: repeat(2, 1fr);
   }
 `;
 
-const CollectionGrid = styled.div`
-    top: 0;
-    height: 100%;
+const CollectionBackdropCard = styled.div`
+  position: relative;
+  cursor: pointer;
+  &:before {
+    display: block;
+    content: "";
     width: 100%;
-    align-content: start;
-    display: grid;
-    grid-gap: 16px;
-    grid-template-columns: repeat(auto-fill,246px);
-    grid-template-rows: auto;
-    padding-right: 50px;
-    padding-left: 50px;
-    align-content: start;
-    display: grid;
-    grid-area: results-grid;
-    grid-gap: 26px;
-    grid-template-rows: auto;
-    padding-bottom: 30px;
-    grid-template-columns: 1fr;
-    flex-grow: 1;
-    @media(min-width: 1000px){
-      grid-template-columns: repeat(2,1fr)
-    }
-}
+    padding-top: 56.25%;
+  }
+`;
+
+const PanelOne = styled.div`
+  opacity: 0.05;
+  transform: scaleX(0.91) translateY(-12px);
+  transition: transform 0.2s ease-in-out;
+  position: absolute;
+  background: #fff;
+  margin-top: 18px;
+  border-radius: 4px;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  ${CollectionBackdropCard}:hover & {
+    opacity: .05;
+    transform: scaleX(.93) translateY(-9px);
+  }
+`;
+
+const PanelTwo = styled.div`
+  transition: transform 0.2s ease-in-out;
+  position: absolute;
+  background: #fff;
+  margin-top: 18px;
+  border-radius: 4px;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  opacity: 0.1;
+  transform: scaleX(0.94) translateY(-8px);
+  ${CollectionBackdropCard}:hover & {
+    opacity: .1;
+    transform: scaleX(.96) translateY(-6px);
+  }
+`;
+
+const PanelThree = styled.div`
+  opacity: 0.2;
+  transform: scaleX(0.97) translateY(-4px);
+  transition: transform 0.2s ease-in-out;
+  position: absolute;
+  background: #fff;
+  margin-top: 18px;
+  border-radius: 4px;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  ${CollectionBackdropCard}:hover & {
+    opacity: .2;
+    transform: scaleX(.99) translateY(-3px);
+  }
+`;
+
+const CollectionContent = styled.div`
+  overflow: hidden;
+  border-radius: 4px;
+  background-color: #000;
+  margin-top: 18px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+`;
+
+const CollectionImage = styled.img`
+  transition: opacity 0.2s ease-in-out;
+  height: 100%;
+  width: 100%;
+  opacity: 0.6;
+  object-fit: cover;
 `;
 
 export {
@@ -183,8 +235,11 @@ export {
   SearchInput,
   VideosListContainer,
   CollectionContainer,
-  CollectionHeader,
-  CollectionHeaderTitle,
-  CollectionHeaderSeeAll,
-  CollectionGrid
+  CollectionGrid,
+  CollectionBackdropCard,
+  PanelOne,
+  CollectionContent,
+  CollectionImage,
+  PanelThree,
+  PanelTwo
 };

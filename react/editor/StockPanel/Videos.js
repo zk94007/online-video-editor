@@ -5,10 +5,13 @@ import {
   SearchInput,
   VideosListContainer,
   CollectionContainer,
-  CollectionHeader,
-  CollectionHeaderTitle,
-  CollectionHeaderSeeAll,
-  CollectionGrid
+  CollectionGrid,
+  CollectionBackdropCard,
+  PanelOne,
+  PanelTwo,
+  PanelThree,
+  CollectionContent,
+  CollectionImage
 } from "./styles";
 import Icon from "../../_core/Icon";
 
@@ -21,17 +24,24 @@ const Videos = () => {
       </SearchBar>
       <VideosListContainer>
         <CollectionContainer>
-          <CollectionHeader>
-            <CollectionHeaderTitle>Footage</CollectionHeaderTitle>
-            <CollectionHeaderSeeAll>
-              <span>SEE ALL</span>
-              <Icon
-                style={{ marginLeft: 12, transform: "rotate(-90deg)" }}
-                size={14}
-                name="arrowLeft"
-              />
-            </CollectionHeaderSeeAll>
-          </CollectionHeader>
+          <CollectionGrid>
+            <CollectionBackdropCard>
+              <PanelOne />
+              <PanelTwo />
+              <PanelThree />
+              <CollectionContent>
+                <CollectionImage src="https://public-stock-data.clipchamp.com/raw-data/collection-thumbs/free-forever.jpg" />
+              </CollectionContent>
+            </CollectionBackdropCard>
+            <CollectionBackdropCard>
+              <PanelOne />
+              <PanelTwo />
+              <PanelThree />
+              <CollectionContent>
+                <CollectionImage src="https://public-stock-data.clipchamp.com/raw-data/collection-thumbs/born-to-be-wild.jpg" />
+              </CollectionContent>
+            </CollectionBackdropCard>
+          </CollectionGrid>
         </CollectionContainer>
       </VideosListContainer>
     </VideosContainer>

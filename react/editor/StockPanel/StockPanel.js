@@ -11,36 +11,12 @@ const StockPanel = () => {
     {
       name: "Video",
       url: "video",
-      icon: "video",
-      nestedItems: [
-        {
-          name: "Footage",
-          url: "video/footage"
-        },
-        {
-          name: "Background",
-          url: "video/background"
-        }
-      ]
+      icon: "video"
     },
     {
       name: "Audio",
       url: "audio",
-      icon: "audio",
-      nestedItems: [
-        {
-          name: "Music",
-          url: "audio/music"
-        },
-        {
-          name: "Loop",
-          url: "audio/loop"
-        },
-        {
-          name: "Sfx",
-          url: "audio/music"
-        }
-      ]
+      icon: "audio"
     }
   ];
   return (
