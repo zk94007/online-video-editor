@@ -12,7 +12,7 @@ const Routing = () => {
           <NewProjectDialog />
         </Route>
         <Route exact path="/project/:id" component={Editor} />
-        <Route exact path="/editor/stock/collections" component={Stockpanel} />
+        <Route exact path="/editor/stock/collections/video" component={Stockpanel} />
       </Switch>
     </Router>
   );

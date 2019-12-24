@@ -15,6 +15,8 @@ import Star from "./Icons/Star";
 import Video from "./Icons/Video";
 import Audio from "./Icons/Audio";
 import Close from "./Icons/Close";
+import Search from "./Icons/Search";
+import ArrowLeft from "./Icons/ArrowLeft";
 
 const ICONS = {
   plus: Plus,
@@ -30,7 +32,9 @@ const ICONS = {
   star: Star,
   video: Video,
   audio: Audio,
-  close: Close
+  close: Close,
+  search: Search,
+  arrowLeft: ArrowLeft
 };
 
 const Icon = ({ name, size = 16, color = "white", style, onClick }) => {
