@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
 import NewProjectDialog from "../newProject/NewProjectDialog";
 import Editor from "../editor/Editor";
+import Stockpanel from "../editor/StockPanel/StockPanel";
 
 const Routing = () => {
   return (
@@ -11,6 +12,7 @@ const Routing = () => {
           <NewProjectDialog />
         </Route>
         <Route exact path="/project/:id" component={Editor} />
+        <Route exact path="/editor/stock/collections" component={Stockpanel} />
       </Switch>
     </Router>
   );

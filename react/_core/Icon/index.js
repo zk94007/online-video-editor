@@ -12,6 +12,9 @@ import Help from "./Icons/Help";
 import Upload from "./Icons/Upload";
 import Delete from "./Icons/Delete";
 import Star from "./Icons/Star";
+import Video from "./Icons/Video";
+import Audio from "./Icons/Audio";
+import Close from "./Icons/Close";
 
 const ICONS = {
   plus: Plus,
@@ -24,7 +27,10 @@ const ICONS = {
   help: Help,
   upload: Upload,
   delete: Delete,
-  star: Star
+  star: Star,
+  video: Video,
+  audio: Audio,
+  close: Close
 };
 
 const Icon = ({ name, size = 16, color = "white", style, onClick }) => {
