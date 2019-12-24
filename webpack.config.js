@@ -2,7 +2,13 @@ module.exports = {
   entry: ["@babel/polyfill", "./react/front.js"],
   output: {
     path: __dirname + "/public",
+    publicPath: "/",
     filename: "[name].js"
+  },
+  devServer: {
+    contentBase: "./dist",
+    hot: true,
+    historyApiFallback: true
   },
   module: {
     rules: [
@@ -30,8 +36,8 @@ module.exports = {
         use: [
           {
             loader: "file-loader"
-          },
-        ],
+          }
+        ]
       },
       {
         // sass / scss loader for webpack

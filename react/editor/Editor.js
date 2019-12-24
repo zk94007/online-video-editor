@@ -33,7 +33,7 @@ export default class Editor extends Component {
     this.closeFetchErrorDialog = this.closeFetchErrorDialog.bind(this);
 
     this.state = {
-      project: window.location.href.match(/project\/([^/]*)/)[1],
+      project: this.props?.match?.params?.id,
       resources: {},
       timeline: [],
       loading: true,
