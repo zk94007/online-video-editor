@@ -3,6 +3,8 @@ import { Container, SideBar } from "./styles";
 import SideBarItems from "./SideBar";
 import { Route } from "react-router-dom";
 import Videos from "./Videos";
+import Audio from "./Audio";
+import VideosCollection from "./VideosCollection";
 
 const StockPanel = () => {
   const [active, setActive] = useState("video");
@@ -10,12 +12,12 @@ const StockPanel = () => {
   const items = [
     {
       name: "Video",
-      url: "video",
+      url: "/editor/stock/collections/video",
       icon: "video"
     },
     {
       name: "Audio",
-      url: "audio",
+      url: "/editor/stock/collections/audio",
       icon: "audio"
     }
   ];
@@ -25,6 +27,12 @@ const StockPanel = () => {
         <SideBarItems setActive={setActive} active={active} items={items} />
       </SideBar>
       <Route exact path="/editor/stock/collections/video" component={Videos} />
+      <Route exact path="/editor/stock/collections/audio" component={Audio} />
+      <Route
+        exact
+        path="/editor/stock/collections/video/:key"
+        component={VideosCollection}
+      />
     </Container>
   );
 };

@@ -1,19 +1,22 @@
 import React from "react";
-import { ListItem, ListViewContainer, Item, SideBar } from "./styles";
+import { ListItem } from "./styles";
 import Icon from "../../_core/Icon";
-import { CSSTransitionGroup } from "react-transition-group";
 import { withRouter } from "react-router-dom";
 
 const SideBarItems = ({ items = [], active, setActive, history }) => {
+  console.log("aaaaa", history);
   return (
     <>
       {items.map((val, key) => {
         return (
           <div key={key}>
             <ListItem
-              onClick={() => setActive(val.url)}
+              onClick={() => {
+                setActive(val.url);
+                history.push(val.url);
+              }}
               style={
-                active === val.name ? { background: "rgba(32,32,44,.9)" } : {}
+                active === val.url ? { background: "rgba(32,32,44,.9)" } : {}
               }
               acive={true}
             >

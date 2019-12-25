@@ -17,6 +17,7 @@ import Audio from "./Icons/Audio";
 import Close from "./Icons/Close";
 import Search from "./Icons/Search";
 import ArrowLeft from "./Icons/ArrowLeft";
+import Add from "./Icons/Add";
 
 const ICONS = {
   plus: Plus,
@@ -34,7 +35,8 @@ const ICONS = {
   audio: Audio,
   close: Close,
   search: Search,
-  arrowLeft: ArrowLeft
+  arrowLeft: ArrowLeft,
+  add: Add
 };
 
 const Icon = ({ name, size = 16, color = "white", style, onClick }) => {

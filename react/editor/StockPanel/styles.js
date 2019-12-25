@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import PerfectScrollbar from "react-perfect-scrollbar";
+import ReactPlayer from "react-player";
 
 const Container = styled.div`
   flex: 1;
@@ -137,6 +138,9 @@ const CollectionGrid = styled.div`
   @media (min-width: 1000px) {
     grid-template-columns: repeat(2, 1fr);
   }
+  @media (min-width: 1400px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
 `;
 
 const CollectionBackdropCard = styled.div`
@@ -163,8 +167,8 @@ const PanelOne = styled.div`
   bottom: 0;
   left: 0;
   ${CollectionBackdropCard}:hover & {
-    opacity: .05;
-    transform: scaleX(.93) translateY(-9px);
+    opacity: 0.05;
+    transform: scaleX(0.93) translateY(-9px);
   }
 `;
 
@@ -181,8 +185,8 @@ const PanelTwo = styled.div`
   opacity: 0.1;
   transform: scaleX(0.94) translateY(-8px);
   ${CollectionBackdropCard}:hover & {
-    opacity: .1;
-    transform: scaleX(.96) translateY(-6px);
+    opacity: 0.1;
+    transform: scaleX(0.96) translateY(-6px);
   }
 `;
 
@@ -199,8 +203,8 @@ const PanelThree = styled.div`
   bottom: 0;
   left: 0;
   ${CollectionBackdropCard}:hover & {
-    opacity: .2;
-    transform: scaleX(.99) translateY(-3px);
+    opacity: 0.2;
+    transform: scaleX(0.99) translateY(-3px);
   }
 `;
 
@@ -222,6 +226,148 @@ const CollectionImage = styled.img`
   width: 100%;
   opacity: 0.6;
   object-fit: cover;
+  ${CollectionContent}:hover & {
+    opacity: 0.8;
+  }
+`;
+
+const VideosHeader = styled.div`
+  display: flex;
+  position: relative;
+  align-items: flex-start;
+  flex-direction: row;
+  margin: 40px 65px 40px 50px;
+`;
+
+const VideosBackContainer = styled.p`
+  transition: opacity 0.2s ease-in-out;
+  cursor: pointer;
+  outline: 0;
+  display: flex;
+  opacity: 0.5;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  align-items: center;
+  position: absolute;
+  &:hover {
+    opacity: 1;
+  }
+`;
+
+const MainContainer = styled.div`
+  z-index: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  width: 100%;
+  padding-right: 50px;
+  padding-left: 50px;
+  padding-bottom: 50px;
+`;
+
+const CollectionDetails = styled.div`
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+`;
+
+const VideoContent = styled.div`
+  overflow: hidden;
+  border-radius: 4px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+`;
+
+const VideoResult = styled.div`
+  display: grid;
+  grid-template-rows: auto;
+  grid-gap: 20px 20px;
+  grid-template-columns: 1fr;
+  @media (min-width: 600px) {
+    grid-template-columns: 1fr 1fr;
+  }
+  @media (min-width: 1000px) {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  @media (min-width: 1400px) {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
+  @media (min-width: 1800px) {
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  }
+`;
+
+const Video = styled(ReactPlayer)`
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  right: initial;
+  bottom: initial;
+  left: initial;
+  object-fit: cover;
+`;
+
+const StockAsset = styled.div`
+  position: relative;
+  cursor: pointer;
+  outline: 0;
+  padding: 0;
+  user-select: none;
+  &:before {
+    display: block;
+    content: "";
+    width: 100%;
+    padding-top: 56.25%;
+  }
+`;
+
+const ContextMenu = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  padding: 8px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+`;
+
+const AddButton = styled.button`
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  padding: 3px;
+  background-color: #fff;
+  color: #665dc3;
+  opacity: 1 !important;
+  display: none;
+  ${StockAsset}:hover & {
+    display: flex;
+  }
+  align-items: center;
+  justify-content: center;
+  &:hover {
+    background-color: #665dc3;
+    color: #fff;
+    svg {
+      fill: white;
+      path {
+        stroke: white;
+      }
+    }
+  }
 `;
 
 export {
@@ -241,5 +387,15 @@ export {
   CollectionContent,
   CollectionImage,
   PanelThree,
-  PanelTwo
+  PanelTwo,
+  CollectionDetails,
+  VideosHeader,
+  VideosBackContainer,
+  MainContainer,
+  VideoResult,
+  VideoContent,
+  Video,
+  StockAsset,
+  ContextMenu,
+  AddButton
 };

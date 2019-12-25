@@ -15,9 +15,8 @@ import {
   CollectionDetails
 } from "./styles";
 import Icon from "../../_core/Icon";
-import { withRouter } from "react-router-dom";
 
-const Videos = ({ history }) => {
+const Audio = () => {
   const collections = [
     {
       name: "Free Forever",
@@ -33,34 +32,20 @@ const Videos = ({ history }) => {
       name: "Celebrate the World",
       image:
         "https://public-stock-data.clipchamp.com/raw-data/collection-thumbs/celebrate-the-world.jpg"
-    },
-    {
-      name: "Celestial Footage",
-      image:
-        "https://public-stock-data.clipchamp.com/raw-data/collection-thumbs/celestial-footage.jpg"
     }
   ];
   return (
     <VideosContainer>
       <SearchBar>
         <Icon style={{ margin: "0 18px" }} color="#665dc3" name="search" />
-        <SearchInput placeholder="Search video.." />
+        <SearchInput placeholder="Search audio.." />
       </SearchBar>
       <VideosListContainer>
         <CollectionContainer>
           <CollectionGrid>
             {collections.map((val, key) => {
               return (
-                <CollectionBackdropCard
-                  onClick={() =>
-                    history.push(
-                      `/editor/stock/collections/video/${val.name
-                        .toLowerCase()
-                        .replace(/ /gi, "-", "-")}`
-                    )
-                  }
-                  key={key}
-                >
+                <CollectionBackdropCard key={key}>
                   <PanelOne />
                   <PanelTwo />
                   <PanelThree />
@@ -80,4 +65,4 @@ const Videos = ({ history }) => {
   );
 };
 
-export default withRouter(Videos);
+export default Audio;

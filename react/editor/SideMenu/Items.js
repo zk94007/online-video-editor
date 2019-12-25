@@ -8,7 +8,7 @@ const Item = ({ name, icon, isActive = false, onClickSide, history }) => {
   if (name === "Stock") {
     return (
       <ItemContainer
-        onClick={() => history.push("/editor/stock/collections/video")}
+        onClick={() => history.push("/editor/stock/collections/video",{})}
       >
         {isActive && <ActiveLine />}
         <Icon name={icon} />
