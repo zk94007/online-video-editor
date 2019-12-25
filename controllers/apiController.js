@@ -6,6 +6,7 @@
 import config from '../config';
 import mltxmlManager from '../models/mltxmlManager';
 import fileManager from '../models/fileManager';
+import cloudManager from  '../models/cloudManager';
 import timeManager from '../models/timeManager';
 import rendererManager from '../models/rendererManager';
 import log from '../models/logger';
@@ -72,7 +73,6 @@ exports.projectGET = (req, res) => {
 
 
 exports.projectFilePOST = (req, res, next) => {
-
 	if (!isset(req.busboy)) {
 		res.status(400);
 		res.json({
@@ -100,6 +100,15 @@ exports.projectFilePOST = (req, res, next) => {
 		// On finish of the upload
 		fstream.on('close', () => {
 			log.info(`Upload of "${filename}" finished`);
+
+			cloudManager.upload(filepath, req.params.projectID, nfilename, true).then(
+				(url) => {
+					console.log(url);
+				},
+				(err) => {
+					console.log(err);
+				}
+			);
 
 			fileManager.copyFile(filepath, path.join(path.dirname(require.main.filename), config.publicUploadPath, `${nfilename}`)).then(
 				() => {
