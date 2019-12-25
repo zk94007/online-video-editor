@@ -31,7 +31,7 @@ export const StockCard = props => {
     };
   }, []);
   return (
-    <StockAsset ref={refer}>
+    <StockAsset onClick={() => props.setModal(true)} ref={refer}>
       <VideoContent>
         <ContextMenu>
           <AddButton>

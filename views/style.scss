@@ -19,7 +19,17 @@ header {
   padding: 0 10px;
   flex: 0 1 auto;
 }
-
+.ReactModal__Body--open {
+  overflow-y: hidden;
+}
+svg.open {
+  transform: rotate(0.5turn);
+  transition: transform 0.2s ease-in-out;
+  cursor: pointer;
+}
+svg.caret {
+  transition: transform 0.2s ease-in-out;
+}
 main {
   flex: 1 1 auto;
 

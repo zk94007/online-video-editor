@@ -259,7 +259,6 @@ const MainContainer = styled.div`
   z-index: 1;
   overflow-x: hidden;
   overflow-y: auto;
-  width: 100%;
   padding-right: 50px;
   padding-left: 50px;
   padding-bottom: 50px;

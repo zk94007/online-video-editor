@@ -9,7 +9,8 @@ import {
   VideoResult
 } from "./styles";
 import Icon from "../../_core/Icon";
-import StockAsset, { StockCard } from "./StockCard";
+import { StockCard } from "./StockCard";
+import { VideoDetailsDialog } from "../../_core/Dialog";
 
 const VideosCollection = props => {
   const asset = [
@@ -22,12 +23,14 @@ const VideosCollection = props => {
         "https://public-stock-data.clipchamp.com/raw-data/stock-previews/stryb_v4020131.mp4"
     }
   ];
+  const [isModal, setModal] = useState(false);
   return (
     <VideosContainer>
       <SearchBar>
         <Icon style={{ margin: "0 18px" }} color="#665dc3" name="search" />
         <SearchInput placeholder="Search video.." />
       </SearchBar>
+      <VideoDetailsDialog open={isModal} />
       <VideosHeader>
         <VideosBackContainer onClick={() => props.history.goBack()}>
           <Icon
@@ -52,7 +55,7 @@ const VideosCollection = props => {
       <MainContainer>
         <VideoResult>
           {asset.map((val, key) => {
-            return <StockCard url={val.url} key={key} />;
+            return <StockCard setModal={() => setModal(true)} url={val.url} key={key} />;
           })}
         </VideoResult>
       </MainContainer>

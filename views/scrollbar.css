@@ -30,6 +30,7 @@
   width: 12px;
   /* there must be 'right' or 'left' for ps__rail-y */
   right: 0;
+  z-index: 10;
   /* please don't change 'position' */
   position: absolute;
   opacity: 0;

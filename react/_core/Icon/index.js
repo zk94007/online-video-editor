@@ -18,6 +18,7 @@ import Close from "./Icons/Close";
 import Search from "./Icons/Search";
 import ArrowLeft from "./Icons/ArrowLeft";
 import Add from "./Icons/Add";
+import Caret from "./Icons/Caret";
 
 const ICONS = {
   plus: Plus,
@@ -36,14 +37,15 @@ const ICONS = {
   close: Close,
   search: Search,
   arrowLeft: ArrowLeft,
-  add: Add
+  add: Add,
+  caret: Caret
 };
 
-const Icon = ({ name, size = 16, color = "white", style, onClick }) => {
+const Icon = ({ name, size = 16, color = "white", style, onClick, className }) => {
   const IconComponent = ICONS[name];
 
   return (
-    <IconComponent size={size} color={color} style={style} onClick={onClick} />
+    <IconComponent className={className} size={size} color={color} style={style} onClick={onClick} />
   );
 };
 
