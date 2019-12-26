@@ -11,6 +11,7 @@ import {
 import Icon from "../../_core/Icon";
 import { StockCard } from "./StockCard";
 import { VideoDetailsDialog } from "../../_core/Dialog";
+import PerfectScroller from "react-perfect-scrollbar";
 
 const VideosCollection = props => {
   const asset = [
@@ -59,20 +60,22 @@ const VideosCollection = props => {
         </h2>
       </VideosHeader>
       <MainContainer>
-        <VideoResult>
-          {asset.map((val, key) => {
-            return (
-              <StockCard
-                setModal={data => {
-                  setData(data);
-                  setModal(true);
-                }}
-                url={val.url}
-                key={key}
-              />
-            );
-          })}
-        </VideoResult>
+        <PerfectScroller component="div">
+          <VideoResult>
+            {asset.map((val, key) => {
+              return (
+                <StockCard
+                  setModal={data => {
+                    setData(data);
+                    setModal(true);
+                  }}
+                  url={val.url}
+                  key={key}
+                />
+              );
+            })}
+          </VideoResult>
+        </PerfectScroller>
       </MainContainer>
     </VideosContainer>
   );

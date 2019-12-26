@@ -9,6 +9,8 @@ const Container = styled.div`
   display: flex;
   background: #1c1c26;
   color: #d8d8d8;
+  height: 100vh;
+  overflow: hidden;
 `;
 
 const SideBar = styled.div`

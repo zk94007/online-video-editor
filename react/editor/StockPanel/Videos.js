@@ -16,6 +16,7 @@ import {
 } from "./styles";
 import Icon from "../../_core/Icon";
 import { withRouter } from "react-router-dom";
+import PerfectScroller from "react-perfect-scrollbar";
 
 const Videos = ({ history }) => {
   const collections = [
@@ -47,34 +48,36 @@ const Videos = ({ history }) => {
         <SearchInput placeholder="Search video.." />
       </SearchBar>
       <VideosListContainer>
-        <CollectionContainer>
-          <CollectionGrid>
-            {collections.map((val, key) => {
-              return (
-                <CollectionBackdropCard
-                  onClick={() =>
-                    history.push(
-                      `/editor/stock/collections/video/${val.name
-                        .toLowerCase()
-                        .replace(/ /gi, "-", "-")}`
-                    )
-                  }
-                  key={key}
-                >
-                  <PanelOne />
-                  <PanelTwo />
-                  <PanelThree />
-                  <CollectionContent>
-                    <CollectionImage src={val.image} />
-                    <CollectionDetails>
-                      <h2>{val.name}</h2>
-                    </CollectionDetails>
-                  </CollectionContent>
-                </CollectionBackdropCard>
-              );
-            })}
-          </CollectionGrid>
-        </CollectionContainer>
+        <PerfectScroller component="div">
+          <CollectionContainer>
+            <CollectionGrid>
+              {collections.map((val, key) => {
+                return (
+                  <CollectionBackdropCard
+                    onClick={() =>
+                      history.push(
+                        `/editor/stock/collections/video/${val.name
+                          .toLowerCase()
+                          .replace(/ /gi, "-", "-")}`
+                      )
+                    }
+                    key={key}
+                  >
+                    <PanelOne />
+                    <PanelTwo />
+                    <PanelThree />
+                    <CollectionContent>
+                      <CollectionImage src={val.image} />
+                      <CollectionDetails>
+                        <h2>{val.name}</h2>
+                      </CollectionDetails>
+                    </CollectionContent>
+                  </CollectionBackdropCard>
+                );
+              })}
+            </CollectionGrid>
+          </CollectionContainer>
+        </PerfectScroller>
       </VideosListContainer>
     </VideosContainer>
   );
