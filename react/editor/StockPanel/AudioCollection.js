@@ -12,15 +12,14 @@ import Icon from "../../_core/Icon";
 import { StockCard } from "./StockCard";
 import { VideoDetailsDialog } from "../../_core/Dialog";
 
-const VideosCollection = props => {
+const AudioCollection = props => {
   const asset = [
     {
       url:
-        "https://public-stock-data.clipchamp.com/raw-data/stock-previews/stryb_v3913895.mp4"
+        "https://public-stock-data.clipchamp.com/raw-data/stock-previews/stryb_a92948.mp3"
     },
     {
-      url:
-        "https://public-stock-data.clipchamp.com/raw-data/stock-previews/stryb_v4020131.mp4"
+      url: "http://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
     }
   ];
   const [isModal, setModal] = useState(false);
@@ -34,8 +33,8 @@ const VideosCollection = props => {
       </SearchBar>
       <VideoDetailsDialog
         data={data}
-        closeModal={() => setModal(false)}
         open={isModal}
+        closeModal={() => setModal(false)}
       />
       <VideosHeader>
         <VideosBackContainer onClick={() => props.history.goBack()}>
@@ -69,6 +68,7 @@ const VideosCollection = props => {
                 }}
                 url={val.url}
                 key={key}
+                audio={true}
               />
             );
           })}
@@ -78,4 +78,4 @@ const VideosCollection = props => {
   );
 };
 
-export default VideosCollection;
+export default AudioCollection;

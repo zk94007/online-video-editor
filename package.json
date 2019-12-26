@@ -18,6 +18,7 @@
     "@babel/polyfill": "^7.7.0",
     "@babel/preset-env": "^7.6.3",
     "@babel/preset-react": "^7.6.3",
+    "@dschoon/react-waves": "^3.0.1",
     "autoprefixer": "^9.6.4",
     "axios": "^0.19.0",
     "babel-loader": "^8.0.6",

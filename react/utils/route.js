@@ -27,6 +27,11 @@ const Routing = () => {
           path="/editor/stock/collections/video/:key"
           component={Stockpanel}
         />
+        <Route
+          exact
+          path="/editor/stock/collections/audio/:key"
+          component={Stockpanel}
+        />
       </Switch>
     </Router>
   );

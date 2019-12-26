@@ -53,6 +53,10 @@ export default class Editor extends Component {
     });
   };
 
+  componentDidMount() {
+    localStorage.setItem("id", this.props?.match?.params?.id);
+  }
+
   render() {
     const items = [
       {

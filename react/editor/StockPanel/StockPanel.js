@@ -5,6 +5,7 @@ import { Route } from "react-router-dom";
 import Videos from "./Videos";
 import Audio from "./Audio";
 import VideosCollection from "./VideosCollection";
+import AudioCollection from "./AudioCollection";
 
 const StockPanel = () => {
   const [active, setActive] = useState("video");
@@ -32,6 +33,11 @@ const StockPanel = () => {
         exact
         path="/editor/stock/collections/video/:key"
         component={VideosCollection}
+      />
+       <Route
+        exact
+        path="/editor/stock/collections/audio/:key"
+        component={AudioCollection}
       />
     </Container>
   );

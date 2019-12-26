@@ -19,7 +19,7 @@ import ReactPlayer from "react-player";
 import { Button } from "../../../editor/SidePanel/style";
 import { CSSTransitionGroup } from "react-transition-group";
 
-Modal.setAppElement(document.body);
+Modal.setAppElement("#app");
 
 const customStyles = {
   content: {
@@ -45,27 +45,18 @@ const customStyles = {
 
 class VideoDetailsDialog extends React.Component {
   state = {
-    detail: false,
-    open: this.props.open
+    detail: false
   };
   render() {
     return (
       <Modal
-        isOpen={this.state.open}
-        onAfterOpen={this.afterOpenModal}
-        onRequestClose={this.props.closeModal}
+        isOpen={this.props.open}
         style={customStyles}
-        contentLabel="Example Modal"
+        contentLabel="Video Details Modal"
       >
         <Scroller component="div">
           <VideoDetailModalContainer>
-            <VideoDetailModalButton
-              onClick={() =>
-                this.setState({
-                  open: false
-                })
-              }
-            >
+            <VideoDetailModalButton onClick={() => this.props.closeModal()}>
               <Icon name="close" size={14} />
             </VideoDetailModalButton>
             <VideoDetailModalLeft>
@@ -77,7 +68,7 @@ class VideoDetailsDialog extends React.Component {
                   <ReactPlayer
                     style={{ width: "100%", height: "100%" }}
                     controls={true}
-                    url="https://public-stock-data.clipchamp.com/raw-data/stock-previews/stryb_v3913895.mp4"
+                    url={this.props?.data?.url}
                   />
                 </VideoDetailModalContent>
               </Scroller>

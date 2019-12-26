@@ -15,8 +15,9 @@ import {
   CollectionDetails
 } from "./styles";
 import Icon from "../../_core/Icon";
+import { withRouter } from "react-router-dom";
 
-const Audio = () => {
+const Audio = ({ history }) => {
   const collections = [
     {
       name: "Free Forever",
@@ -45,7 +46,16 @@ const Audio = () => {
           <CollectionGrid>
             {collections.map((val, key) => {
               return (
-                <CollectionBackdropCard key={key}>
+                <CollectionBackdropCard
+                  onClick={() =>
+                    history.push(
+                      `/editor/stock/collections/audio/${val.name
+                        .toLowerCase()
+                        .replace(/ /gi, "-", "-")}`
+                    )
+                  }
+                  key={key}
+                >
                   <PanelOne />
                   <PanelTwo />
                   <PanelThree />
@@ -65,4 +75,4 @@ const Audio = () => {
   );
 };
 
-export default Audio;
+export default withRouter(Audio);

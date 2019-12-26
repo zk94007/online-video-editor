@@ -26,7 +26,9 @@ const SideBarItems = ({ items = [], active, setActive, history }) => {
           </div>
         );
       })}
-      <ListItem onClick={() => history.goBack()}>
+      <ListItem
+        onClick={() => history.push(`/project/${localStorage.getItem("id")||''}`)}
+      >
         <Icon color="#665dc3" style={{ marginRight: 16 }} name="close" />
         Close
       </ListItem>

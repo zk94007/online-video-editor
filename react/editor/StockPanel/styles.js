@@ -322,6 +322,12 @@ const StockAsset = styled.div`
   outline: 0;
   padding: 0;
   user-select: none;
+  ${({ audio }) =>
+    audio &&
+    `
+  border: 1.2px solid rgba(229,230,241,.15);
+  border-radius: 4px;
+  `}
   &:before {
     display: block;
     content: "";
