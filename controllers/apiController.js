@@ -222,15 +222,15 @@ exports.projectLogoPOST = (req, res, next) => {
 		fstream.on('close', () => {
 			log.info(`Upload of "${filename}" finished`);
 
-			fileManager.copyFile(filepath, path.join(path.dirname(require.main.filename), config.publicUploadPath, `${nfilename}`)).then(
-				() => {
+			cloudManager.upload(filepath, `upload/${req.params.projectID}`, nfilename).then(
+				(url) => {
 					rendererManager.loadRenderer(req.params.projectID).then(
 						(renderer) => {
 							renderer.logos[fileID] = {
 								id: fileID,
 								name: filename,
 								filepath: path.resolve(filepath),
-								url: `/upload/${nfilename}`
+								url
 							};
 
 							rendererManager.saveRenderer(req.params.projectID, renderer).then(
@@ -238,7 +238,7 @@ exports.projectLogoPOST = (req, res, next) => {
 									res.json({
 										msg: `Upload of "${filename}" OK`,
 										logo_id: fileID,
-										url: `/upload/${nfilename}`
+										url
 									});
 								},
 								err => next(err)
@@ -246,7 +246,8 @@ exports.projectLogoPOST = (req, res, next) => {
 						},
 						err => fileErr(err, res)
 					);
-				}
+				},
+				err => next(err)
 			);
 			
 		});
