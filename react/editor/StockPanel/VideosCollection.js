@@ -16,12 +16,10 @@ import PerfectScroller from "react-perfect-scrollbar";
 const VideosCollection = props => {
   const asset = [
     {
-      url:
-        "https://public-stock-data.clipchamp.com/raw-data/stock-previews/stryb_v3913895.mp4"
+      url: "https://s3.amazonaws.com/virginia-testing.webrand.com/public/stryb_v3913895.mp4"
     },
     {
-      url:
-        "https://public-stock-data.clipchamp.com/raw-data/stock-previews/stryb_v4020131.mp4"
+      url: "https://s3.amazonaws.com/virginia-testing.webrand.com/public/stryb_v4020131.mp4"
     }
   ];
   const [isModal, setModal] = useState(false);

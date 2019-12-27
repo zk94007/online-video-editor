@@ -10,23 +10,23 @@ const Text = () => {
         <LibraryGrid>
           <BackgroundCard
             name="Plunging"
-            video="http://54.173.175.102/assets/video/plunging.mp4"
-            image="https://public-stock-data.clipchamp.com/raw-data/content/thumbs/cc_m9426fdfd.jpg"
+            video="https://s3.amazonaws.com/virginia-testing.webrand.com/public/plunging.mp4"
+            image="https://s3.amazonaws.com/virginia-testing.webrand.com/public/plunging.jpg"
           />
           <BackgroundCard
             name="Clean"
-            video="http://54.173.175.102/assets/video/clean.mp4"
-            image="https://public-stock-data.clipchamp.com/raw-data/content/thumbs/cc_m1306e99c.jpg"
+            video="https://s3.amazonaws.com/virginia-testing.webrand.com/public/clean.mp4"
+            image="https://s3.amazonaws.com/virginia-testing.webrand.com/public/clean.jpg"
           />
           <BackgroundCard
             name="Mirror"
-            video="http://54.173.175.102/assets/video/mirror.mp4"
-            image="https://public-stock-data.clipchamp.com/raw-data/content/thumbs/cc_mb050aee.jpg"
+            video="https://s3.amazonaws.com/virginia-testing.webrand.com/public/mirror.mp4"
+            image="https://s3.amazonaws.com/virginia-testing.webrand.com/public/mirror.jpg"
           />
           <BackgroundCard
             name="Funky"
-            video="http://54.173.175.102/assets/video/funky.mp4"
-            image="https://public-stock-data.clipchamp.com/raw-data/content/thumbs/cc_m806cfa9.jpg"
+            video="https://s3.amazonaws.com/virginia-testing.webrand.com/public/funky.mp4"
+            image="https://s3.amazonaws.com/virginia-testing.webrand.com/public/funky.jpg"
           />
         </LibraryGrid>
       </PerfectScrollbar>

@@ -21,18 +21,15 @@ const Audio = ({ history }) => {
   const collections = [
     {
       name: "Free Forever",
-      image:
-        "https://public-stock-data.clipchamp.com/raw-data/collection-thumbs/free-forever.jpg"
+      image: "https://s3.amazonaws.com/virginia-testing.webrand.com/public/free-forever.jpg"
     },
     {
       name: "Born to be Wild",
-      image:
-        "https://public-stock-data.clipchamp.com/raw-data/collection-thumbs/born-to-be-wild.jpg"
+      image: "https://s3.amazonaws.com/virginia-testing.webrand.com/public/born-to-be-wild.jpg"
     },
     {
       name: "Celebrate the World",
-      image:
-        "https://public-stock-data.clipchamp.com/raw-data/collection-thumbs/celebrate-the-world.jpg"
+      image: "https://s3.amazonaws.com/virginia-testing.webrand.com/public/celebrate-the-world.jpg"
     }
   ];
   return (

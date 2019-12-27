@@ -16,11 +16,10 @@ import PerfectScroller from "react-perfect-scrollbar";
 const AudioCollection = props => {
   const asset = [
     {
-      url:
-        "https://public-stock-data.clipchamp.com/raw-data/stock-previews/stryb_a92948.mp3"
+      url: "https://s3.amazonaws.com/virginia-testing.webrand.com/public/stryb_a92948.mp3"
     },
     {
-      url: "http://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+      url: "https://s3.amazonaws.com/virginia-testing.webrand.com/public/SoundHelix-Song-1.mp3"
     }
   ];
   const [isModal, setModal] = useState(false);
