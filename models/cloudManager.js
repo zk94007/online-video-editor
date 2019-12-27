@@ -14,29 +14,20 @@ const s3 = new AWS.S3({
 });
 
 export default {
-    upload(filepath, project, filename, signed = false) {
+    upload(filepath, prefix, filename) {
         return new Promise((resolve, reject) => {
             const fileContent = fs.readFileSync(filepath);
 
             const params = {
                 Bucket: config.s3.bucket,
-                Key: `${project}/${filename}`,
-                Body: fileContent
+                Key: `${prefix}/${filename}`,
+                Body: fileContent,
+                ACL: 'public-read'
             };
 
             s3.upload(params, (err, data) => {
-                if (err) return reject(err);
-                if (signed) {
-                    const url = s3.getSignedUrl('getObject', {
-                        Bucket: config.s3.bucket,
-                        Key: `${project}/${filename}`,
-                        Expires: config.s3.signedUrlExpireSeconds
-                    });
-                    return resolve(url);
-                } else {
-                    return resolve(data.Location);
-                }
-
+                if (err) return reject(err);                
+                return resolve(data.Location);
             });
         });
     },

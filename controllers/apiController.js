@@ -101,17 +101,8 @@ exports.projectFilePOST = (req, res, next) => {
 		fstream.on('close', () => {
 			log.info(`Upload of "${filename}" finished`);
 
-			cloudManager.upload(filepath, req.params.projectID, nfilename, true).then(
+			cloudManager.upload(filepath, `upload/${req.params.projectID}`, nfilename).then(
 				(url) => {
-					console.log(url);
-				},
-				(err) => {
-					console.log(err);
-				}
-			);
-
-			fileManager.copyFile(filepath, path.join(path.dirname(require.main.filename), config.publicUploadPath, `${nfilename}`)).then(
-				() => {
 					fileManager.getDuration(filepath, mimeType).then(
 						length => {
 							if (length !== null) length += '0';
@@ -123,7 +114,7 @@ exports.projectFilePOST = (req, res, next) => {
 										filepath: path.resolve(filepath),
 										mimeType,										
 										length,
-										url: `/upload/${nfilename}`
+										url
 									};
 		
 									rendererManager.saveRenderer(req.params.projectID, renderer).then(
@@ -133,7 +124,7 @@ exports.projectFilePOST = (req, res, next) => {
 												resource_id: fileID,
 												resource_mime: mimeType,
 												length: length,
-												url: `/upload/${nfilename}`
+												url
 											});
 										},
 										err => next(err)
@@ -143,9 +134,9 @@ exports.projectFilePOST = (req, res, next) => {
 							);
 						}
 					);
-				}
-			);
-			
+				},
+				err => next(err)
+			);			
 		});
 	});
 
