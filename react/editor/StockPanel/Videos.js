@@ -1,0 +1,86 @@
+import React from "react";
+import {
+  SearchBar,
+  VideosContainer,
+  SearchInput,
+  VideosListContainer,
+  CollectionContainer,
+  CollectionGrid,
+  CollectionBackdropCard,
+  PanelOne,
+  PanelTwo,
+  PanelThree,
+  CollectionContent,
+  CollectionImage,
+  CollectionDetails
+} from "./styles";
+import Icon from "../../_core/Icon";
+import { withRouter } from "react-router-dom";
+import PerfectScroller from "react-perfect-scrollbar";
+
+const Videos = ({ history }) => {
+  const collections = [
+    {
+      name: "Free Forever",
+      image:
+        "https://public-stock-data.clipchamp.com/raw-data/collection-thumbs/free-forever.jpg"
+    },
+    {
+      name: "Born to be Wild",
+      image:
+        "https://public-stock-data.clipchamp.com/raw-data/collection-thumbs/born-to-be-wild.jpg"
+    },
+    {
+      name: "Celebrate the World",
+      image:
+        "https://public-stock-data.clipchamp.com/raw-data/collection-thumbs/celebrate-the-world.jpg"
+    },
+    {
+      name: "Celestial Footage",
+      image:
+        "https://public-stock-data.clipchamp.com/raw-data/collection-thumbs/celestial-footage.jpg"
+    }
+  ];
+  return (
+    <VideosContainer>
+      <SearchBar>
+        <Icon style={{ margin: "0 18px" }} color="#665dc3" name="search" />
+        <SearchInput placeholder="Search video.." />
+      </SearchBar>
+      <VideosListContainer>
+        <PerfectScroller component="div">
+          <CollectionContainer>
+            <CollectionGrid>
+              {collections.map((val, key) => {
+                return (
+                  <CollectionBackdropCard
+                    onClick={() =>
+                      history.push(
+                        `/editor/stock/collections/video/${val.name
+                          .toLowerCase()
+                          .replace(/ /gi, "-", "-")}`
+                      )
+                    }
+                    key={key}
+                  >
+                    <PanelOne />
+                    <PanelTwo />
+                    <PanelThree />
+                    <CollectionContent>
+                      <CollectionImage src={val.image} />
+                      <CollectionDetails>
+                        <h2>{val.name}</h2>
+                      </CollectionDetails>
+                    </CollectionContent>
+                  </CollectionBackdropCard>
+                );
+              })}
+            </CollectionGrid>
+          </CollectionContainer>
+        </PerfectScroller>
+      </VideosListContainer>
+    </VideosContainer>
+  );
+};
+
+export default withRouter(Videos);

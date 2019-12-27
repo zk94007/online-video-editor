@@ -12,6 +12,13 @@ import Help from "./Icons/Help";
 import Upload from "./Icons/Upload";
 import Delete from "./Icons/Delete";
 import Star from "./Icons/Star";
+import Video from "./Icons/Video";
+import Audio from "./Icons/Audio";
+import Close from "./Icons/Close";
+import Search from "./Icons/Search";
+import ArrowLeft from "./Icons/ArrowLeft";
+import Add from "./Icons/Add";
+import Caret from "./Icons/Caret";
 
 const ICONS = {
   plus: Plus,
@@ -24,14 +31,21 @@ const ICONS = {
   help: Help,
   upload: Upload,
   delete: Delete,
-  star: Star
+  star: Star,
+  video: Video,
+  audio: Audio,
+  close: Close,
+  search: Search,
+  arrowLeft: ArrowLeft,
+  add: Add,
+  caret: Caret
 };
 
-const Icon = ({ name, size = 16, color = "white", style, onClick }) => {
+const Icon = ({ name, size = 16, color = "white", style, onClick, className }) => {
   const IconComponent = ICONS[name];
 
   return (
-    <IconComponent size={size} color={color} style={style} onClick={onClick} />
+    <IconComponent className={className} size={size} color={color} style={style} onClick={onClick} />
   );
 };
 

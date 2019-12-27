@@ -19,7 +19,30 @@ header {
   padding: 0 10px;
   flex: 0 1 auto;
 }
-
+.ReactModal__Body--open {
+  overflow-y: hidden;
+}
+svg.open {
+  transform: rotate(0.5turn);
+  transition: transform 0.2s ease-in-out;
+  cursor: pointer;
+}
+svg.caret {
+  transition: transform 0.2s ease-in-out;
+}
+.react-waves {
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  .wave {
+    canvas {
+    }
+  }
+}
 main {
   flex: 1 1 auto;
 

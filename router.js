@@ -16,8 +16,8 @@ router.get('/vis.css', (req, res) => res.sendFile(__dirname + '/node_modules/vis
 router.get('/vis.js', (req, res) => res.sendFile(__dirname + '/node_modules/vis-timeline/dist/vis-timeline-graph2d.min.js'));
 
 // Homepage route
-router.get('/', mainController.main);
-router.get('/project/:projectID', mainController.project);
+// router.get('/', mainController.main);
+// router.get('/project/:projectID', mainController.project);
 
 // API route
 router.all('/api', apiController.default);

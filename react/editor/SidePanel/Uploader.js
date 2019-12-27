@@ -69,7 +69,9 @@ export default class Uploader extends Component {
         transitionLeave={false}
       >
         {this.state.status !== "uploading" && (
-          <UploadContainer style={{ display: "flex", flexDirection: "column" }}>
+          <UploadContainer
+            style={{ display: "flex", flexDirection: "column", height: "100%" }}
+          >
             <UploadIcon>
               <Icon name="upload" />
             </UploadIcon>
@@ -124,7 +126,8 @@ export default class Uploader extends Component {
             height: "100%",
             borderRadius: 6,
             border: "1px dashed rgba(229,230,241,.25)",
-            transition: "all .2s ease-in-out"
+            transition: "all .2s ease-in-out",
+            justifyContent: "center"
           }
         }}
         InputComponent={this.__renderInput}
