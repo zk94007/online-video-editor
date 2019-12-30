@@ -32,5 +32,12 @@ export default {
 		fadeOutBrightness: 'brightness',
 		fadeInVolume: 'volume',
 		fadeOutVolume: 'volume',
+	},
+
+	s3: {
+		bucket: '',
+		accessKeyId: '',
+		secretAccessKey: '',
+		signedUrlExpireSeconds: 60 * 60 * 24 * 30,
 	}
 };
