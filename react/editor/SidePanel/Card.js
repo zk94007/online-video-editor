@@ -34,6 +34,16 @@ export const CardComponent = props => {
     }
   }, []);
 
+  const handleObjectItemDragStart = (event, id) => {
+    var dragSrcEl = event.target;
+    event.dataTransfer.effectAllowed = "move";
+    var objectItem = {
+      content: id,
+      target: "item"
+    };
+    event.dataTransfer.setData("text", JSON.stringify(objectItem));
+  };
+
   useEffect(() => {
     return () => {
       if (refer?.current) {
@@ -43,7 +53,7 @@ export const CardComponent = props => {
     };
   }, []);
   return (
-    <Card>
+    <Card draggable="true" onDragStart={handleObjectItemDragStart}>
       <Preview ref={refer}>
         <DefaultWrapper>
           {!isMedia && !isAudio + 1 && <Image src={url} />}
@@ -58,11 +68,7 @@ export const CardComponent = props => {
 
             <VideoContainer>
               <VideoWrapper>
-                <Video
-                  playing={isPlay}
-                  loop={true}
-                  url={url}
-                />
+                <Video playing={isPlay} loop={true} url={url} />
               </VideoWrapper>
             </VideoContainer>
           </>
