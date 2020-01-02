@@ -96,7 +96,6 @@ export default class Timeline extends Component {
   onInsert = id => {
     // Get duration for image files
     let duration = null;
-    console.log("Dataaaa", this.props.resources[id]);
     if (new RegExp(/^image\//).test(this.props.resources[id]?.mime || new RegExp(/^image\//).test(this.props.resources[id]?.mimeType ))) {
       duration = prompt("Enter a duration", "00:00:00,000");
       if (duration === null) return;
@@ -152,7 +151,7 @@ export default class Timeline extends Component {
       groups.push({
         id: track.id,
         content:
-          '<div style="width:0;height:66px;"  ondrop={function(event){console.log(event)}></div>'
+          '<div style="width:0;height:66px;"></div>'
       });
 
       let actualTime = "00:00:00,000";
@@ -224,9 +223,6 @@ export default class Timeline extends Component {
         onDragOver={event => {
           event.stopPropagation();
           event.preventDefault();
-        }}
-        onDrop={event => {
-          console.log("aaaasasas", event.dataTransfer);
         }}
       >
         <button onClick={this.buttonFilter}>
