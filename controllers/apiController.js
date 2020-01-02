@@ -31,6 +31,14 @@ exports.projectPOST = (req, res, next) => {
 		resources: {},
 		timeline: [
 			{
+				id: 'texttrack0',
+				items: []
+			},
+			{
+				id: 'logotrack0',
+				items: []
+			},
+			{
 				id: 'audiotrack0',
 				items: []
 			},
@@ -309,34 +317,29 @@ exports.projectLogoDELETE = (req, res, next) => {
 exports.projectFilePUT = (req, res, next) => {
 
 	// Required parameters: track
-	if (!isset(req.body.track)) {
+	if (!isset(req.body.track) || !isset(req.body.support) || !isset(req.body.in) || !isset(req.body.out)) {
 		res.status(400);
 		res.json({
 			err: 'Missing parameters.',
-			msg: 'Missing required track parameter',
+			msg: 'Missing required parameters; ( track | support | in | out )',
 		});
 		return;
 	}
 
-	mltxmlManager.loadMLT(req.params.projectID, 'w').then(
-		([dom, , release]) => {
-			const document = dom.window.document;
-			const root = document.getElementsByTagName('mlt').item(0);
-
-			const producer = document.getElementById(`producer${req.params.fileID}`);
-			if (producer === null) {
-				release();
+	rendererManager.loadRenderer(req.params.projectID).then(
+		(renderer) => {
+			const resource = renderer.resources[req.params.fileID];
+			if (!resource) {
 				res.status(404);
 				res.json({
 					err: 'Source not found.',
-					msg: 'The resource is not in the project.',
+					msg: 'The resource is not in the project.'
 				});
 				return;
 			}
 
-			const track = document.getElementById(req.body.track);
+			const track = timeline.find(t => t.id === req.body.track);
 			if (track === null) {
-				release();
 				res.status(404);
 				res.json({
 					err: 'Track not found.',
@@ -345,79 +348,38 @@ exports.projectFilePUT = (req, res, next) => {
 				return;
 			}
 
-			const newEntry = document.createElement('entry');
-			newEntry.setAttribute('producer', 'producer' + req.params.fileID);
-
-			const mime = mltxmlManager.getProperty(producer.getElementsByTagName('property'), 'musecut:mime_type');
-			if (mime === null) {
-				release();
-				return next(`Project "${req.params.projectID}", producer "${req.params.fileID}" missing mime_type tag`);
-			}
-			else if (new RegExp(/^image\//).test(mime)) {
-				if (new RegExp(/^videotrack\d+/).test(req.body.track) === false) {
-					release();
-					res.status(400);
-					res.json({
-						err: 'Unsupported file type.',
-						msg: 'Images can only be embedded on a video track.',
-					});
-					return;
-				}
-
-				// Images needs duration parameter
-				if (!timeManager.isValidDuration(req.body.duration)) {
-					release();
-					res.status(400);
-					res.json({
-						err: 'Missing duration.',
-						msg: 'To insert an image on the timeline, you must specify a duration of 00: 00: 00,000.',
-					});
-					return;
-				}
-
-				newEntry.setAttribute('in', '00:00:00,000');
-				newEntry.setAttribute('out', req.body.duration);
-			}
-			else if (new RegExp(/^video\//).test(mime)) {
-				if (new RegExp(/^videotrack\d+/).test(req.body.track) === false) {
-					release();
-					res.status(400);
-					res.json({
-						err: 'Unsupported file type.',
-						msg: 'You can only embed a video on a video track.',
-					});
-					return;
-				}
-			}
-			else if (new RegExp(/^audio\//).test(mime)) {
-				if (new RegExp(/^audiotrack\d+/).test(req.body.track) === false) {
-					release();
-					res.status(400);
-					res.json({
-						err: 'Unsupported file type.',
-						msg: 'Audio can only be inserted on an audio track.',
-					});
-					return;
-				}
-			}
-			else {
-				// Reject everything except images, videos and audio
-				release();
-				res.status(403);
+			if (!track.id.includes(req.body.support)) {
+				res.status(400);
 				res.json({
 					err: 'Unsupported file type.',
-					msg: 'Only video, image, or audio can be inserted on the timeline.',
+					msg: 'Please import exact type of resource into the track.',
 				});
 				return;
 			}
 
-			track.appendChild(newEntry);
+			if (!timeManager.isValidDuration(req.body.in) || !timeManager.isValidDuration(req.body.out)) {
+				res.status(400);
+				res.json({
+					err: 'Invalid time format.',
+					msg: 'To insert on the timeline, you must specify a duration of 00: 00: 00,000.',
+				});
+				return;
+			}
 
-			mltxmlManager.saveMLT(req.params.projectID, root.outerHTML, release).then(
+			track.items.append({
+				id: req.params.fileID,
+				in: req.body.in,
+				out: req.body.out
+			});
+
+			rendererManager.saveRenderer(req.params.projectID, renderer).then(
 				() => {
 					res.json({
-						msg: 'Item added to timeline',
-						timeline: req.body.track,
+						msg: `Upload of "${filename}" OK`,
+						resource_id: fileID,
+						resource_mime: mimeType,
+						length: length,
+						url
 					});
 				},
 				err => next(err)
