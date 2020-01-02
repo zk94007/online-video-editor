@@ -54,17 +54,9 @@ export default class Timeline extends Component {
       zoomMax: 21600000,
       onMove: this.onMove,
       onDropObjectOnItem: (objectData, item, callback) => {
-        console.log("Asasasas");
-        if (!item) {
-          return;
+        if (objectData?.content) {
+          this.onInsert(objectData?.content);
         }
-        alert(
-          'dropped object with content: "' +
-            objectData.content +
-            '" to item: "' +
-            item.content +
-            '"'
-        );
       },
       onMoving: this.onMoving,
       format: {
@@ -100,6 +92,52 @@ export default class Timeline extends Component {
     this.timeline.on("moving", this.onMoving);
     this.timeline.on("move", this.onMove);
   }
+
+  onInsert = id => {
+    // Get duration for image files
+    let duration = null;
+    console.log("Dataaaa", this.props.resources[id]);
+    if (new RegExp(/^image\//).test(this.props.resources[id]?.mime || new RegExp(/^image\//).test(this.props.resources[id]?.mimeType ))) {
+      duration = prompt("Enter a duration", "00:00:00,000");
+      if (duration === null) return;
+
+      if (!timeManager.isValidDuration(duration)) {
+        alert("Enter a non-zero length in the format HH:MM:SS,sss");
+        this.putResource(id);
+        return;
+      }
+    }
+
+    const track =
+      this.props.resources[id].mime?.includes("audio/") ||
+      this.props.resources[id].mimeType?.includes("audio/")
+        ? "audiotrack0"
+        : "videotrack0";
+
+    // Send request to API
+    const url = `${server.apiUrl}/project/${this.props.project}/file/${id}`;
+    const params = {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        track: track,
+        duration: duration
+      })
+    };
+
+    fetch(url, params)
+      .then(response => response.json())
+      .then(data => {
+        if (typeof data.err === "undefined") {
+          this.props.onPutResource(id, duration, track);
+        } else {
+          alert(`${data.err}\n\n${data.msg}`);
+        }
+      })
+      .catch(error => this.props.fetchError(error.message));
+  };
 
   componentDidUpdate(prevProps) {
     if (prevProps.items === this.props.items) return;
@@ -174,8 +212,7 @@ export default class Timeline extends Component {
     this.timeline.setData({
       items: items,
       groups: groups
-	});
-	
+    });
 
     this.timeline.fit();
   }

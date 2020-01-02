@@ -53,7 +53,10 @@ export const CardComponent = props => {
     };
   }, []);
   return (
-    <Card draggable="true" onDragStart={handleObjectItemDragStart}>
+    <Card
+      draggable="true"
+      onDragStart={event => handleObjectItemDragStart(event, props.item.id)}
+    >
       <Preview ref={refer}>
         <DefaultWrapper>
           {!isMedia && !isAudio + 1 && <Image src={url} />}

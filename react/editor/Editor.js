@@ -191,6 +191,7 @@ export default class Editor extends Component {
             <footer>
               <Timeline
                 resources={this.state.resources}
+                onPutResource={this.putResource}
                 items={this.state.timeline}
                 project={this.state.project}
                 onAddFilter={this.addFilter}

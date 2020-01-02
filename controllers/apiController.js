@@ -1370,6 +1370,7 @@ exports.projectTrackDELETE = (req, res, next) => {
  */
 function fileErr(err, res) {
 	if (err.code === 'ENOENT') {
+		console.log("DAaaa",err)
 		res.status(404).json({
 			err: 'The project does not exist',
 			msg: 'The specified project does not exist.',
