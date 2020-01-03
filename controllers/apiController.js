@@ -35,10 +35,6 @@ exports.projectPOST = (req, res, next) => {
 				items: []
 			},
 			{
-				id: 'logotrack0',
-				items: []
-			},
-			{
 				id: 'audiotrack0',
 				items: []
 			},
@@ -120,7 +116,7 @@ exports.projectFilePOST = (req, res, next) => {
 										id: fileID,
 										name: filename,
 										filepath: path.resolve(filepath),
-										mimeType,										
+										mimeType,
 										length,
 										url
 									};
@@ -338,7 +334,7 @@ exports.projectFilePUT = (req, res, next) => {
 				return;
 			}
 
-			const track = timeline.find(t => t.id === req.body.track);
+			const track = renderer.timeline.find(t => t.id === req.body.track);
 			if (track === null) {
 				res.status(404);
 				res.json({
@@ -366,7 +362,7 @@ exports.projectFilePUT = (req, res, next) => {
 				return;
 			}
 
-			track.items.append({
+			track.items.push({
 				id: req.params.fileID,
 				in: req.body.in,
 				out: req.body.out
@@ -375,11 +371,8 @@ exports.projectFilePUT = (req, res, next) => {
 			rendererManager.saveRenderer(req.params.projectID, renderer).then(
 				() => {
 					res.json({
-						msg: `Upload of "${filename}" OK`,
-						resource_id: fileID,
-						resource_mime: mimeType,
-						length: length,
-						url
+						msg: 'Item added to timeline',
+						timeline: req.body.track,
 					});
 				},
 				err => next(err)
