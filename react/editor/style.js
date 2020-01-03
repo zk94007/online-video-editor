@@ -4,7 +4,7 @@ import ReactPlayer from "react-player";
 const Container = styled.div`
   display: flex;
   width: 100%;
-  height: calc(100vh - 47px);
+  min-height: calc(100vh - 47px);
 `;
 const EditSection = styled.div`
   display: flex;

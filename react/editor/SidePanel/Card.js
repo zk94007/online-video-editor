@@ -39,7 +39,7 @@ export const CardComponent = props => {
     event.dataTransfer.effectAllowed = "move";
     var objectItem = {
       content: id,
-      target: "item"
+      target: "itemType"
     };
     event.dataTransfer.setData("text", JSON.stringify(objectItem));
   };

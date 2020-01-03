@@ -365,20 +365,20 @@ export default class Editor extends Component {
    */
   static findTrack(timeline, trackId) {
     let track = null;
-    for (let videotrack of timeline.video) {
-      if (videotrack.id === trackId) {
-        track = videotrack;
-        break;
-      }
-    }
-    if (track === null) {
-      for (let audiotrack of timeline.audio) {
-        if (audiotrack.id === trackId) {
-          track = audiotrack;
-          break;
-        }
-      }
-    }
+    // for (let videotrack of timeline.video) {
+    //   if (videotrack.id === trackId) {
+    //     track = videotrack;
+    //     break;
+    //   }
+    // }
+    // if (track === null) {
+    //   for (let audiotrack of timeline.audio) {
+    //     if (audiotrack.id === trackId) {
+    //       track = audiotrack;
+    //       break;
+    //     }
+    //   }
+    // }
 
     return track;
   }

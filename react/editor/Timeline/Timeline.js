@@ -12,6 +12,7 @@ import timeManager from "../../../models/timeManager";
 
 import Editor from "../Editor";
 import AddFilterDialog from "./AddFilterDialog";
+import moment from "moment";
 
 export default class Timeline extends Component {
   constructor(props) {
@@ -46,19 +47,25 @@ export default class Timeline extends Component {
       min: new Date(1970, 0, 1),
       max: new Date(1970, 0, 1, 23, 59, 59, 999),
       showCurrentTime: false,
-      start: new Date(1970, 0, 1, 0, 0, 0),
-      end: new Date(1970, 0, 1, 4, 59, 59, 999),
+      start: new Date(1970, 0, 1),
+      end: new Date(1970, 0, 1, 0, 0, 10, 0),
       multiselect: false,
       multiselectPerGroup: true,
-      stack: true,
-      zoomMin: 100,
+      stack: false,
+      zoomMin: 1000 * 80,
       editable: true,
-      zoomMax: 21600000,
+      zoomMax: 216000,
       onMove: this.onMove,
-      onDropObjectOnItem: (objectData, item, callback) => {
-        if (objectData?.content) {
-          this.onInsert(objectData?.content);
+      onAdd: item => {
+        if (item?.content) {
+          this.onInsert(item?.content, item?.start);
         }
+      },
+      onDropObjectOnItem: (objectData, item, callback) => {
+      },
+      timeAxis: {
+        scale: "second",
+        step: 2
       },
       onMoving: this.onMoving,
       format: {
@@ -95,23 +102,20 @@ export default class Timeline extends Component {
     this.timeline.on("move", this.onMove);
   }
 
-  onInsert = id => {
+  onInsert = (id, startTime) => {
     // Get duration for image files
     let duration = null;
+    let support =
+      this.props.resources[id].mime?.includes("audio/") ||
+      this.props.resources[id].mimeType?.includes("audio/")
+        ? "audio"
+        : "video";
     if (
-      new RegExp(/^image\//).test(
-        this.props.resources[id]?.mime ||
-          new RegExp(/^image\//).test(this.props.resources[id]?.mimeType)
-      )
+      new RegExp(/^image\//).test(this.props.resources[id]?.mime) ||
+      new RegExp(/^image\//).test(this.props.resources[id]?.mimeType)
     ) {
-      duration = prompt("Enter a duration", "00:00:00,000");
-      if (duration === null) return;
-
-      if (!timeManager.isValidDuration(duration)) {
-        alert("Enter a non-zero length in the format HH:MM:SS,sss");
-        this.putResource(id);
-        return;
-      }
+      support = "video";
+      duration = moment(startTime).add(5, "s");
     }
 
     const track =
@@ -129,9 +133,14 @@ export default class Timeline extends Component {
       },
       body: JSON.stringify({
         track: track,
-        support: "video",
-        in: "00:00:00,000",
-        out: "00:05:00,000"
+        support: support,
+        in: moment(startTime).format("HH:mm:ss,SSS"),
+        out: this.props.resources[id]?.length
+          ? timeManager.addDuration(
+              moment(startTime).format("HH:mm:ss,SSS"),
+              this.props.resources[id]?.length
+            )
+          : duration?.format("HH:mm:ss,SSS")
       })
     };
 
@@ -139,7 +148,7 @@ export default class Timeline extends Component {
       .then(response => response.json())
       .then(data => {
         if (typeof data.err === "undefined") {
-          this.props.onPutResource(id, duration, track);
+          this.props.loadData();
         } else {
           alert(`${data.err}\n\n${data.msg}`);
         }
@@ -172,38 +181,35 @@ export default class Timeline extends Component {
         if (item.resource === "blank") {
           actualTime = timeManager.addDuration(item.length, actualTime);
         } else {
-          const timeIn = actualTime.match(/^(\d{2,}):(\d{2}):(\d{2}),(\d{3})$/);
-          actualTime = timeManager.addDuration(actualTime, item.out);
-          actualTime = timeManager.subDuration(actualTime, item.in);
-          const timeOut = actualTime.match(
-            /^(\d{2,}):(\d{2}):(\d{2}),(\d{3})$/
-          );
-          let content = this.props.resources[item.resource].name;
-          if (item.filters.length > 0)
+          let content = this.props.resources[item.id].name;
+          if (item?.filters?.length > 0)
             content =
               '<div class="filter"></div><i class="filter material-icons">flare</i>' +
               content;
           // todo Subtract transition duration
+          let endTime = item.out.split(/:|,/);
+          let startTime = item.in.split(/:|,/);
           items.push({
             id: track.id + ":" + index,
             content: content,
+            align: "center",
             start: new Date(
               1970,
               0,
               1,
-              Number(timeIn[1]),
-              Number(timeIn[2]),
-              Number(timeIn[3]),
-              Number(timeIn[4])
+              Number(startTime[0]),
+              Number(startTime[1]),
+              Number(startTime[2]),
+              Number(startTime[3])
             ),
             end: new Date(
               1970,
               0,
               1,
-              Number(timeOut[1]),
-              Number(timeOut[2]),
-              Number(timeOut[3]),
-              Number(timeOut[4])
+              Number(endTime[0]),
+              Number(endTime[1]),
+              Number(endTime[2]),
+              Number(endTime[3])
             ),
             group: track.id,
             className: videoMatch.test(track.id) ? "video" : "audio"
@@ -211,14 +217,7 @@ export default class Timeline extends Component {
           index++;
         }
       }
-
-      if (actualTime > duration) {
-        duration = actualTime;
-      }
     }
-
-    if (this.state.duration !== duration) this.setState({ duration: duration });
-
     this.timeline.setData({
       items: items,
       groups: groups
