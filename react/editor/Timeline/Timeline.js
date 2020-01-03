@@ -46,6 +46,8 @@ export default class Timeline extends Component {
       min: new Date(1970, 0, 1),
       max: new Date(1970, 0, 1, 23, 59, 59, 999),
       showCurrentTime: false,
+      start: new Date(1970, 0, 1, 0, 0, 0),
+      end: new Date(1970, 0, 1, 4, 59, 59, 999),
       multiselect: false,
       multiselectPerGroup: true,
       stack: true,
@@ -96,7 +98,12 @@ export default class Timeline extends Component {
   onInsert = id => {
     // Get duration for image files
     let duration = null;
-    if (new RegExp(/^image\//).test(this.props.resources[id]?.mime || new RegExp(/^image\//).test(this.props.resources[id]?.mimeType ))) {
+    if (
+      new RegExp(/^image\//).test(
+        this.props.resources[id]?.mime ||
+          new RegExp(/^image\//).test(this.props.resources[id]?.mimeType)
+      )
+    ) {
       duration = prompt("Enter a duration", "00:00:00,000");
       if (duration === null) return;
 
@@ -122,7 +129,9 @@ export default class Timeline extends Component {
       },
       body: JSON.stringify({
         track: track,
-        duration: duration
+        support: "video",
+        in: "00:00:00,000",
+        out: "00:05:00,000"
       })
     };
 
@@ -150,8 +159,10 @@ export default class Timeline extends Component {
     for (let track of tracks) {
       groups.push({
         id: track.id,
-        content:
-          '<div style="width:0;height:66px;"></div>'
+        content: `<div style="height: 66px; align-items: center;display: flex; justify-content: center; border-bottom: none; text-transform: capitalize">${
+          track?.id?.split("0")?.[0]?.split("track")?.[0]
+        }</div>`,
+        className: "timeline-group"
       });
 
       let actualTime = "00:00:00,000";
