@@ -44,6 +44,8 @@ router.delete('/api/project/:projectID/filter', apiController.projectFilterDELET
 
 router.post('/api/project/:projectID/transition', apiController.projectTransitionPOST);
 
+router.post('/api/project/:projectID/textanimation', apiController.projectTextAnimationPOST);
+
 router.delete('/api/project/:projectID/item', apiController.projectItemDELETE);
 
 router.put('/api/project/:projectID/item/move', apiController.projectItemPUTmove);

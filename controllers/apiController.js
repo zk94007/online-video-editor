@@ -605,6 +605,66 @@ exports.projectFilterDELETE = (req, res, next) => {
 
 };
 
+exports.projectTextAnimationPOST = (req, res, next) => {
+	if (!isset(req.body.track, req.body.textAnimation, req.body.in, req.body.out)) {
+		res.status(400);
+		res.json({
+			err: 'Missing parameters.',
+			msg: 'Missing required parameters: track, textAnimation, in, out.',
+		});
+		return;
+	}
+
+	if (!timeManager.isValidDuration(req.body.in) || !timeManager.isValidDuration(req.body.out)) {
+		res.status(400);
+		res.json({
+			err: 'Incorrect parameters.',
+			msg: 'In/Out must be nonzero, in the format 00: 00: 00,000.',
+		});
+		return;
+	}
+
+	if (!req.body.track.includes('texttrack')) {
+		res.status(400);
+		res.json({
+			err: 'Incorrect action.',
+			msg: 'Text animation should be inserted on texttracks.',
+		});
+		return;
+	}
+
+	rendererManager.loadRenderer(req.body.projectID).then(
+		(renderer) => {
+			const track = renderer.timeline.find(t => t.id == req.body.track);
+			if (track === null) {
+				res.status(404);
+				res.json({
+					err: 'Track not found.',
+					msg: `The specified track "${req.body.track}" is not in the project.`,
+				});
+				return;
+			}
+
+			track.items.push({
+				id: generate('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890', 16),
+				sid: req.body.textAnimation,
+				in: req.body.in,
+				out: req.body.out
+			});
+
+			rendererManager.saveRenderer(req.params.projectID, renderer).then(
+				() => {
+					res.json({
+						msg: 'Item added to timeline',
+						timeline: req.body.track,
+					});
+				},
+				err => next(err)
+			);
+		},
+		err => fileErr(err, res)
+	);
+};
 
 exports.projectTransitionPOST = (req, res, next) => {
 
