@@ -13,6 +13,9 @@ import timeManager from "../../../models/timeManager";
 import Editor from "../Editor";
 import AddFilterDialog from "./AddFilterDialog";
 import moment from "moment";
+import { extendMoment } from "moment-range";
+import { formattedDateFromString } from "../../utils";
+const Moment = extendMoment(moment);
 
 export default class Timeline extends Component {
   constructor(props) {
@@ -57,12 +60,45 @@ export default class Timeline extends Component {
       zoomMax: 216000,
       onMove: this.onMove,
       onAdd: item => {
-        if (item?.content) {
-          this.onInsert(item?.content, item?.start);
-        }
+        const type =
+          this.props?.resources[item?.content]?.mime?.includes("audio/") ||
+          this.props?.resources[item?.content]?.mimeType?.includes("audio/")
+            ? "audiotrack0"
+            : "videotrack0";
+        let startDate = item?.start;
+        let length = this.props?.resources[item?.content]?.length
+          ? this.props?.resources[item?.content]?.length
+          : moment(startDate)
+              .add(3, "s")
+              .format("HH:mm:ss,SSS");
+
+        this.props.items
+          .filter(val => val.id === type)?.[0]
+          ?.items?.map(data => {
+            const start = formattedDateFromString(data.in);
+            const end = formattedDateFromString(data.out);
+            // const range = moment.range(moment(start), moment(end));
+            const duration = timeManager.addDuration(
+              moment(startDate).format("HH:mm:ss,SSS"),
+              length
+            );
+            let currentRange = moment.range(
+              startDate,
+              formattedDateFromString(duration)
+            );
+            if (currentRange.contains(start) || currentRange.contains(end)) {
+              startDate = moment(formattedDateFromString(data.out)).add(2, "s");
+            }
+            // if (
+            //   range.contains(formattedDateFromString(duration)) ||
+            //   range.contains(startDate)
+            // ) {
+            //   startDate = moment(formattedDateFromString(data.out)).add(2, "s");
+            // }
+          });
+        this.onInsert(item?.content, startDate);
       },
-      onDropObjectOnItem: (objectData, item, callback) => {
-      },
+      onDropObjectOnItem: (objectData, item, callback) => {},
       timeAxis: {
         scale: "second",
         step: 2
@@ -115,7 +151,7 @@ export default class Timeline extends Component {
       new RegExp(/^image\//).test(this.props.resources[id]?.mimeType)
     ) {
       support = "video";
-      duration = moment(startTime).add(5, "s");
+      duration = moment(startTime).add(3, "s");
     }
 
     const track =
@@ -193,24 +229,8 @@ export default class Timeline extends Component {
             id: track.id + ":" + index,
             content: content,
             align: "center",
-            start: new Date(
-              1970,
-              0,
-              1,
-              Number(startTime[0]),
-              Number(startTime[1]),
-              Number(startTime[2]),
-              Number(startTime[3])
-            ),
-            end: new Date(
-              1970,
-              0,
-              1,
-              Number(endTime[0]),
-              Number(endTime[1]),
-              Number(endTime[2]),
-              Number(endTime[3])
-            ),
+            start: formattedDateFromString(item.in),
+            end: formattedDateFromString(item.out),
             group: track.id,
             className: videoMatch.test(track.id) ? "video" : "audio"
           });
