@@ -40,7 +40,8 @@ exports.projectPOST = (req, res, next) => {
 			},
 			{
 				id: 'videotrack0',
-				items: []
+				items: [],
+				transitions: []
 			}
 		]
 	};
@@ -322,6 +323,24 @@ exports.projectFilePUT = (req, res, next) => {
 		return;
 	}
 
+	if (!req.body.track.includes(req.body.support)) {
+		res.status(400);
+		res.json({
+			err: 'Unsupported file type.',
+			msg: 'Please import exact type of resource into the track.',
+		});
+		return;
+	}
+
+	if (!timeManager.isValidDuration(req.body.in) || !timeManager.isValidDuration(req.body.out)) {
+		res.status(400);
+		res.json({
+			err: 'Invalid time format.',
+			msg: 'To insert on the timeline, you must specify a duration of 00:00:00,000.',
+		});
+		return;
+	}
+
 	rendererManager.loadRenderer(req.params.projectID).then(
 		(renderer) => {
 			const resource = renderer.resources[req.params.fileID];
@@ -344,28 +363,14 @@ exports.projectFilePUT = (req, res, next) => {
 				return;
 			}
 
-			if (!track.id.includes(req.body.support)) {
-				res.status(400);
-				res.json({
-					err: 'Unsupported file type.',
-					msg: 'Please import exact type of resource into the track.',
-				});
-				return;
-			}
-
-			if (!timeManager.isValidDuration(req.body.in) || !timeManager.isValidDuration(req.body.out)) {
-				res.status(400);
-				res.json({
-					err: 'Invalid time format.',
-					msg: 'To insert on the timeline, you must specify a duration of 00: 00: 00,000.',
-				});
-				return;
-			}
-
 			track.items.push({
 				id: req.params.fileID,
 				in: req.body.in,
-				out: req.body.out
+				out: req.body.out,
+				clip: {
+					left: '00:00:00,000',
+					right: timeManager.subDuration(req.body.out, req.body.in)
+				}
 			});
 
 			rendererManager.saveRenderer(req.params.projectID, renderer).then(
@@ -382,6 +387,439 @@ exports.projectFilePUT = (req, res, next) => {
 	);
 
 };
+
+exports.projectTextAnimationPOST = (req, res, next) => {
+	if (!isset(req.body.track, req.body.textAnimation, req.body.in, req.body.out)) {
+		res.status(400);
+		res.json({
+			err: 'Missing parameters.',
+			msg: 'Missing required parameters: track, textAnimation, in, out.',
+		});
+		return;
+	}
+
+	if (!timeManager.isValidDuration(req.body.in) || !timeManager.isValidDuration(req.body.out)) {
+		res.status(400);
+		res.json({
+			err: 'Incorrect parameters.',
+			msg: 'In/Out must be nonzero, in the format 00:00:00,000.',
+		});
+		return;
+	}
+
+	if (!req.body.track.includes('texttrack')) {
+		res.status(400);
+		res.json({
+			err: 'Incorrect action.',
+			msg: 'Text animation should be inserted on texttracks.',
+		});
+		return;
+	}
+
+	rendererManager.loadRenderer(req.body.projectID).then(
+		(renderer) => {
+			const track = renderer.timeline.find(t => t.id == req.body.track);
+			if (track === null) {
+				res.status(404);
+				res.json({
+					err: 'Track not found.',
+					msg: `The specified track "${req.body.track}" is not in the project.`,
+				});
+				return;
+			}
+
+			track.items.push({
+				id: generate('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890', 16),
+				textAnimation: req.body.textAnimation,
+				in: req.body.in,
+				out: req.body.out,
+				clip: {
+					left: '00:00:00,000',
+					right: timeManager.subDuration(req.body.out, req.body.in)
+				}
+			});
+
+			rendererManager.saveRenderer(req.params.projectID, renderer).then(
+				() => {
+					res.json({
+						msg: 'Item added to timeline',
+						timeline: req.body.track,
+					});
+				},
+				err => next(err)
+			);
+		},
+		err => fileErr(err, res)
+	);
+};
+
+exports.projectTransitionPOST = (req, res, next) => {
+
+	// Required parameters: track, itemA, itemB, transition, duration
+	if (!isset(req.body.track, req.body.itemA, req.body.itemB, req.body.transition, req.body.duration)) {
+		res.status(400);
+		res.json({
+			err: 'Missing parameters.',
+			msg: 'Missing required parameters: track, itemA, itemB, transition, duration.',
+		});
+		return;
+	}
+
+	if (!timeManager.isValidDuration(req.body.duration)) {
+		res.status(400);
+		res.json({
+			err: 'Incorrect parameters.',
+			msg: 'Duration must be nonzero, in the format 00:00:00,000.',
+		});
+		return;
+	}
+
+	rendererManager.loadRenderer(req.body.projectID).then(
+		(renderer) => {
+			const track = renderer.timeline.find(t => t.id == req.body.track);
+			if (track === null) {
+				res.status(404);
+				res.json({
+					err: 'Track not found.',
+					msg: `The specified track "${req.body.track}" is not in the project.`,
+				});
+				return;
+			}
+
+			const itemA = track.items.find(item => item.id == req.body.itemA);
+			const itemB = track.items.find(item => item.id == req.body.itemB);
+
+			if (!itemA || !itemB) {
+				res.status(404);
+				res.json({
+					err: 'Item not found.',
+					msg: `${req.body.itemA} or ${req.body.itemA} is not on track "${req.body.track}".`,
+				});
+				return;
+			}
+
+			if (itemA.out !== itemB.in) {
+				res.status(400);
+				res.json({
+					err: 'Incorrect parameters.',
+					msg: 'itemA must directly follow itemB.',
+				});
+				return;
+			}
+
+			const durationA = timeManager.subDuration(itemA.out, itemA.in);
+			const durationB = timeManager.subDuration(itemB.out, itemB.in);
+
+			if (req.body.duration > durationA || req.body.duration > durationB) {
+				res.status(400);
+				res.json({
+					err: 'Transition time too long.',
+					msg: 'The transition is longer than one of the transition items.',
+				});
+				return;
+			}
+
+			track.transitions.push({
+				id: generate('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890', 16),
+				itemA: req.body.itemA,
+				itemB: req.body.itemB,
+				transition: req.body.transition,
+				duration: req.body.duration
+			});
+
+
+			rendererManager.saveRenderer(req.params.projectID, renderer).then(
+				() => {
+					res.json({
+						msg: 'Item added to timeline',
+						timeline: req.body.track,
+					});
+				},
+				err => next(err)
+			);
+		},
+		err => fileErr(err, res)
+	);
+};
+
+exports.projectItemDELETE = (req, res, next) => {
+	// Required parameters: track, item
+	if (!isset(req.body.track, req.body.item)) {
+		res.status(400);
+		res.json({
+			err: 'Missing parameters.',
+			msg: 'Missing required parameters: track, item.',
+		});
+		return;
+	}
+
+	rendererManager.loadRenderer(req.params.projectID).then(
+		(renderer) => {
+			const track = renderer.timeline.find(t => t.id == req.body.track);
+			if (track === null) {
+				res.status(404);
+				res.json({
+					err: 'Track not found.',
+					msg: `The specified track "${req.body.track}" is not in the project.`,
+				});
+				return;
+			}
+			
+			const item = track.items.find(item => item.id == req.body.item);
+			if (item === null) {
+				res.status(404);
+				res.json({
+					err: 'Item not found.',
+					msg: `${req.body.item} is not on track "${req.body.track}".`,
+				});
+				return;
+			}
+
+			track.items.splice(track.items.findIndex(item => item.id == req.body.item), 1);
+
+			if (track.id.includes('videotrack')) {
+				track.transitions.splice(track.transitions.findIndex(transition => transition.itemA == req.body.item || transition.itemB == req.body.item), 1);
+			}
+
+			rendererManager.saveRenderer(req.params.projectID, renderer).then(
+				() => {
+					res.json({msg: 'Item removed'});
+				},
+				err => next(err)
+			);
+		},
+		err => fileErr(err, res)
+	);
+};
+
+exports.projectItemPUTmove = (req, res, next) => {
+
+	// Required parameters: track, trackTarget, item, time
+	if (!isset(req.body.track, req.body.trackTarget, req.body.item, req.body.time)) {
+		res.status(400);
+		res.json({
+			err: 'Missing parameters.',
+			msg: 'Missing required parameters: track, trackTarget, item, time.',
+		});
+		return;
+	}
+
+	if (req.body.time !== '00:00:00,000' && !timeManager.isValidDuration(req.body.time)) {
+		res.status(400);
+		res.json({
+			err: 'Wrong parameter.',
+			msg: 'The time parameter must be in the format 00:00:00,000.',
+		});
+		return;
+	}
+
+	if (!(req.body.trackTarget.includes('videotrack') && req.body.track.includes('videotrack'))) {
+		if (!(req.body.trackTarget.includes('audiotrack') && req.body.track.includes('audiotrack'))) {
+			res.status(400);
+			res.json({
+				err: 'Incompatible tracks.',
+				msg: 'You cannot move items between video and audio tracks.',
+			});
+			return;
+		}
+	}
+
+	rendererManager.loadRenderer(req.params,projectID).then(
+		(renderer) => {
+			const track = renderer.timeline.find(t => t.id == req.body.track);
+			const trackTarget = renderer.timeline.find(t => t.id == req.body.trackTarget);
+
+			if (track === null || trackTarget === null) {
+				res.status(404);
+				res.json({
+					err: 'Track not found.',
+					msg: `The specified track "${req.body.track}" or "${trackTarget}" is not in the project.`,
+				});
+				return;
+			}
+
+			const item = track.items.find(item => item.id == req.body.item);
+			if (item === null) {
+				res.status(404);
+				res.json({
+					err: 'Item not found.',
+					msg: `${req.body.item} is not on track "${req.body.track}".`,
+				});
+				return;
+			}
+
+			track.items.splice(track.items.findIndex(item => item.id == req.body.item), 1);
+			if (track.id.includes('videotrack')) {
+				track.transitions.splice(track.transitions.findIndex(transition => transition.itemA == req.body.item || transition.itemB == req.body.item), 1);
+			}
+
+			trackTarget.items.push(item);
+
+			rendererManager.saveRenderer(req.params.projectID, renderer).then(
+				() => {
+					res.json({msg: 'Item removed'});
+				},
+				err => next(err)
+			);
+		},
+		err => fileErr(err, res)
+	);
+};
+
+exports.projectItemPUTsplit = (req, res, next) => {
+	// Required parameters: track, item, time
+	if (!isset(req.body.track, req.body.item, req.body.time)) {
+		res.status(400);
+		res.json({
+			err: 'Missing parameters.',
+			msg: 'Missing required parameters: track, item, time.',
+		});
+		return;
+	}
+
+	if (!timeManager.isValidDuration(req.body.time)) {
+		res.status(400);
+		res.json({
+			err: 'Wrong parameter.',
+			msg: 'The time parameter must be positive, in the format 00:00:00,000.',
+		});
+		return;
+	}
+
+	rendererManager.loadRenderer(req.params.projectID).then(
+		(renderer) => {
+			const track = renderer.timeline.find(t => t.id == req.body.track);
+			if (track === null) {
+				res.status(404);
+				res.json({
+					err: 'Track not found.',
+					msg: `The specified track "${req.body.track}" is not in the project.`,
+				});
+				return;
+			}
+
+			const item = track.items.find(item => item.id == req.body.item);
+			if (item === null) {
+				res.status(404);
+				res.json({
+					err: 'Item not found.',
+					msg: `Item ${req.body.item} is not on "${req.body.track}".`,
+				});
+				return;
+			}
+
+			if (req.body.time < item.in || req.body.time > item.out) {
+				res.status(400);
+				res.json({
+					err: 'Parameter out of range.',
+					msg: `The time parameter must be between ${item.in} and a ${item.out}`,
+				});
+				return;
+			}
+
+			const leftDuration = timeManager.subDuration(req.body.time, item.in);
+			const rightDuration = timeManager.subDuration(time.out, req.body.time);
+
+			const itemLeft = JSON.parse(JSON.stringify(item));
+			const itemRight = JSON.parse(JSON.stringify(item));
+
+			itemLeft.out = req.body.time;
+			itemRight.in = req.body.time;
+
+			itemLeft.clip.right = timeManager.subDuration(itemLeft.clip.right, rightDuration);
+			itemRight.clip.left = timeManager.addDuration(itemRight.clip.left, leftDuration);
+
+			track.items.splice(track.items.findIndex(item => item.id == req.body.item), 1);
+			track.items.push(itemLeft);
+			track.items.push(itemRight);
+			
+			rendererManager.saveRenderer(req.params.projectID, renderer).then(
+				() => {
+					res.json({msg: 'Item removed'});
+				},
+				err => next(err)
+			);
+		},
+		err => fileErr(err, res)
+	);
+};
+
+exports.projectItemPUTcrop = (req, res, next) => {
+	// Required parameters: track, item, time
+	if (!isset(req.body.track, req.body.item, req.body.time, req.body.direction)) {
+		res.status(400);
+		res.json({
+			err: 'Missing parameters.',
+			msg: 'Missing required parameters: track, item, time, direction.',
+		});
+		return;
+	}
+
+	if (!timeManager.isValidDuration(req.body.time)) {
+		res.status(400);
+		res.json({
+			err: 'Wrong parameter.',
+			msg: 'The time parameter must be positive, in the format 00:00:00,000.',
+		});
+		return;
+	}
+
+	rendererManager.loadRenderer(req.params.projectID).then(
+		(renderer) => {
+			const track = renderer.timeline.find(t => t.id == req.body.track);
+			if (track === null) {
+				res.status(404);
+				res.json({
+					err: 'Track not found.',
+					msg: `The specified track "${req.body.track}" is not in the project.`,
+				});
+				return;
+			}
+
+			const item = track.items.find(item => item.id == req.body.item);
+			if (item === null) {
+				res.status(404);
+				res.json({
+					err: 'Item not found.',
+					msg: `Item ${req.body.item} is not on "${req.body.track}".`,
+				});
+				return;
+			}
+
+			if (direction == 'front') {
+				if (req.body.time > item.in) {
+					const duration = timeManager.subDuration(req.body.time, item.in);
+					item.in = req.body.time;
+					item.clip.left = timeManager.addDuration(item.clip.left, duration);
+				}
+				if (req.body.time < item.in) {
+					const duration = timeManager.subDuration(item.in, req.body.time);
+					item.in = req.body.time;
+					item.clip.left = timeManager.subDuration(item.clip.left, duration);
+				}
+			} else if (direction == 'back') {
+				if (req.body.time < item.out) {
+					const duration = timeManager.subDuration(item.out, req.body.time);
+					item.out = req.body.time;
+					item.clip.right = timeManager.subDuration(item.clip.right, duration);
+				}
+				if (req.body.time > item.out) {
+					const duration = timeManager.subDuration(req.body.time, item.out);
+					item.out = req.body.time;
+					item.clip.right = timeManager.addDuration(item.clip.right, duration);
+				}
+			}
+			
+			rendererManager.saveRenderer(req.params.projectID, renderer).then(
+				() => {
+					res.json({msg: 'Item removed'});
+				},
+				err => next(err)
+			);
+		},
+		err => fileErr(err, res)
+	);
+}
 
 exports.projectFilterPOST = (req, res, next) => {
 
@@ -504,7 +942,6 @@ exports.projectFilterPOST = (req, res, next) => {
 
 };
 
-
 exports.projectFilterDELETE = (req, res, next) => {
 
 	// Required parameters: track, item, filter
@@ -605,266 +1042,6 @@ exports.projectFilterDELETE = (req, res, next) => {
 
 };
 
-exports.projectTextAnimationPOST = (req, res, next) => {
-	if (!isset(req.body.track, req.body.textAnimation, req.body.in, req.body.out)) {
-		res.status(400);
-		res.json({
-			err: 'Missing parameters.',
-			msg: 'Missing required parameters: track, textAnimation, in, out.',
-		});
-		return;
-	}
-
-	if (!timeManager.isValidDuration(req.body.in) || !timeManager.isValidDuration(req.body.out)) {
-		res.status(400);
-		res.json({
-			err: 'Incorrect parameters.',
-			msg: 'In/Out must be nonzero, in the format 00: 00: 00,000.',
-		});
-		return;
-	}
-
-	if (!req.body.track.includes('texttrack')) {
-		res.status(400);
-		res.json({
-			err: 'Incorrect action.',
-			msg: 'Text animation should be inserted on texttracks.',
-		});
-		return;
-	}
-
-	rendererManager.loadRenderer(req.body.projectID).then(
-		(renderer) => {
-			const track = renderer.timeline.find(t => t.id == req.body.track);
-			if (track === null) {
-				res.status(404);
-				res.json({
-					err: 'Track not found.',
-					msg: `The specified track "${req.body.track}" is not in the project.`,
-				});
-				return;
-			}
-
-			track.items.push({
-				id: generate('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890', 16),
-				sid: req.body.textAnimation,
-				in: req.body.in,
-				out: req.body.out
-			});
-
-			rendererManager.saveRenderer(req.params.projectID, renderer).then(
-				() => {
-					res.json({
-						msg: 'Item added to timeline',
-						timeline: req.body.track,
-					});
-				},
-				err => next(err)
-			);
-		},
-		err => fileErr(err, res)
-	);
-};
-
-exports.projectTransitionPOST = (req, res, next) => {
-
-	// Required parameters: track, itemA, itemB, transition, duration
-	if (!isset(req.body.track, req.body.itemA, req.body.itemB, req.body.transition, req.body.duration)) {
-		res.status(400);
-		res.json({
-			err: 'Missing parameters.',
-			msg: 'Missing required parameters: track, itemA, itemB, transition, duration.',
-		});
-		return;
-	}
-
-	if (!isNaturalNumber(req.body.itemA, req.body.itemA) || !timeManager.isValidDuration(req.body.duration)) {
-		res.status(400);
-		res.json({
-			err: 'Incorrect parameters.',
-			msg: 'ItemA, itemB must be integer, nonnegative, duration must be nonzero, in the format 00: 00: 00,000.',
-		});
-		return;
-	}
-
-	if ((req.body.itemB - req.body.itemA) !== 1) {
-		res.status(400);
-		res.json({
-			err: 'Incorrect parameters.',
-			msg: 'itemA must directly follow itemB.',
-		});
-		return;
-	}
-
-	mltxmlManager.loadMLT(req.params.projectID, 'w').then(
-		([dom, , release]) => {
-			const document = dom.window.document;
-			const root = document.getElementsByTagName('mlt').item(0);
-
-			const track = document.getElementById(req.body.track);
-			if (track === null) {
-				release();
-				res.status(404);
-				res.json({
-					err: 'Track not found.',
-					msg: `The specified track "${req.body.track}" is not in the project.`,
-				});
-				return;
-			}
-
-			const itemA = mltxmlManager.getItem(document, track, req.body.itemA);
-			const itemB = mltxmlManager.getItem(document, track, req.body.itemB);
-
-			if (itemA === null || itemB === null) {
-				release();
-				res.status(404);
-				res.json({
-					err: 'Item not found.',
-					msg: `${req.body.itemA} or ${req.body.itemA} is not on track "${req.body.track}".`,
-				});
-				return;
-			}
-
-			const durationA = mltxmlManager.getDuration(itemA, document);
-			const durationB = mltxmlManager.getDuration(itemB, document);
-			const waitBeforeTransition = timeManager.subDuration(durationA.out, req. body.duration);
-			if (req.body.duration > durationA.time || req.body.duration > durationB.time) {
-				release();
-				res.status(400);
-				res.json({
-					err: 'Transition time too long.',
-					msg: 'The transition is longer than one of the transition items.',
-				});
-				return;
-			}
-
-			// Simple + Simple
-			if (mltxmlManager.isSimpleNode(itemA) && mltxmlManager.isSimpleNode(itemB)) {
-				// Create playlist after last producer
-				const newPlaylistA = mltxmlManager.entryToPlaylist(itemA, document);
-				const newPlaylistB = mltxmlManager.entryToPlaylist(itemB, document);
-				newPlaylistB.innerHTML = `<blank length="${waitBeforeTransition}" />` + newPlaylistB.innerHTML;
-
-				// Create tractor before videotrack0
-				const newTractor = mltxmlManager.createTractor(document);
-				newTractor.innerHTML = `<multitrack><track producer="${newPlaylistA.id}"/><track producer="${newPlaylistB.id}"/></multitrack>`;
-				newTractor.innerHTML += `<transition mlt_service="${req.body.transition}" in="${waitBeforeTransition}" out="${durationA.out}" a_track="0" b_track="1"/>`;
-
-				// Update track
-				itemA.removeAttribute('in');
-				itemA.removeAttribute('out');
-				itemA.setAttribute('producer', newTractor.id);
-				itemB.remove();
-			}
-			// Complex + Simple
-			else if (!mltxmlManager.isSimpleNode(itemA) && mltxmlManager.isSimpleNode(itemB)) {
-				const newPlaylist = mltxmlManager.entryToPlaylist(itemB, document);
-				mltxmlManager.appendPlaylistToMultitrack(itemA.parentElement, newPlaylist, req.body.duration, req.body.transition, document);
-				itemB.remove();
-			}
-			// Complex + Complex
-			else if (!mltxmlManager.isSimpleNode(itemA)) {
-				const multitrackA = itemA.parentElement;
-				const multitrackB = itemB.parentElement;
-				if (multitrackA === multitrackB) {
-					release();
-					res.status(403);
-					res.json({
-						err: 'Gradient already applied.',
-						msg: 'The selected elements already have a mutual transition.',
-					});
-					return;
-				}
-
-				let duration = req.body.duration;
-				let transition = req.body.transition;
-				let newTrackIndex = multitrackB.childElementCount;
-				let oldTrackIndex = 0;
-				const transitions = multitrackB.parentElement.getElementsByTagName('transition');
-				const filters = multitrackB.parentElement.getElementsByTagName('filter');
-				const tracksB = multitrackB.childNodes;
-				for (let
-					track of tracksB) {
-					// Merge transition
-					if (!isset(transition)) {
-						for (let transitionElement of transitions) {
-							if (transitionElement.getAttribute('b_track') === oldTrackIndex.toString()) {
-								transition = transitionElement.getAttribute('mlt_service');
-								duration = timeManager.subDuration(transitionElement.getAttribute('out'), transitionElement.getAttribute('in'));
-							}
-						}
-					}
-
-					// Merge filters
-					for (let filter of filters) {
-						if (filter.getAttribute('track') === oldTrackIndex.toString()) {
-							filter.setAttribute('track', newTrackIndex.toString());
-							multitrackA.parentElement.append(filter);
-						}
-					}
-
-					let playlist = document.getElementById(track.getAttribute('producer'));
-					mltxmlManager.appendPlaylistToMultitrack(multitrackA, playlist, duration, transition, document);
-
-					transition = undefined;
-					duration = undefined;
-					newTrackIndex++;
-					oldTrackIndex++;
-				}
-				const tractorB = multitrackB.parentElement;
-				const tractorBentry = document.querySelector(`mlt>playlist>entry[producer="${tractorB.id}"]`);
-				tractorBentry.remove();
-				tractorB.remove();
-			}
-			// Simple + Complex
-			else {
-				const durationA = timeManager.subDuration(mltxmlManager.getDuration(itemA, document).time, req.body.duration);
-				const multitrackB = itemB.parentElement;
-				// Re-index transition, adjust IN/OUT timing
-				const transitions = multitrackB.parentElement.getElementsByTagName('transition');
-				for (let transition of transitions) {
-					transition.setAttribute('a_track', Number(transition.getAttribute('a_track')) + 1);
-					transition.setAttribute('b_track', Number(transition.getAttribute('b_track')) + 1);
-					transition.setAttribute('in', timeManager.addDuration(transition.getAttribute('in'), durationA));
-					transition.setAttribute('out', timeManager.addDuration(transition.getAttribute('out'), durationA));
-				}
-				// Re-index filters
-				const filters = multitrackB.parentElement.getElementsByTagName('filter');
-				for (let filter of filters) {
-					filter.setAttribute('track', Number(filter.getAttribute('track')) + 1);
-				}
-				// Adjust blank duration of tracks
-				const tracks = multitrackB.childNodes;
-				for (let track of tracks) {
-					let playlist = document.getElementById(track.getAttribute('producer'));
-					let blank = playlist.getElementsByTagName('blank').item(0);
-					if (blank === null)
-						playlist.innerHTML = `<blank length="${durationA}" />` + playlist.innerHTML;
-					else
-						blank.setAttribute('length', timeManager.addDuration(blank.getAttribute('length'), durationA));
-				}
-				// Prepend multitrack with item
-				const newPlaylist = mltxmlManager.entryToPlaylist(itemA, document);
-				multitrackB.innerHTML = `<track producer="${newPlaylist.id}" />` + multitrackB.innerHTML;
-				// Add new transition
-				multitrackB.parentElement.innerHTML += `<transition mlt_service="${req.body.transition}" in="${durationA}" out="${mltxmlManager.getDuration(itemA, document).time}" a_track="0" b_track="1" />`;
-
-				itemA.remove();
-			}
-
-			mltxmlManager.saveMLT(req.params.projectID, root.outerHTML, release).then(
-				() => {
-					res.json({msg: 'Transition applied'});
-				},
-				err => next(err)
-			);
-		},
-		err => fileErr(err, res)
-	);
-
-};
-
-
 exports.projectPUT = (req, res, next) => {
 
 	const projectPath = mltxmlManager.getWorkerDir(req.params.projectID);
@@ -907,312 +1084,6 @@ exports.projectPUT = (req, res, next) => {
 	});
 
 };
-
-
-exports.projectItemDELETE = (req, res, next) => {
-
-	// Required parameters: track, item
-	if (!isset(req.body.track, req.body.item)) {
-		res.status(400);
-		res.json({
-			err: 'Missing parameters.',
-			msg: 'Missing required parameters: track, item.',
-		});
-		return;
-	}
-
-	rendererManager.loadRenderer(req.params.projectID).then(
-		(renderer) => {
-			const track = renderer.timeline.find(t => t.id == req.body.track);
-			if (track === null) {
-				res.status(404);
-				res.json({
-					err: 'Track not found.',
-					msg: `The specified track "${req.body.track}" is not in the project.`,
-				});
-				return;
-			}
-			
-			const item = track.items.find(item => item.id == req.body.item);
-			if (item === null) {
-				res.status(404);
-				res.json({
-					err: 'Item not found.',
-					msg: `${req.body.item} is not on track "${req.body.track}".`,
-				});
-				return;
-			}
-
-			delete track.items[item.id];
-
-			rendererManager.saveRenderer(req.params.projectID, renderer).then(
-				() => {
-					res.json({msg: 'Item split'});
-				},
-				err => next(err)
-			);
-		},
-		err => fileErr(err, res)
-	);
-};
-
-
-exports.projectItemPUTmove = (req, res, next) => {
-
-	// Required parameters: track, trackTarget, item, time
-	if (!isset(req.body.track, req.body.trackTarget, req.body.item, req.body.time)) {
-		res.status(400);
-		res.json({
-			err: 'Missing parameters.',
-			msg: 'Missing required parameters: track, trackTarget, item, time.',
-		});
-		return;
-	}
-
-	if (req.body.time !== '00:00:00,000' && !timeManager.isValidDuration(req.body.time)) {
-		res.status(400);
-		res.json({
-			err: 'Wrong parameter.',
-			msg: 'The time parameter must be in the format 00: 00: 00,000.',
-		});
-		return;
-	}
-
-	if (!(req.body.trackTarget.includes('videotrack') && req.body.track.includes('videotrack'))) {
-		if (!(req.body.trackTarget.includes('audiotrack') && req.body.track.includes('audiotrack'))) {
-			res.status(400);
-			res.json({
-				err: 'Incompatible tracks.',
-				msg: 'You cannot move items between video and audio tracks.',
-			});
-			return;
-		}
-	}
-
-	mltxmlManager.loadMLT(req.params.projectID, 'w').then(
-		([dom, , release]) => {
-			const document = dom.window.document;
-			const root = document.getElementsByTagName('mlt').item(0);
-
-			const track = document.getElementById(req.body.track);
-			const trackTarget = document.getElementById(req.body.trackTarget);
-			if (track === null || trackTarget === null) {
-				release();
-				res.status(404);
-				res.json({
-					err: 'Track not found.',
-					msg: `The specified track "${req.body.track}" or "${trackTarget}" is not in the project.`,
-				});
-				return;
-			}
-
-			let item = mltxmlManager.getItem(document, track, req.body.item);
-			if (item === null) {
-				release();
-				res.status(404);
-				res.json({
-					err: 'Item not found.',
-					msg: `${Req.body.item} is not on track "${req.body.track}".`,
-				});
-				return;
-			}
-
-			if (!mltxmlManager.isSimpleNode(item)) {
-				item = item.parentElement; // Get multitrack of complex item
-			}
-
-			const itemDuration = mltxmlManager.getDuration(item, document).time;
-
-			if (!mltxmlManager.isSimpleNode(item)) {
-				item = item.parentElement; // Get tractor of complex item
-				item = document.querySelector(`mlt>playlist>entry[producer="${item.id}"]`); // Get videotrack entry
-			}
-
-			// Add blank to old location
-			const prevElement = item.previousElementSibling;
-			const nextElement = item.nextElementSibling;
-			let leftDuration = itemDuration;
-
-			if (prevElement !== null && prevElement.tagName === 'blank') {
-				leftDuration = timeManager.addDuration(leftDuration, prevElement.getAttribute('length'));
-				prevElement.remove();
-			}
-			if (nextElement !== null && nextElement.tagName === 'blank') {
-				leftDuration = timeManager.addDuration(leftDuration, nextElement.getAttribute('length'));
-				nextElement.remove();
-			}
-			if (nextElement !== null) {
-				const newBlank = document.createElement('blank');
-				newBlank.setAttribute('length', leftDuration);
-				track.insertBefore(newBlank, item);
-			}
-			item.remove();
-
-			// Check free space
-			if (mltxmlManager.getItemInRange(trackTarget, req.body.time, timeManager.addDuration(req.body.time, itemDuration), document).length > 0) {
-				release();
-				res.status(403);
-				res.json({
-					err: 'The destination already contains an item.',
-					msg: 'The location you entered is not free, the item cannot be moved.',
-				});
-				return;
-			}
-
-			let targetElement = mltxmlManager.getItemAtTime(document, trackTarget, req.body.time);
-
-			// Prepare target place
-			if (targetElement.entries.length === 0) { // End of timeline
-				if (targetElement.endTime < req.body.time) {
-					const newBlank = document.createElement('blank');
-					newBlank.setAttribute('length', timeManager.subDuration(req.body.time, targetElement.endTime));
-					trackTarget.appendChild(newBlank);
-				}
-				trackTarget.appendChild(item);
-			}
-			else if (targetElement.entries.length === 1) { // Inside blank
-				const afterLength = timeManager.subDuration(targetElement.endTime, timeManager.addDuration(req.body.time, itemDuration));
-				const afterBlank = document.createElement('blank');
-				afterBlank.setAttribute('length', afterLength);
-
-				const beforeLength = timeManager.subDuration(targetElement.entries[0].getAttribute('length'), timeManager.addDuration(afterLength, itemDuration));
-				const beforeBlank = document.createElement('blank');
-				beforeBlank.setAttribute('length', beforeLength);
-
-				if (beforeLength !== '00:00:00,000') trackTarget.insertBefore(beforeBlank, targetElement.entries[0]);
-				trackTarget.insertBefore(item, targetElement.entries[0]);
-				if (afterLength !== '00:00:00,000' && targetElement.entries[0].nextElementSibling !== null) trackTarget.insertBefore(afterBlank, targetElement.entries[0]);
-				targetElement.entries[0].remove();
-			}
-			else { // Between two elements
-				const blank =  (targetElement.entries[0].tagName === 'blank') ? targetElement.entries[0] : targetElement.entries[1];
-				if (blank !== null) {
-					blank.setAttribute('length', timeManager.subDuration(blank.getAttribute('length'), itemDuration));
-					if (blank.getAttribute('lenght') === '00:00:00,000') blank.remove();
-				}
-				trackTarget.insertBefore(item, targetElement.entries[1]);
-			}
-
-			mltxmlManager.saveMLT(req.params.projectID, root.outerHTML, release).then(
-				() => {
-					res.json({msg: 'Item moved'});
-				},
-				err => next(err)
-			);
-		},
-		err => fileErr(err, res)
-	);
-
-};
-
-
-exports.projectItemPUTsplit = (req, res, next) => {
-	// Required parameters: track, item, time
-	if (!isset(req.body.track, req.body.item, req.body.time)) {
-		res.status(400);
-		res.json({
-			err: 'Missing parameters.',
-			msg: 'Missing required parameters: track, item, time.',
-		});
-		return;
-	}
-
-	if (!timeManager.isValidDuration(req.body.time)) {
-		res.status(400);
-		res.json({
-			err: 'Wrong parameter.',
-			msg: 'The time parameter must be positive, in the format 00: 00: 00,000.',
-		});
-		return;
-	}
-
-	mltxmlManager.loadMLT(req.params.projectID, 'w').then(
-		([dom, , release]) => {
-			const document = dom.window.document;
-			const root = document.getElementsByTagName('mlt').item(0);
-
-			const track = document.getElementById(req.body.track);
-			if (track === null) {
-				release();
-				res.status(404);
-				res.json({
-					err: 'Track not found.',
-					msg: `The specified track "${req.body.track}" is not in the project.`,
-				});
-				return;
-			}
-
-			let item = mltxmlManager.getItem(document, track, req.body.item);
-			if (item === null) {
-				release();
-				res.status(404);
-				res.json({
-					err: 'Item not found.',
-					msg: `Item ${req.body.item} is not on "${req.body.track}".`,
-				});
-				return;
-			}
-
-			const time = mltxmlManager.getDuration(item, document);
-
-			if (req.body.time >= time.time) {
-				release();
-				res.status(400);
-				res.json({
-					err: 'Parameter out of range.',
-					msg: `The time parameter must be between 00: 00: 00,000 and a ${time.time}`,
-				});
-				return;
-			}
-
-			let splitTime = req.body.time;
-			if (time.in !== '00:00:00,000') splitTime = timeManager.addDuration(time.in, req.body.time);
-
-			if (mltxmlManager.isSimpleNode(item)) { // It's simple element
-				const itemCopy = item.cloneNode();
-				track.insertBefore(itemCopy, item);
-				itemCopy.setAttribute('out', splitTime);
-				item.setAttribute('in', splitTime);
-			}
-			else {
-				const tractor = item.parentElement.parentElement;
-				if (tractor.getElementsByTagName('transition').length === 0) { // It's element with filter(s)
-					const trackItem = document.querySelector(`mlt>playlist[id="${item.getAttribute('producer')}"]`).getElementsByTagName('entry')[0];
-					const trackItemCopy = trackItem.cloneNode();
-					trackItemCopy.setAttribute('out', splitTime);
-					trackItem.setAttribute('in', splitTime);
-
-					const playlistCopy = mltxmlManager.entryToPlaylist(trackItemCopy, document);
-
-					const tractorCopy = mltxmlManager.createTractor(document);
-					tractorCopy.innerHTML = `<multitrack><track producer="${playlistCopy.id}"/></multitrack>`;
-					const filters = tractor.getElementsByTagName('filter');
-					for (let filter of filters) {
-						tractorCopy.innerHTML += filter.outerHTML;
-					}
-
-					const videotrackRefCopy = document.createElement('entry');
-					videotrackRefCopy.setAttribute('producer', tractorCopy.id);
-					const videotrackRef = document.querySelector(`mlt>playlist>entry[producer="${tractor.id}"]`);
-					track.insertBefore(videotrackRefCopy, videotrackRef);
-				}
-				else { // It's element with transition(s)
-					release();
-					return; // TODO
-				}
-			}
-
-			mltxmlManager.saveMLT(req.params.projectID, root.outerHTML, release).then(
-				() => {
-					res.json({msg: 'Item split'});
-				},
-				err => next(err)
-			);
-		},
-		err => fileErr(err, res)
-	);
-};
-
 
 exports.projectTrackPOST = (req, res, next) => {
 	// Required parameters: type
