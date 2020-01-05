@@ -861,14 +861,10 @@ exports.projectItemDELETE = (req, res, next) => {
 		return;
 	}
 
-	mltxmlManager.loadMLT(req.params.projectID, 'w').then(
-		([dom, , release]) => {
-			const document = dom.window.document;
-			const root = document.getElementsByTagName('mlt').item(0);
-
-			const track = document.getElementById(req.body.track);
+	rendererManager.loadRenderer(req.params.projectID).then(
+		(renderer) => {
+			const track = renderer.timeline.find(t => t.id == req.body.track);
 			if (track === null) {
-				release();
 				res.status(404);
 				res.json({
 					err: 'Track not found.',
@@ -876,10 +872,9 @@ exports.projectItemDELETE = (req, res, next) => {
 				});
 				return;
 			}
-
-			let item = mltxmlManager.getItem(document, track, req.body.item);
+			
+			const item = track.items.find(item => item.id == req.body.item);
 			if (item === null) {
-				release();
 				res.status(404);
 				res.json({
 					err: 'Item not found.',
@@ -888,48 +883,9 @@ exports.projectItemDELETE = (req, res, next) => {
 				return;
 			}
 
-			let entry;
-			let duration = mltxmlManager.getDuration(item, document).time;
+			delete track.items[item.id];
 
-			if (mltxmlManager.isSimpleNode(item)) { // It's simple element
-				entry = item;
-			}
-			else {
-				const tractor = item.parentElement.parentElement;
-				if (tractor.getElementsByTagName('transition').length === 0) { // It's element with filter(s)
-					const playlist = document.querySelector(`mlt>playlist[id="${item.getAttribute('producer')}"]`);
-					entry = document.querySelector(`mlt>playlist>entry[producer="${tractor.id}"]`);
-
-					tractor.remove();
-					playlist.remove();
-				}
-				else { // It's element with transition(s)
-					release();
-					return;
-				}
-			}
-
-			const prevEntry = entry.previousElementSibling;
-			const nextEntry = entry.nextElementSibling;
-			if (nextEntry !== null) {
-				// Replace with blank
-				if (prevEntry !== null && prevEntry.tagName === 'blank') {
-					duration = timeManager.addDuration(duration, prevEntry.getAttribute('length'));
-					prevEntry.remove();
-				}
-				if (nextEntry.tagName === 'blank') {
-					duration = timeManager.addDuration(duration, nextEntry.getAttribute('length'));
-					nextEntry.remove();
-				}
-				entry.outerHTML = `<blank length="${duration}"/>`;
-			}
-			else {
-				// Last item, just delete
-				if (prevEntry !== null && prevEntry.tagName === 'blank') prevEntry.remove();
-				entry.remove();
-			}
-
-			mltxmlManager.saveMLT(req.params.projectID, root.outerHTML, release).then(
+			rendererManager.saveRenderer(req.params.projectID, renderer).then(
 				() => {
 					res.json({msg: 'Item split'});
 				},
@@ -938,7 +894,6 @@ exports.projectItemDELETE = (req, res, next) => {
 		},
 		err => fileErr(err, res)
 	);
-
 };
 
 
