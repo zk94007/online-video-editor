@@ -76,6 +76,56 @@ exports.projectGET = (req, res) => {
 	);
 };
 
+exports.projectImportPOST = (req, res, next) => {
+	// Required parameters: track, item, time
+	if (!isset(req.body.url)) {
+		res.status(400);
+		res.json({
+			err: 'Missing parameters.',
+			msg: 'Missing required parameters: url.',
+		});
+		return;
+	}
+
+	cloudManager.download(url, path.join(config.projectPath, req.params.projectID)).then(
+		(filename) => {
+			const fileID = generate('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890', 16);
+			let filepath = path.join(config.projectPath, req.params.projectID, filename);
+
+			fileManager.getDuration(filepath, mimeType).then(
+				length => {
+					if (length !== null) length += '0';
+					rendererManager.loadRenderer(req.params.projectID).then(
+						(renderer) => {
+							renderer.resources[fileID] = {
+								id: fileID,
+								name: filename,
+								filepath: path.resolve(filepath),
+								mimeType,
+								length,
+								url: req.body.url
+							};
+
+							rendererManager.saveRenderer(req.params.projectID, renderer).then(
+								() => {
+									res.json({
+										msg: `Import of "${filename}" OK`,
+										resource_id: fileID,
+										resource_mime: mimeType,
+										length: length,
+										url: req.body.url
+									});
+								},
+								err => next(err)
+							);
+						},
+						err => fileErr(err, res)
+					);
+				}
+			);
+		}
+	);
+};
 
 exports.projectFilePOST = (req, res, next) => {
 	if (!isset(req.busboy)) {

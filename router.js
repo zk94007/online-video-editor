@@ -28,6 +28,8 @@ router.get('/api/project/:projectID', apiController.projectGET);
 
 router.put('/api/project/:projectID', apiController.projectPUT);
 
+router.post('/api/project/:projectID/import', apiController.projectImportPOST);
+
 router.post('/api/project/:projectID/file', apiController.projectFilePOST);
 
 router.delete('/api/project/:projectID/file/:fileID', apiController.projectFileDELETE);

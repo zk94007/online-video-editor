@@ -7,6 +7,7 @@ import config from '../config';
 
 const fs = require('fs');
 const AWS = require('aws-sdk');
+const download = require('download');
 
 const s3 = new AWS.S3({
     accessKeyId: config.s3.accessKeyId,
@@ -31,4 +32,9 @@ export default {
             });
         });
     },
+    download(url, dirpath) {
+        return download(url, dirpath).then(data => {
+            return data;
+        });
+    }
 }
