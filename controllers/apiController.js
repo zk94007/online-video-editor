@@ -11,6 +11,7 @@ import timeManager from '../models/timeManager';
 import rendererManager from '../models/rendererManager';
 import log from '../models/logger';
 
+const mime = require('mime');
 const fs = require('fs');
 const path = require('path');
 const generate = require('nanoid/generate');
@@ -91,6 +92,8 @@ exports.projectImportPOST = (req, res, next) => {
 		(filename) => {
 			const fileID = generate('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890', 16);
 			let filepath = path.join(config.projectPath, req.params.projectID, filename);
+
+			const mimeType = mime.getType(filepath);
 
 			fileManager.getDuration(filepath, mimeType).then(
 				length => {
