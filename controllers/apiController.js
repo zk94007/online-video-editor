@@ -87,7 +87,7 @@ exports.projectImportPOST = (req, res, next) => {
 		return;
 	}
 
-	cloudManager.download(url, path.join(config.projectPath, req.params.projectID)).then(
+	cloudManager.download(req.body.url, path.join(config.projectPath, req.params.projectID)).then(
 		(filename) => {
 			const fileID = generate('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890', 16);
 			let filepath = path.join(config.projectPath, req.params.projectID, filename);
