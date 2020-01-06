@@ -58,6 +58,7 @@ export default class Timeline extends Component {
       zoomMin: 1000 * 80,
       editable: true,
       zoomMax: 216000,
+      onRemove: this.onRemove,
       onMove: this.onMove,
       onAdd: item => {
         const type =
@@ -137,6 +138,33 @@ export default class Timeline extends Component {
     this.timeline.on("moving", this.onMoving);
     this.timeline.on("move", this.onMove);
   }
+
+  onRemove = (item = {}) => {
+    const itemPath =
+      item?.id?.split(":") || this.state.selectedItems?.[0]?.split(":");
+    let data = this.props.items.filter(arr => arr.id === itemPath[0])[0];
+    const url = `${server.apiUrl}/project/${this.props.project}/item`;
+    const params = {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        track: itemPath[0],
+        item: data?.items[itemPath[1]]?.id
+      })
+    };
+    console.log("Dateeee",data)
+    fetch(url, params)
+      .then(response => response.json())
+      .then(data => {
+        if (typeof data.err !== "undefined") {
+          alert(`${data.err}\n\n${data.msg}`);
+        }
+        this.props.loadData();
+      })
+      .catch(error => this.props.fetchError(error.message));
+  };
 
   onInsert = (id, startTime) => {
     // Get duration for image files
@@ -269,7 +297,7 @@ export default class Timeline extends Component {
           Split in point
         </button>
         {/*<button><i className="material-icons" aria-hidden="true">menu</i>Vlastnosti</button>*/}
-        <button onClick={this.buttonDel}>
+        <button onClick={this.onRemove}>
           <i className="material-icons" aria-hidden="true">
             remove
           </i>
