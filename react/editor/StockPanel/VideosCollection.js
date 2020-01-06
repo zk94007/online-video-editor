@@ -44,8 +44,12 @@ const VideosCollection = props => {
       )}
       <VideoDetailsDialog
         data={data}
+        setError={props.setError}
+        getNetworkRequest={props.getNetworkRequest}
         closeModal={() => setModal(false)}
         open={isModal}
+        setLoading={props.setLoading}
+        resources={props.resources}
       />
       {!props.searchBar && (
         <VideosHeader>
@@ -80,13 +84,19 @@ const VideosCollection = props => {
                   val.name.toLowerCase().indexOf(keyword.toLowerCase()) !== -1
               )
               .map((val, key) => {
+                const isAdded = Object.keys(props.resources).filter(data =>
+                  val?.url?.includes(props.resources?.[data]?.name)
+                );
                 return (
                   <StockCard
                     setError={props.setError}
+                    setLoading={props.setLoading}
+                    getNetworkRequest={props.getNetworkRequest}
                     setModal={data => {
                       setData(data);
                       setModal(true);
                     }}
+                    isAdded={!!isAdded.length}
                     url={val.url}
                     key={key}
                   />

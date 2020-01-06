@@ -347,6 +347,12 @@ const ContextMenu = styled.div`
   width: 100%;
   display: flex;
   justify-content: space-between;
+  p {
+    display: none;
+    ${StockAsset}:hover & {
+      display: block;
+    }
+  }
 `;
 
 const AddButton = styled.button`

@@ -8,11 +8,19 @@ import {
 } from "./styles";
 import Icon from "../../_core/Icon";
 import ReactWaves from "@dschoon/react-waves";
-import axios from "axios";
-import { server } from "../../../config";
 import { withRouter } from "react-router-dom";
+import { addToLibrary, getResources } from "../../utils";
 
-const StockCard = ({ setModal, url, audio = false, history, setError }) => {
+const StockCard = ({
+  setModal,
+  url,
+  audio = false,
+  history,
+  setError,
+  isAdded = false,
+  getNetworkRequest,
+  setLoading
+}) => {
   const refer = useRef(null);
   const [isPlay, setPlay] = useState(false);
 
@@ -35,30 +43,7 @@ const StockCard = ({ setModal, url, audio = false, history, setError }) => {
       }
     };
   }, []);
-  const addToLibrary = useCallback(e => {
-    e.stopPropagation();
-    const projectId = localStorage.getItem("id");
-    const requestUrl = `${server.apiUrl}/project/${projectId}/import`;
-    axios
-      .post(
-        requestUrl,
-        JSON.stringify({
-          url: url,
-          projectID: projectId
-        }),
-        {
-          headers: {
-            "Content-Type": "application/json"
-          }
-        }
-      )
-      .then(data => {
-        if (typeof data.err !== "undefined") {
-          alert(`${data.err}\n\n${data.msg}`);
-        }
-      })
-      .catch(error => setError(error.message));
-  });
+
   return (
     <StockAsset
       onClick={e => {
@@ -71,9 +56,17 @@ const StockCard = ({ setModal, url, audio = false, history, setError }) => {
     >
       <VideoContent>
         <ContextMenu>
-          <AddButton onClick={addToLibrary}>
-            <Icon name="add" color="#665dc3" size={14} />
-          </AddButton>
+          {isAdded ? (
+            <p>Already Added</p>
+          ) : (
+            <AddButton
+              onClick={e =>
+                addToLibrary(e, url, setError, getNetworkRequest, setLoading)
+              }
+            >
+              <Icon name="add" color="#665dc3" size={14} />
+            </AddButton>
+          )}
         </ContextMenu>
         {audio ? (
           <ReactWaves
