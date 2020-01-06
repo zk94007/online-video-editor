@@ -15,7 +15,13 @@ import SidePanel from "./SidePanel/SidePanel";
 import Timeline from "./Timeline/Timeline";
 import SideMenu from "./SideMenu/SideMenu";
 
-import { Container, EditSection } from "./style";
+import {
+  Container,
+  EditSection,
+  ProjectTitleContainer,
+  ProjectTitle,
+  ProjectInput
+} from "./style";
 
 export default class Editor extends Component {
   constructor(props) {
@@ -31,6 +37,7 @@ export default class Editor extends Component {
     this.closeSubmitDialog = this.closeSubmitDialog.bind(this);
     this.openFetchErrorDialog = this.openFetchErrorDialog.bind(this);
     this.closeFetchErrorDialog = this.closeFetchErrorDialog.bind(this);
+    this.projectRef = "";
 
     this.state = {
       project: this.props?.match?.params?.id,
@@ -41,7 +48,9 @@ export default class Editor extends Component {
       showFetchError: false,
       fetchError: "",
       activeState: "Media",
-      logos: {}
+      logos: {},
+      titleClicked: false,
+      projectName: "Untitled Project"
     };
 
     this.loadData();
@@ -55,6 +64,20 @@ export default class Editor extends Component {
 
   componentDidMount() {
     localStorage.setItem("id", this.props?.match?.params?.id);
+    window.addEventListener("click", this.handleClickOutside);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener("click", this.handleClickOutside);
+  }
+
+  handleClickOutside = (event) => {
+    if (this.projectRef && !this.projectRef.contains(event.target)) {
+      this.setState({
+        titleClicked: !false,
+        projectName: this.state.projectName ? this.state.projectName : "Untitled Project"
+      })
+    }
   }
 
   render() {
@@ -134,6 +157,32 @@ export default class Editor extends Component {
             activeState={this.state.activeState}
           />
           <EditSection>
+            <ProjectTitleContainer>
+              {!!this.state.titleClicked ? (
+                <ProjectInput
+                ref={e => {
+                  this.projectRef = e;
+                }}
+                  onChange={event =>
+                    this.setState({
+                      projectName: event.target.value
+                    })
+                  }
+                  value={this.state.projectName}
+                />
+              ) : (
+                <ProjectTitle
+                  onClick={() =>
+                    this.setState({
+                      titleClicked: true
+                    })
+                  }
+                >
+                  <h3>{this.state.projectName}</h3>
+                </ProjectTitle>
+              )}
+            </ProjectTitleContainer>
+
             <main>
               <div>
                 <SidePanel
