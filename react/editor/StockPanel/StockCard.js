@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   VideoContent,
   Video,
@@ -8,10 +8,14 @@ import {
 } from "./styles";
 import Icon from "../../_core/Icon";
 import ReactWaves from "@dschoon/react-waves";
+import axios from "axios";
+import { server } from "../../../config";
+import { withRouter } from "react-router-dom";
 
-export const StockCard = ({ setModal, url, audio = false }) => {
+const StockCard = ({ setModal, url, audio = false, history, setError }) => {
   const refer = useRef(null);
   const [isPlay, setPlay] = useState(false);
+
   useEffect(() => {
     if (refer?.current) {
       refer.current.addEventListener("mouseover", () => {
@@ -31,19 +35,43 @@ export const StockCard = ({ setModal, url, audio = false }) => {
       }
     };
   }, []);
+  const addToLibrary = useCallback(e => {
+    e.stopPropagation();
+    const projectId = localStorage.getItem("id");
+    const requestUrl = `${server.apiUrl}/project/${projectId}/import`;
+    axios
+      .post(
+        requestUrl,
+        JSON.stringify({
+          url: url,
+          projectID: projectId
+        }),
+        {
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      )
+      .then(data => {
+        if (typeof data.err !== "undefined") {
+          alert(`${data.err}\n\n${data.msg}`);
+        }
+      })
+      .catch(error => setError(error.message));
+  });
   return (
     <StockAsset
-      onClick={() =>
+      onClick={e => {
         setModal({
           url: url
-        })
-      }
+        });
+      }}
       audio={audio}
       ref={refer}
     >
       <VideoContent>
         <ContextMenu>
-          <AddButton>
+          <AddButton onClick={addToLibrary}>
             <Icon name="add" color="#665dc3" size={14} />
           </AddButton>
         </ContextMenu>
@@ -73,3 +101,5 @@ export const StockCard = ({ setModal, url, audio = false }) => {
     </StockAsset>
   );
 };
+
+export default withRouter(StockCard);

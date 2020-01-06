@@ -6,9 +6,11 @@ import Videos from "./Videos";
 import Audio from "./Audio";
 import VideosCollection from "./VideosCollection";
 import AudioCollection from "./AudioCollection";
+import { FetchErrorDialog } from "../../_core/Dialog";
 
 const StockPanel = () => {
   const [active, setActive] = useState("video");
+  const [fetchError, setError] = useState(false);
 
   const items = [
     {
@@ -27,14 +29,20 @@ const StockPanel = () => {
       <SideBar>
         <SideBarItems setActive={setActive} active={active} items={items} />
       </SideBar>
+      {!!fetchError && (
+        <FetchErrorDialog msg={fetchError} onClose={() => setError(false)} />
+      )}
+
       <Route exact path="/editor/stock/collections/video" component={Videos} />
       <Route exact path="/editor/stock/collections/audio" component={Audio} />
       <Route
         exact
         path="/editor/stock/collections/video/:key"
-        component={VideosCollection}
+        component={props => (
+          <VideosCollection setError={setError} {...props} />
+        )}
       />
-       <Route
+      <Route
         exact
         path="/editor/stock/collections/audio/:key"
         component={AudioCollection}

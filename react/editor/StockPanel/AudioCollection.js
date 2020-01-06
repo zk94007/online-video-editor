@@ -9,7 +9,7 @@ import {
   VideoResult
 } from "./styles";
 import Icon from "../../_core/Icon";
-import { StockCard } from "./StockCard";
+import StockCard from "./StockCard";
 import { VideoDetailsDialog } from "../../_core/Dialog";
 import PerfectScroller from "react-perfect-scrollbar";
 
