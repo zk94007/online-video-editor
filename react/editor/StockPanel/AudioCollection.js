@@ -14,65 +14,84 @@ import { VideoDetailsDialog } from "../../_core/Dialog";
 import PerfectScroller from "react-perfect-scrollbar";
 
 const AudioCollection = props => {
+  const [search, setSearch] = useState("");
   const asset = [
     {
-      url: "https://s3.amazonaws.com/virginia-testing.webrand.com/public/stryb_a92948.mp3"
+      name: "Softly Inspiring",
+      url:
+        "https://s3.amazonaws.com/virginia-testing.webrand.com/public/stryb_a92948.mp3"
     },
     {
-      url: "https://s3.amazonaws.com/virginia-testing.webrand.com/public/SoundHelix-Song-1.mp3"
+      name: "Such A Great Day ",
+      url:
+        "https://s3.amazonaws.com/virginia-testing.webrand.com/public/SoundHelix-Song-1.mp3"
     }
   ];
   const [isModal, setModal] = useState(false);
   const [data, setData] = useState(null);
+  const keyword = props.searchBar ? props.search : search;
 
   return (
     <VideosContainer>
-      <SearchBar>
-        <Icon style={{ margin: "0 18px" }} color="#665dc3" name="search" />
-        <SearchInput placeholder="Search video.." />
-      </SearchBar>
+      {!props.searchBar && (
+        <SearchBar>
+          <Icon style={{ margin: "0 18px" }} color="#665dc3" name="search" />
+          <SearchInput
+            onChange={e => setSearch(e.target.value)}
+            value={search}
+            placeholder="Search video.."
+          />
+        </SearchBar>
+      )}
       <VideoDetailsDialog
         data={data}
         open={isModal}
         closeModal={() => setModal(false)}
       />
-      <VideosHeader>
-        <VideosBackContainer onClick={() => props.history.goBack()}>
-          <Icon
-            name="arrowLeft"
-            style={{ marginRight: 6, transform: "rotate(90deg)" }}
-          />
-          <span>Back to collections</span>
-        </VideosBackContainer>
-        <h2
-          style={{
-            fontSize: "1.625rem",
-            fontWeight: 600,
-            textAlign: "center",
-            color: "#fff",
-            flex: 1,
-            textTransform: "capitalize"
-          }}
-        >
-          {props?.match?.params?.key?.replace(/-/gi, " ")}
-        </h2>
-      </VideosHeader>
+      {!props.searchBar && (
+        <VideosHeader>
+          <VideosBackContainer onClick={() => props.history.goBack()}>
+            <Icon
+              name="arrowLeft"
+              style={{ marginRight: 6, transform: "rotate(90deg)" }}
+            />
+            <span>Back to collections</span>
+          </VideosBackContainer>
+          <h2
+            style={{
+              fontSize: "1.625rem",
+              fontWeight: 600,
+              textAlign: "center",
+              color: "#fff",
+              flex: 1,
+              textTransform: "capitalize"
+            }}
+          >
+            {props?.match?.params?.key?.replace(/-/gi, " ")}
+          </h2>
+        </VideosHeader>
+      )}
       <MainContainer>
         <PerfectScroller>
           <VideoResult>
-            {asset.map((val, key) => {
-              return (
-                <StockCard
-                  setModal={data => {
-                    setData(data);
-                    setModal(true);
-                  }}
-                  url={val.url}
-                  key={key}
-                  audio={true}
-                />
-              );
-            })}
+            {asset
+              .filter(
+                val =>
+                  val.name.toLowerCase().indexOf(keyword.toLowerCase()) !== -1
+              )
+              .map((val, key) => {
+                return (
+                  <StockCard
+                    setModal={data => {
+                      setData(data);
+                      setModal(true);
+                    }}
+                    url={val.url}
+                    key={key}
+                    audio={true}
+                  />
+                );
+              })}
           </VideoResult>
         </PerfectScroller>
       </MainContainer>
