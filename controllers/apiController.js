@@ -27,7 +27,7 @@ exports.default = (req, res) => {
 exports.projectPOST = (req, res, next) => {
     const renderer = {
 		projectID: generate('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890', 32),
-		projectName: '',
+		projectName: 'Untitled',
 		logos: {},
 		resources: {},
 		timeline: [
@@ -72,6 +72,34 @@ exports.projectGET = (req, res) => {
 				resources: renderer.resources,
 				timeline: renderer.timeline,
 			});
+		},
+		err => fileErr(err, res)
+	);
+};
+
+exports.projectNamePost = (req, res, next) => {
+	if (!isset(req.body.projectName)) {
+		res.status(400);
+		res.json({
+			err: 'Missing parameters.',
+			msg: 'Missing required parameters: projectName.',
+		});
+		return;
+	}
+
+	rendererManager.loadRenderer(req.body.projectID).then(
+		(renderer) => {
+			renderer.projectName = req.body.projectName;
+
+			rendererManager.saveRenderer(req.params.projectID, renderer).then(
+				() => {
+					res.json({
+						msg: `Project name has updated`,
+						projectName: renderer.projectName
+					});
+				},
+				err => next(err)
+			);
 		},
 		err => fileErr(err, res)
 	);

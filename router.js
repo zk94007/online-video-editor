@@ -7,17 +7,12 @@ const server = require('express');
 const router = server.Router();
 
 // Require controller modules.
-const mainController = require('./controllers/mainController');
 const apiController = require('./controllers/apiController');
 const errorController = require('./controllers/errorController');
 
 // Vis timeline resources
 router.get('/vis.css', (req, res) => res.sendFile(__dirname + '/node_modules/vis-timeline/dist/vis-timeline-graph2d.min.css'));
 router.get('/vis.js', (req, res) => res.sendFile(__dirname + '/node_modules/vis-timeline/dist/vis-timeline-graph2d.min.js'));
-
-// Homepage route
-// router.get('/', mainController.main);
-// router.get('/project/:projectID', mainController.project);
 
 // API route
 router.all('/api', apiController.default);
@@ -27,6 +22,8 @@ router.post('/api/project', apiController.projectPOST);
 router.get('/api/project/:projectID', apiController.projectGET);
 
 router.put('/api/project/:projectID', apiController.projectPUT);
+
+router.post('/api/project/:projectID/projectName', apiController.projectNamePOST);
 
 router.post('/api/project/:projectID/import', apiController.projectImportPOST);
 
