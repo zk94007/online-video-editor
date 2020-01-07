@@ -12,6 +12,7 @@ import Icon from "../../_core/Icon";
 import StockCard from "./StockCard";
 import { VideoDetailsDialog } from "../../_core/Dialog";
 import PerfectScroller from "react-perfect-scrollbar";
+import Videos from "./Videos";
 
 const VideosCollection = props => {
   const [search, setSearch] = useState("");
