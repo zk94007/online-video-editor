@@ -71,14 +71,16 @@ export default class Editor extends Component {
     window.removeEventListener("click", this.handleClickOutside);
   }
 
-  handleClickOutside = (event) => {
+  handleClickOutside = event => {
     if (this.projectRef && !this.projectRef.contains(event.target)) {
       this.setState({
-        titleClicked: !false,
-        projectName: this.state.projectName ? this.state.projectName : "Untitled Project"
-      })
+        titleClicked: !this.state.titleClicked,
+        projectName: this.state.projectName
+          ? this.state.projectName
+          : "Untitled Project"
+      });
     }
-  }
+  };
 
   render() {
     const items = [
@@ -137,6 +139,30 @@ export default class Editor extends Component {
             </button>
           </a>
           <div className="divider" />
+          {!!this.state.titleClicked ? (
+            <ProjectInput
+              ref={e => {
+                this.projectRef = e;
+              }}
+              onChange={event =>
+                this.setState({
+                  projectName: event.target.value
+                })
+              }
+              value={this.state.projectName}
+            />
+          ) : (
+            <ProjectTitle
+              onClick={e => {
+                e.stopPropagation();
+                this.setState({
+                  titleClicked: true
+                });
+              }}
+            >
+              <h3>{this.state.projectName}</h3>
+            </ProjectTitle>
+          )}
           {/*<button><i className="material-icons" aria-hidden="true">language</i>Jazyk</button>*/}
           {/*<button><i className="material-icons" aria-hidden="true">save_alt</i>Exportovat</button>*/}
           <button
@@ -157,32 +183,6 @@ export default class Editor extends Component {
             activeState={this.state.activeState}
           />
           <EditSection>
-            <ProjectTitleContainer>
-              {!!this.state.titleClicked ? (
-                <ProjectInput
-                ref={e => {
-                  this.projectRef = e;
-                }}
-                  onChange={event =>
-                    this.setState({
-                      projectName: event.target.value
-                    })
-                  }
-                  value={this.state.projectName}
-                />
-              ) : (
-                <ProjectTitle
-                  onClick={() =>
-                    this.setState({
-                      titleClicked: true
-                    })
-                  }
-                >
-                  <h3>{this.state.projectName}</h3>
-                </ProjectTitle>
-              )}
-            </ProjectTitleContainer>
-
             <main>
               <div>
                 <SidePanel

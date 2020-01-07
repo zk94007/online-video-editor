@@ -22,14 +22,12 @@ const ProjectTitleContainer = styled.div`
 `;
 
 const ProjectTitle = styled.div`
-  display: flex;
+  display: inline-block;
   align-items: center;
-  height: 40px;
   padding: 0.5rem 0.75rem;
   color: rgb(255, 255, 255);
   margin-right: auto;
   background-color: rgba(255, 255, 255, 0.05);
-  margin-top: 24px;
 `;
 
 const ProjectInput = styled.input`
@@ -44,16 +42,12 @@ const ProjectInput = styled.input`
   letter-spacing: 0.014375rem;
   display: inline-block;
   max-width: 200px;
-  height: 40px;
   border-width: initial;
   border-style: none;
   border-color: initial;
   border-image: initial;
   outline: none;
-  margin-top: 24px;
-  margin-bottom: 0px;
-  margin-left: 0px;
-  margin-right: 0px;
+  margin: 0;
   border-radius: 0.1875rem;
   padding: 0.5rem 0.75rem;
 `;
