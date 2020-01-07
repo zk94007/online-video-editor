@@ -18,6 +18,7 @@ import Scroller from "react-perfect-scrollbar";
 import ReactPlayer from "react-player";
 import { Button } from "../../../editor/SidePanel/style";
 import { CSSTransitionGroup } from "react-transition-group";
+import { addToLibrary, getResources } from "../../../utils";
 
 Modal.setAppElement("#app");
 
@@ -48,6 +49,10 @@ class VideoDetailsDialog extends React.Component {
     detail: false
   };
   render() {
+    const { setLoading, setError, getNetworkRequest, resources } = this.props;
+    const isAdded = Object.keys(resources).filter(keys => {
+      return this.props?.data?.url.includes(resources[keys].name || "");
+    });
     return (
       <Modal
         isOpen={this.props.open}
@@ -74,10 +79,34 @@ class VideoDetailsDialog extends React.Component {
               </Scroller>
             </VideoDetailModalLeft>
             <VideoDetailModalRight>
-              <Button style={{ padding: 0 }}>
-                <Icon style={{ marginRight: 8 }} name="add" />
-                Add to Library
-              </Button>
+              {!!isAdded.length ? (
+                <Button
+                  disabled
+                  style={{
+                    padding: 0,
+                    backgroundColor: "rgba(102,93,195,0.25)"
+                  }}
+                >
+                  Already Added
+                </Button>
+              ) : (
+                <Button
+                  onClick={e =>
+                    addToLibrary(
+                      e,
+                      this.props?.data?.url,
+                      setError,
+                      getNetworkRequest,
+                      setLoading
+                    )
+                  }
+                  style={{ padding: 0 }}
+                >
+                  <Icon style={{ marginRight: 8 }} name="add" />
+                  Add to Library
+                </Button>
+              )}
+
               <VideoDetailModalCategory>
                 <h4>Category:</h4>
                 <VideoDetailModalTags>footage</VideoDetailModalTags>

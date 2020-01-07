@@ -9,17 +9,19 @@ import {
   VideoResult
 } from "./styles";
 import Icon from "../../_core/Icon";
-import { StockCard } from "./StockCard";
+import StockCard from "./StockCard";
 import { VideoDetailsDialog } from "../../_core/Dialog";
 import PerfectScroller from "react-perfect-scrollbar";
 
 const AudioCollection = props => {
   const asset = [
     {
-      url: "https://s3.amazonaws.com/virginia-testing.webrand.com/public/stryb_a92948.mp3"
+      url:
+        "https://s3.amazonaws.com/virginia-testing.webrand.com/public/stryb_a92948.mp3"
     },
     {
-      url: "https://s3.amazonaws.com/virginia-testing.webrand.com/public/SoundHelix-Song-1.mp3"
+      url:
+        "https://s3.amazonaws.com/virginia-testing.webrand.com/public/SoundHelix-Song-1.mp3"
     }
   ];
   const [isModal, setModal] = useState(false);
@@ -35,6 +37,11 @@ const AudioCollection = props => {
         data={data}
         open={isModal}
         closeModal={() => setModal(false)}
+        resources={props.resources}
+        setError={props.setError}
+        setLoading={props.setLoading}
+        getNetworkRequest={props.getNetworkRequest}
+
       />
       <VideosHeader>
         <VideosBackContainer onClick={() => props.history.goBack()}>
@@ -61,13 +68,19 @@ const AudioCollection = props => {
         <PerfectScroller>
           <VideoResult>
             {asset.map((val, key) => {
+              const isAdded = Object.keys(props.resources).filter(data =>
+                val?.url?.includes(props.resources?.[data]?.name)
+              );
               return (
                 <StockCard
                   setModal={data => {
                     setData(data);
                     setModal(true);
                   }}
+                  setLoading={props.setLoading}
+                  getNetworkRequest={props.getNetworkRequest}
                   url={val.url}
+                  isAdded={!!isAdded.length}
                   key={key}
                   audio={true}
                 />

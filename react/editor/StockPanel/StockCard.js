@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   VideoContent,
   Video,
@@ -8,10 +8,22 @@ import {
 } from "./styles";
 import Icon from "../../_core/Icon";
 import ReactWaves from "@dschoon/react-waves";
+import { withRouter } from "react-router-dom";
+import { addToLibrary, getResources } from "../../utils";
 
-export const StockCard = ({ setModal, url, audio = false }) => {
+const StockCard = ({
+  setModal,
+  url,
+  audio = false,
+  history,
+  setError,
+  isAdded = false,
+  getNetworkRequest,
+  setLoading
+}) => {
   const refer = useRef(null);
   const [isPlay, setPlay] = useState(false);
+
   useEffect(() => {
     if (refer?.current) {
       refer.current.addEventListener("mouseover", () => {
@@ -31,21 +43,30 @@ export const StockCard = ({ setModal, url, audio = false }) => {
       }
     };
   }, []);
+
   return (
     <StockAsset
-      onClick={() =>
+      onClick={e => {
         setModal({
           url: url
-        })
-      }
+        });
+      }}
       audio={audio}
       ref={refer}
     >
       <VideoContent>
         <ContextMenu>
-          <AddButton>
-            <Icon name="add" color="#665dc3" size={14} />
-          </AddButton>
+          {isAdded ? (
+            <p>Already Added</p>
+          ) : (
+            <AddButton
+              onClick={e =>
+                addToLibrary(e, url, setError, getNetworkRequest, setLoading)
+              }
+            >
+              <Icon name="add" color="#665dc3" size={14} />
+            </AddButton>
+          )}
         </ContextMenu>
         {audio ? (
           <ReactWaves
@@ -73,3 +94,5 @@ export const StockCard = ({ setModal, url, audio = false }) => {
     </StockAsset>
   );
 };
+
+export default withRouter(StockCard);

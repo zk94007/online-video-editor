@@ -347,10 +347,16 @@ const ContextMenu = styled.div`
   width: 100%;
   display: flex;
   justify-content: space-between;
+  p {
+    display: none;
+    ${StockAsset}:hover & {
+      display: block;
+    }
+  }
 `;
 
 const AddButton = styled.button`
-  z-index: 1;
+  z-index: 10000;
   width: 24px;
   height: 24px;
   border-radius: 50%;

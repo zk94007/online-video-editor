@@ -28,6 +28,8 @@ router.get('/api/project/:projectID', apiController.projectGET);
 
 router.put('/api/project/:projectID', apiController.projectPUT);
 
+router.post('/api/project/:projectID/import', apiController.projectImportPOST);
+
 router.post('/api/project/:projectID/file', apiController.projectFilePOST);
 
 router.delete('/api/project/:projectID/file/:fileID', apiController.projectFileDELETE);
@@ -44,11 +46,15 @@ router.delete('/api/project/:projectID/filter', apiController.projectFilterDELET
 
 router.post('/api/project/:projectID/transition', apiController.projectTransitionPOST);
 
+router.post('/api/project/:projectID/textanimation', apiController.projectTextAnimationPOST);
+
 router.delete('/api/project/:projectID/item', apiController.projectItemDELETE);
 
 router.put('/api/project/:projectID/item/move', apiController.projectItemPUTmove);
 
 router.put('/api/project/:projectID/item/split', apiController.projectItemPUTsplit);
+
+router.put('/api/project/:projectID/item/crop', apiController.projectItemPUTcrop);
 
 router.post('/api/project/:projectID/track', apiController.projectTrackPOST);
 

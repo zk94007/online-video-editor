@@ -70,7 +70,7 @@ export default class Uploader extends Component {
       >
         {this.state.status !== "uploading" && (
           <UploadContainer
-            style={{ display: "flex", flexDirection: "column", height: "100%" }}
+            style={{ display: "flex", flexDirection: "column" }}
           >
             <UploadIcon>
               <Icon name="upload" />
