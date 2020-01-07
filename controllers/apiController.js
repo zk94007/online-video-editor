@@ -77,7 +77,7 @@ exports.projectGET = (req, res) => {
 	);
 };
 
-exports.projectNamePost = (req, res, next) => {
+exports.projectNamePOST = (req, res, next) => {
 	if (!isset(req.body.projectName)) {
 		res.status(400);
 		res.json({
