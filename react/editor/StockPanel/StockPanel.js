@@ -45,8 +45,32 @@ const StockPanel = () => {
         <FetchErrorDialog msg={fetchError} onClose={() => setError(false)} />
       )}
       {!!loading && <LoadingDialog />}
-      <Route exact path="/editor/stock/collections/video" component={Videos} />
-      <Route exact path="/editor/stock/collections/audio" component={Audio} />
+      <Route
+        exact
+        path="/editor/stock/collections/video"
+        component={props => (
+          <Videos
+            resources={resources}
+            setError={setError}
+            getNetworkRequest={getNetworkRequest}
+            setLoading={setLoading}
+            {...props}
+          />
+        )}
+      />
+      <Route
+        exact
+        path="/editor/stock/collections/audio"
+        component={props => (
+          <Audio
+            resources={resources}
+            setError={setError}
+            getNetworkRequest={getNetworkRequest}
+            setLoading={setLoading}
+            {...props}
+          />
+        )}
+      />
       <Route
         exact
         path="/editor/stock/collections/video/:key"

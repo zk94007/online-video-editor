@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import {
   SearchBar,
   VideosContainer,
@@ -18,7 +18,13 @@ import Icon from "../../_core/Icon";
 import { withRouter } from "react-router-dom";
 import AudioCollection from "./AudioCollection";
 
-const Audio = ({ history }) => {
+const Audio = ({
+  history,
+  resources,
+  setError,
+  setLoading,
+  getNetworkRequest
+}) => {
   const [search, setSearch] = useState("");
   const collections = [
     {
@@ -49,7 +55,14 @@ const Audio = ({ history }) => {
       </SearchBar>
 
       {!!search ? (
-        <AudioCollection searchBar={true} search={search} />
+        <AudioCollection
+          resources={resources}
+          setError={setError}
+          getNetworkRequest={getNetworkRequest}
+          setLoading={setLoading}
+          searchBar={true}
+          search={search}
+        />
       ) : (
         <VideosListContainer>
           <CollectionContainer>

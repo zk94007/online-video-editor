@@ -19,7 +19,13 @@ import { withRouter } from "react-router-dom";
 import PerfectScroller from "react-perfect-scrollbar";
 import VideoCollection from "./VideosCollection";
 
-const Videos = ({ history }) => {
+const Videos = ({
+  history,
+  resources,
+  setError,
+  setLoading,
+  getNetworkRequest
+}) => {
   const [search, setSearch] = useState("");
 
   const collections = [
@@ -55,7 +61,14 @@ const Videos = ({ history }) => {
         />
       </SearchBar>
       {!!search ? (
-        <VideoCollection searchBar={true} search={search} />
+        <VideoCollection
+          resources={resources}
+          setError={setError}
+          getNetworkRequest={getNetworkRequest}
+          setLoading={setLoading}
+          searchBar={true}
+          search={search}
+        />
       ) : (
         <VideosListContainer>
           <PerfectScroller component="div">
