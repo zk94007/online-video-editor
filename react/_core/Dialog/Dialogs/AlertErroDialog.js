@@ -24,7 +24,7 @@ export default class AlertErrorDialog extends Component {
             Alert
           </h2>
           <div>
-            <i>{this.props.msg}</i>
+            <p>{this.props.msg}</p>
             <button onClick={() => this.props.onClose()}>Close</button>
           </div>
         </Modal>

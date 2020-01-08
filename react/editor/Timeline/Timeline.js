@@ -64,10 +64,6 @@ export default class Timeline extends Component {
       onMove: this.onMove,
       onAdd: item => {
         if (item?.group?.includes(item?.support)) {
-          this.setState({
-            error: `aaa`
-          });
-        } else {
           const type =
             this.props?.resources[item?.content]?.mime?.includes("audio/") ||
             this.props?.resources[item?.content]?.mimeType?.includes("audio/")
@@ -107,7 +103,11 @@ export default class Timeline extends Component {
               //   startDate = moment(formattedDateFromString(data.out)).add(2, "s");
               // }
             });
-          // this.onInsert(item?.content, startDate, item?.support);
+          this.onInsert(item?.content, startDate, item?.support);
+        } else {
+          this.setState({
+            error: `can't drag on ${item?.group}`
+          });
         }
       },
       onDropObjectOnItem: (objectData, item, callback) => {},
@@ -287,7 +287,7 @@ export default class Timeline extends Component {
           event.preventDefault();
         }}
       >
-        {/* {!!this.state.error && (
+        {!!this.state.error && (
           <AlertErrorDialog
             onClose={() =>
               this.setState({
@@ -296,7 +296,7 @@ export default class Timeline extends Component {
             }
             msg={this.state.error}
           />
-        )} */}
+        )}
         <button onClick={this.buttonFilter}>
           <i className="material-icons" aria-hidden="true">
             flare
