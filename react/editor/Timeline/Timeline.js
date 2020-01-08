@@ -263,7 +263,7 @@ export default class Timeline extends Component {
         if (item.resource === "blank") {
           actualTime = timeManager.addDuration(item.length, actualTime);
         } else {
-          let content = this.props.resources[item.id].name;
+          let content = this.props.resources?.[item?.resource_id]?.name || item?.textAnimation;
           if (item?.filters?.length > 0)
             content =
               '<div class="filter"></div><i class="filter material-icons">flare</i>' +
