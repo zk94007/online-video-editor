@@ -43,6 +43,11 @@ exports.projectPOST = (req, res, next) => {
 				id: 'videotrack0',
 				items: [],
 				transitions: []
+			},
+			{
+				id: 'videotrack1',
+				items: [],
+				transitions: []
 			}
 		]
 	};
@@ -445,7 +450,8 @@ exports.projectFilePUT = (req, res, next) => {
 			}
 
 			track.items.push({
-				id: req.params.fileID,
+				id: generate('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890', 16),
+				resource_id: resource.id,
 				in: req.body.in,
 				out: req.body.out,
 				clip: {
