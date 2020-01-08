@@ -14,7 +14,8 @@ export const BackgroundCard = ({
   name,
   color = "false",
   image,
-  video = false
+  video = false,
+  support = ""
 }) => {
   const refer = useRef(null);
   const [isShow, setShow] = useState(null);
@@ -45,7 +46,7 @@ export const BackgroundCard = ({
     var objectItem = {
       content: id,
       target: "itemType",
-      support: "text"
+      support: support
     };
     event.dataTransfer.setData("text", JSON.stringify(objectItem));
   };
@@ -53,7 +54,9 @@ export const BackgroundCard = ({
   return (
     <Card
       draggable="true"
-      onDragStart={event => handleObjectItemDragStart(event, name?.toLowerCase())}
+      onDragStart={event =>
+        handleObjectItemDragStart(event, name?.toLowerCase())
+      }
     >
       <Preview ref={refer}>
         <DefaultWrapper color={color}>

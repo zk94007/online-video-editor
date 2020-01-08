@@ -64,20 +64,20 @@ export default class Timeline extends Component {
       onMove: this.onMove,
       onAdd: item => {
         if (item?.group?.includes(item?.support)) {
-          const type =
-            this.props?.resources[item?.content]?.mime?.includes("audio/") ||
-            this.props?.resources[item?.content]?.mimeType?.includes("audio/")
-              ? "audiotrack0"
-              : "videotrack0";
           let startDate = item?.start;
           let length = this.props?.resources[item?.content]?.length
             ? this.props?.resources[item?.content]?.length
             : moment(startDate)
                 .add(3, "s")
                 .format("HH:mm:ss,SSS");
-
+          length =
+            item?.support === "text"
+              ? moment(startDate)
+                  .add(3, "s")
+                  .format("HH:mm:ss,SSS")
+              : length;
           this.props.items
-            .filter(val => val.id === type)?.[0]
+            .filter(val => val.id === item?.group)?.[0]
             ?.items?.map(data => {
               const start = formattedDateFromString(data.in);
               const end = formattedDateFromString(data.out);
@@ -103,7 +103,13 @@ export default class Timeline extends Component {
               //   startDate = moment(formattedDateFromString(data.out)).add(2, "s");
               // }
             });
-          this.onInsert(item?.content, startDate, item?.support);
+          this.onInsert(
+            item?.content,
+            startDate,
+            item?.support,
+            item?.group,
+            length
+          );
         } else {
           this.setState({
             error: `can't drag on ${item?.group}`
@@ -176,41 +182,49 @@ export default class Timeline extends Component {
       .catch(error => this.props.fetchError(error.message));
   };
 
-  onInsert = (id, startTime, support) => {
-    // Get duration for image files
-    let duration = null;
-    if (
-      new RegExp(/^image\//).test(this.props.resources[id]?.mime) ||
-      new RegExp(/^image\//).test(this.props.resources[id]?.mimeType)
-    ) {
-      duration = moment(startTime).add(3, "s");
-    }
-
-    const track =
-      this.props.resources[id].mime?.includes("audio/") ||
-      this.props.resources[id].mimeType?.includes("audio/")
-        ? "audiotrack0"
-        : "videotrack0";
-
+  onInsert = (id, startTime, support, group, length) => {
     // Send request to API
-    const url = `${server.apiUrl}/project/${this.props.project}/file/${id}`;
-    const params = {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        track: track,
-        support: support,
-        in: moment(startTime).format("HH:mm:ss,SSS"),
-        out: this.props.resources[id]?.length
-          ? timeManager.addDuration(
-              moment(startTime).format("HH:mm:ss,SSS"),
-              this.props.resources[id]?.length
-            )
-          : duration?.format("HH:mm:ss,SSS")
-      })
-    };
+    let url = "";
+    let params = "";
+    if (support === "text") {
+      url = `${server.apiUrl}/project/${this.props.project}/textanimation`;
+      params = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          track: group,
+          textAnimation: id,
+          in: moment(startTime).format("HH:mm:ss,SSS"),
+          out: this.props.resources[id]?.length
+            ? timeManager.addDuration(
+                moment(startTime).format("HH:mm:ss,SSS"),
+                this.props.resources[id]?.length
+              )
+            : length
+        })
+      };
+    } else {
+      url = `${server.apiUrl}/project/${this.props.project}/file/${id}`;
+      params = {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          track: group,
+          support: support,
+          in: moment(startTime).format("HH:mm:ss,SSS"),
+          out: this.props.resources[id]?.length
+            ? timeManager.addDuration(
+                moment(startTime).format("HH:mm:ss,SSS"),
+                this.props.resources[id]?.length
+              )
+            : length
+        })
+      };
+    }
 
     fetch(url, params)
       .then(response => response.json())
