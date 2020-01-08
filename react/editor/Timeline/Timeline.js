@@ -15,6 +15,7 @@ import AddFilterDialog from "./AddFilterDialog";
 import moment from "moment";
 import { extendMoment } from "moment-range";
 import { formattedDateFromString } from "../../utils";
+import AlertErrorDialog from "../../_core/Dialog/Dialogs/AlertErroDialog";
 const Moment = extendMoment(moment);
 
 export default class Timeline extends Component {
@@ -27,7 +28,8 @@ export default class Timeline extends Component {
       selectedItems: [],
       showAddFilterDialog: false,
       duration: "00:00:00,000",
-      timePointer: "00:00:00,000"
+      timePointer: "00:00:00,000",
+      error: false
     };
 
     this.onSelect = this.onSelect.bind(this);
@@ -61,43 +63,52 @@ export default class Timeline extends Component {
       onRemove: this.onRemove,
       onMove: this.onMove,
       onAdd: item => {
-        const type =
-          this.props?.resources[item?.content]?.mime?.includes("audio/") ||
-          this.props?.resources[item?.content]?.mimeType?.includes("audio/")
-            ? "audiotrack0"
-            : "videotrack0";
-        let startDate = item?.start;
-        let length = this.props?.resources[item?.content]?.length
-          ? this.props?.resources[item?.content]?.length
-          : moment(startDate)
-              .add(3, "s")
-              .format("HH:mm:ss,SSS");
-
-        this.props.items
-          .filter(val => val.id === type)?.[0]
-          ?.items?.map(data => {
-            const start = formattedDateFromString(data.in);
-            const end = formattedDateFromString(data.out);
-            // const range = moment.range(moment(start), moment(end));
-            const duration = timeManager.addDuration(
-              moment(startDate).format("HH:mm:ss,SSS"),
-              length
-            );
-            let currentRange = moment.range(
-              startDate,
-              formattedDateFromString(duration)
-            );
-            if (currentRange.contains(start) || currentRange.contains(end)) {
-              startDate = moment(formattedDateFromString(data.out)).add(2, "s");
-            }
-            // if (
-            //   range.contains(formattedDateFromString(duration)) ||
-            //   range.contains(startDate)
-            // ) {
-            //   startDate = moment(formattedDateFromString(data.out)).add(2, "s");
-            // }
+        if (item?.group?.includes(item?.support)) {
+          this.setState({
+            error: `aaa`
           });
-        this.onInsert(item?.content, startDate);
+        } else {
+          const type =
+            this.props?.resources[item?.content]?.mime?.includes("audio/") ||
+            this.props?.resources[item?.content]?.mimeType?.includes("audio/")
+              ? "audiotrack0"
+              : "videotrack0";
+          let startDate = item?.start;
+          let length = this.props?.resources[item?.content]?.length
+            ? this.props?.resources[item?.content]?.length
+            : moment(startDate)
+                .add(3, "s")
+                .format("HH:mm:ss,SSS");
+
+          this.props.items
+            .filter(val => val.id === type)?.[0]
+            ?.items?.map(data => {
+              const start = formattedDateFromString(data.in);
+              const end = formattedDateFromString(data.out);
+              // const range = moment.range(moment(start), moment(end));
+              const duration = timeManager.addDuration(
+                moment(startDate).format("HH:mm:ss,SSS"),
+                length
+              );
+              let currentRange = moment.range(
+                startDate,
+                formattedDateFromString(duration)
+              );
+              if (currentRange.contains(start) || currentRange.contains(end)) {
+                startDate = moment(formattedDateFromString(data.out)).add(
+                  2,
+                  "s"
+                );
+              }
+              // if (
+              //   range.contains(formattedDateFromString(duration)) ||
+              //   range.contains(startDate)
+              // ) {
+              //   startDate = moment(formattedDateFromString(data.out)).add(2, "s");
+              // }
+            });
+          // this.onInsert(item?.content, startDate, item?.support);
+        }
       },
       onDropObjectOnItem: (objectData, item, callback) => {},
       timeAxis: {
@@ -154,7 +165,6 @@ export default class Timeline extends Component {
         item: data?.items[itemPath[1]]?.id
       })
     };
-    console.log("Dateeee",data)
     fetch(url, params)
       .then(response => response.json())
       .then(data => {
@@ -166,19 +176,13 @@ export default class Timeline extends Component {
       .catch(error => this.props.fetchError(error.message));
   };
 
-  onInsert = (id, startTime) => {
+  onInsert = (id, startTime, support) => {
     // Get duration for image files
     let duration = null;
-    let support =
-      this.props.resources[id].mime?.includes("audio/") ||
-      this.props.resources[id].mimeType?.includes("audio/")
-        ? "audio"
-        : "video";
     if (
       new RegExp(/^image\//).test(this.props.resources[id]?.mime) ||
       new RegExp(/^image\//).test(this.props.resources[id]?.mimeType)
     ) {
-      support = "video";
       duration = moment(startTime).add(3, "s");
     }
 
@@ -283,6 +287,16 @@ export default class Timeline extends Component {
           event.preventDefault();
         }}
       >
+        {/* {!!this.state.error && (
+          <AlertErrorDialog
+            onClose={() =>
+              this.setState({
+                error: false
+              })
+            }
+            msg={this.state.error}
+          />
+        )} */}
         <button onClick={this.buttonFilter}>
           <i className="material-icons" aria-hidden="true">
             flare

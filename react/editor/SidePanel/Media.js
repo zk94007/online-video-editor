@@ -1,5 +1,11 @@
 import React from "react";
-import { MediaContainer, UploadIcon, Title, LibraryGrid, ScrollContainer } from "./style";
+import {
+  MediaContainer,
+  UploadIcon,
+  Title,
+  LibraryGrid,
+  ScrollContainer
+} from "./style";
 import { func, any, string } from "prop-types";
 import { CSSTransitionGroup } from "react-transition-group";
 import { CardComponent } from "./Card";
@@ -11,9 +17,22 @@ const Media = ({ onChangeState, items = [], onRemove, projectId }) => {
     <ScrollContainer>
       <PerfectScrollbar component="div">
         <LibraryGrid>
-          {Object.keys(items).map((val, ind) => (
-            <CardComponent projectId={projectId} onRemove={onRemove} item={items[val]} key={ind} />
-          ))}
+          {Object.keys(items).map((val, ind) => {
+            let support =
+              items[val].mime?.includes("audio/") ||
+              items[val].mimeType?.includes("audio/")
+                ? "audio"
+                : "video";
+            return (
+              <CardComponent
+                support={support}
+                projectId={projectId}
+                onRemove={onRemove}
+                item={items[val]}
+                key={ind}
+              />
+            );
+          })}
         </LibraryGrid>
       </PerfectScrollbar>
     </ScrollContainer>
