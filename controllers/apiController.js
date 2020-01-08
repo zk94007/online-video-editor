@@ -503,7 +503,7 @@ exports.projectTextAnimationPOST = (req, res, next) => {
 		return;
 	}
 
-	rendererManager.loadRenderer(req.body.projectID).then(
+	rendererManager.loadRenderer(req.params.projectID).then(
 		(renderer) => {
 			const track = renderer.timeline.find(t => t.id == req.body.track);
 			if (track === null) {
