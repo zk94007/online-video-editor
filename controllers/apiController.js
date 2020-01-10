@@ -740,6 +740,9 @@ exports.projectItemPUTmove = (req, res, next) => {
 				track.transitions.splice(track.transitions.findIndex(transition => transition.itemA == req.body.item || transition.itemB == req.body.item), 1);
 			}
 
+			const duration = timeManager.subDuration(item.out, item.in);
+			item.in = req.body.time;
+			item.out = timeManager.addDuration(item.in, duration);
 			trackTarget.items.push(item);
 
 			rendererManager.saveRenderer(req.params.projectID, renderer).then(
