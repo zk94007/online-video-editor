@@ -18,7 +18,6 @@ import SideMenu from "./SideMenu/SideMenu";
 import {
   Container,
   EditSection,
-  ProjectTitleContainer,
   ProjectTitle,
   ProjectInput
 } from "./style";
@@ -415,20 +414,6 @@ export default class Editor extends Component {
   static findTrack(timeline = [], trackId) {
     let track = timeline.filter(data => data.id === trackId);
     return track?.[0]?.items;
-    // for (let videotrack of timeline.video) {
-    //   if (videotrack.id === trackId) {
-    //     track = videotrack;
-    //     break;
-    //   }
-    // }
-    // if (track === null) {
-    //   for (let audiotrack of timeline.audio) {
-    //     if (audiotrack.id === trackId) {
-    //       track = audiotrack;
-    //       break;
-    //     }
-    //   }
-    // }
   }
 
   /**

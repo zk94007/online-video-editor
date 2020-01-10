@@ -58,9 +58,14 @@ export default class Timeline extends Component {
       stack: false,
       zoomMin: 1000 * 80,
       editable: true,
+      itemsAlwaysDraggable: {
+        item: true,
+        range: true
+      },
       zoomMax: 216000,
       onRemove: this.onRemove,
       onMove: this.onMove,
+      onMoving: this.onMoving,
       onAdd: item => {
         if (item?.group?.includes(item?.support)) {
           let startDate = item?.start;
@@ -120,7 +125,6 @@ export default class Timeline extends Component {
         scale: "second",
         step: 2
       },
-      onMoving: this.onMoving,
       format: {
         minorLabels: {
           millisecond: "SSS [ms]",
@@ -262,7 +266,7 @@ export default class Timeline extends Component {
     for (let track of tracks) {
       groups.push({
         id: track.id,
-        content: `<div style="height: 66px; align-items: center;display: flex; justify-content: center; border-bottom: none; text-transform: capitalize">
+        content: `<div style="height: 40px; align-items: center;display: flex; justify-content: center; border-bottom: none; text-transform: capitalize">
         <i class="material-icons" aria-hidden="true">${this.getIcons(
           track.id
         )}</i></div>`,
@@ -273,7 +277,7 @@ export default class Timeline extends Component {
       let index = 0;
 
       for (let item of track.items) {
-        if (item.resource === "blank") {
+        if (item?.resource === "blank") {
           actualTime = timeManager.addDuration(item.length, actualTime);
         } else {
           let content =
@@ -284,14 +288,14 @@ export default class Timeline extends Component {
               '<div class="filter"></div><i class="filter material-icons">flare</i>' +
               content;
           // todo Subtract transition duration
-          let endTime = item.out.split(/:|,/);
-          let startTime = item.in.split(/:|,/);
+          // let endTime = item?.out?.split(/:|,/);
+          // let startTime = item?.in?.split(/:|,/);
           items.push({
             id: track.id + ":" + index,
             content: content,
             align: "center",
-            start: formattedDateFromString(item.in),
-            end: formattedDateFromString(item.out),
+            start: formattedDateFromString(item?.in),
+            end: formattedDateFromString(item?.out),
             group: track.id,
             className: videoMatch.test(track.id) ? "video" : "audio"
           });
@@ -379,7 +383,7 @@ export default class Timeline extends Component {
     const item = this.getItem(this.state.selectedItems[0]);
     const splitTime = Timeline.dateToString(this.timeline.getCustomTime());
     const splitItemTime = timeManager.subDuration(splitTime, item.start);
-    if (splitTime <= item.item.in|| splitTime >= item.item.out) return;
+    if (splitTime <= item.item.in || splitTime >= item.item.out) return;
 
     const itemPath = this.state.selectedItems[0].split(":");
     const url = `${server.apiUrl}/project/${this.props.project}/item/split`;
@@ -451,7 +455,7 @@ export default class Timeline extends Component {
     const items = [];
     let time = "00:00:00,000";
     let index = 0;
-    for (let item of track.items) {
+    for (let item of track) {
       if (item.resource === "blank") {
         time = timeManager.addDuration(item.length, time);
       } else {
@@ -498,6 +502,7 @@ export default class Timeline extends Component {
   };
 
   onMoving(item, callback) {
+    console.log(item);
     callback(this.itemMove(item));
   }
 
@@ -508,6 +513,7 @@ export default class Timeline extends Component {
 
     if (item !== null) {
       const itemPath = item.id.split(":");
+      const currentItem = Editor.findTrack(this.props.items, itemPath[0]);
       const url = `${server.apiUrl}/project/${this.props.project}/item/move`;
       const params = {
         method: "PUT",
@@ -517,7 +523,7 @@ export default class Timeline extends Component {
         body: JSON.stringify({
           track: itemPath[0],
           trackTarget: item.group,
-          item: Number(itemPath[1]),
+          item: currentItem?.[0]?.id,
           time: Timeline.dateToString(item.start)
         })
       };
@@ -528,7 +534,7 @@ export default class Timeline extends Component {
           if (typeof data.err !== "undefined") {
             alert(`${data.err}\n\n${data.msg}`);
           } else {
-            if (itemPath[0] === item.group) {
+            if (itemPath[0] === item?.group) {
               // Same track
               this.props.loadData();
             } else {
@@ -536,12 +542,20 @@ export default class Timeline extends Component {
               const trackType = item.group.includes("audio")
                 ? "audio"
                 : "video";
-              const prevTrack = Editor.findTrack(this.props.items, itemPath[0]);
-              const newTrack = Editor.findTrack(this.props.items, item.group);
+              const prevTrack = Editor.findTrack(
+                this.props.items,
+                itemPath[0]
+              )?.[0];
+              const newTrack = Editor.findTrack(
+                this.props.items,
+                item.group
+              )?.[0];
+              console.log("aaaaa", newTrack);
+              console.log("aaaaa", prevTrack);
 
-              const addTrack = newTrack.items.length === 0; //
-              const delTrack = Editor.findItem(prevTrack.items, 1) === null;
-
+              const addTrack = newTrack?.items?.length === 0; //
+              const delTrack = Editor.findItem(prevTrack, 1) === null;
+              console.log("delTrack", delTrack);
               if (addTrack && delTrack) this.addTrack(trackType, prevTrack.id);
               else if (addTrack) this.addTrack(trackType, null);
               else if (delTrack) this.delTrack(prevTrack.id);
@@ -571,7 +585,15 @@ export default class Timeline extends Component {
             itemPath[0].includes("audiotrack")
           )
         ) {
-          return null;
+          if (
+            !(
+              item.group.includes("texttrack") &&
+              itemPath[0].includes("texttrack")
+            )
+          ){
+            return null;
+
+          }
         }
       }
 
