@@ -563,7 +563,7 @@ export default class Timeline extends Component {
             }
           }
         })
-        .catch(error => this.props.fetchError(error.message));
+        .catch(error => console.log(error.message));
     }
   }
 
