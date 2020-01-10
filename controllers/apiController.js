@@ -805,7 +805,7 @@ exports.projectItemPUTsplit = (req, res, next) => {
 			}
 
 			const leftDuration = timeManager.subDuration(req.body.time, item.in);
-			const rightDuration = timeManager.subDuration(time.out, req.body.time);
+			const rightDuration = timeManager.subDuration(item.out, req.body.time);
 
 			const itemLeft = JSON.parse(JSON.stringify(item));
 			const itemRight = JSON.parse(JSON.stringify(item));
