@@ -30,6 +30,10 @@ svg.open {
 svg.caret {
   transition: transform 0.2s ease-in-out;
 }
+.vis-foreground .vis-group {
+  border-bottom: 1px solid #555555 !important;
+}
+
 .react-waves {
   display: flex !important;
   flex-direction: column;

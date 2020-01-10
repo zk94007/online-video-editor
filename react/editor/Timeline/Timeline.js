@@ -238,6 +238,19 @@ export default class Timeline extends Component {
       .catch(error => this.props.fetchError(error.message));
   };
 
+  getIcons = text => {
+    switch (text) {
+      case "texttrack0":
+        return "text_fields";
+      case "audiotrack0":
+        return "audiotrack";
+      case "videotrack0":
+        return "videocam";
+      default:
+        return "videocam";
+    }
+  };
+
   componentDidUpdate(prevProps) {
     if (prevProps.items === this.props.items) return;
 
@@ -250,9 +263,8 @@ export default class Timeline extends Component {
     for (let track of tracks) {
       groups.push({
         id: track.id,
-        content: `<div style="height: 66px; align-items: center;display: flex; justify-content: center; border-bottom: none; text-transform: capitalize">${
-          track?.id?.split("0")?.[0]?.split("track")?.[0]
-        }</div>`,
+        content: `<div style="height: 66px; align-items: center;display: flex; justify-content: center; border-bottom: none; text-transform: capitalize">
+        <i class="material-icons" aria-hidden="true">${this.getIcons(track.id)}</i></div>`,
         className: "timeline-group"
       });
 
@@ -263,7 +275,9 @@ export default class Timeline extends Component {
         if (item.resource === "blank") {
           actualTime = timeManager.addDuration(item.length, actualTime);
         } else {
-          let content = this.props.resources?.[item?.resource_id]?.name || item?.textAnimation;
+          let content =
+            this.props.resources?.[item?.resource_id]?.name ||
+            item?.textAnimation;
           if (item?.filters?.length > 0)
             content =
               '<div class="filter"></div><i class="filter material-icons">flare</i>' +
@@ -311,12 +325,6 @@ export default class Timeline extends Component {
             msg={this.state.error}
           />
         )}
-        <button onClick={this.buttonFilter}>
-          <i className="material-icons" aria-hidden="true">
-            flare
-          </i>
-          Filters
-        </button>
         {/*<button><i className="material-icons" aria-hidden="true">photo_filter</i>Přidat přechod</button>*/}
         <button onClick={this.buttonSplit}>
           <i className="material-icons" aria-hidden="true">
