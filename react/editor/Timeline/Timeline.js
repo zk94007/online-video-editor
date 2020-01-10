@@ -33,7 +33,6 @@ export default class Timeline extends Component {
     };
 
     this.onSelect = this.onSelect.bind(this);
-    this.onTimeChange = this.onTimeChange.bind(this);
     this.onMoving = this.onMoving.bind(this);
     this.onMove = this.onMove.bind(this);
     this.buttonFilter = this.buttonFilter.bind(this);
@@ -51,11 +50,11 @@ export default class Timeline extends Component {
       orientation: "top",
       min: new Date(1970, 0, 1),
       max: new Date(1970, 0, 1, 23, 59, 59, 999),
-      showCurrentTime: false,
+      showCurrentTime: true,
       start: new Date(1970, 0, 1),
       end: new Date(1970, 0, 1, 0, 0, 10, 0),
       multiselect: false,
-      multiselectPerGroup: true,
+      multiselectPerGroup: false,
       stack: false,
       zoomMin: 1000 * 80,
       editable: true,
@@ -264,7 +263,9 @@ export default class Timeline extends Component {
       groups.push({
         id: track.id,
         content: `<div style="height: 66px; align-items: center;display: flex; justify-content: center; border-bottom: none; text-transform: capitalize">
-        <i class="material-icons" aria-hidden="true">${this.getIcons(track.id)}</i></div>`,
+        <i class="material-icons" aria-hidden="true">${this.getIcons(
+          track.id
+        )}</i></div>`,
         className: "timeline-group"
       });
 
@@ -378,7 +379,7 @@ export default class Timeline extends Component {
     const item = this.getItem(this.state.selectedItems[0]);
     const splitTime = Timeline.dateToString(this.timeline.getCustomTime());
     const splitItemTime = timeManager.subDuration(splitTime, item.start);
-    if (splitTime <= item.start || splitTime >= item.end) return;
+    if (splitTime <= item.item.in|| splitTime >= item.item.out) return;
 
     const itemPath = this.state.selectedItems[0].split(":");
     const url = `${server.apiUrl}/project/${this.props.project}/item/split`;
@@ -389,7 +390,7 @@ export default class Timeline extends Component {
       },
       body: JSON.stringify({
         track: itemPath[0],
-        item: Number(itemPath[1]),
+        item: item.item.id,
         time: splitItemTime
       })
     };
@@ -441,7 +442,7 @@ export default class Timeline extends Component {
 
   getItem(trackIndex) {
     const itemPath = trackIndex.split(":");
-    const trackItems = Editor.findTrack(this.props.items, itemPath[0]).items;
+    const trackItems = Editor.findTrack(this.props.items, itemPath[0]);
     return Editor.findItem(trackItems, Number(itemPath[1]));
   }
 
@@ -470,26 +471,22 @@ export default class Timeline extends Component {
     return items;
   }
 
-  onTimeChange(event) {
-    const timePointer = Timeline.dateToString(event.time);
-
+  onTimeChange = event => {
+    const timePointer = Timeline;
     if (event.time.getFullYear() < 1970) {
       this.timeline.setCustomTime(new Date(1970, 0, 1));
       this.timeline.setCustomTimeTitle("00:00:00,000");
       this.setState({ timePointer: "00:00:00,000" });
     } else if (timePointer > this.state.duration) {
-      const parsedDuration = this.state.duration.match(
-        /^(\d{2,}):(\d{2}):(\d{2}),(\d{3})$/
-      );
       this.timeline.setCustomTime(
         new Date(
           1970,
           0,
           1,
-          parsedDuration[1],
-          parsedDuration[2],
-          parsedDuration[3],
-          parsedDuration[4]
+          event.time.getHours(),
+          event.time.getMinutes(),
+          event.time.getSeconds(),
+          event.time.getMilliseconds()
         )
       );
       this.timeline.setCustomTimeTitle(this.state.duration);
@@ -498,7 +495,7 @@ export default class Timeline extends Component {
       this.setState({ timePointer: timePointer });
       this.timeline.setCustomTimeTitle(timePointer);
     }
-  }
+  };
 
   onMoving(item, callback) {
     callback(this.itemMove(item));

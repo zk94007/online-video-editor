@@ -412,8 +412,9 @@ export default class Editor extends Component {
    * @param {String} trackId
    * @return {null|Object}
    */
-  static findTrack(timeline, trackId) {
-    let track = null;
+  static findTrack(timeline = [], trackId) {
+    let track = timeline.filter(data => data.id === trackId);
+    return track?.[0]?.items;
     // for (let videotrack of timeline.video) {
     //   if (videotrack.id === trackId) {
     //     track = videotrack;
@@ -428,8 +429,6 @@ export default class Editor extends Component {
     //     }
     //   }
     // }
-
-    return track;
   }
 
   /**

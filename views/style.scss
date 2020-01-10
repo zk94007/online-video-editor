@@ -33,7 +33,9 @@ svg.caret {
 .vis-foreground .vis-group {
   border-bottom: 1px solid #555555 !important;
 }
-
+.vis-custom-time{
+  z-index: 1000;
+}
 .react-waves {
   display: flex !important;
   flex-direction: column;
