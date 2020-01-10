@@ -744,7 +744,11 @@ exports.projectItemPUTmove = (req, res, next) => {
 
 			rendererManager.saveRenderer(req.params.projectID, renderer).then(
 				() => {
-					res.json({msg: 'Item removed'});
+					res.json({
+						msg: 'Item removed',
+						track,
+						trackTarget
+					});
 				},
 				err => next(err)
 			);
