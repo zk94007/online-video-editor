@@ -711,7 +711,7 @@ exports.projectItemPUTmove = (req, res, next) => {
 		}
 	}
 
-	rendererManager.loadRenderer(req.params,projectID).then(
+	rendererManager.loadRenderer(req.params.projectID).then(
 		(renderer) => {
 			const track = renderer.timeline.find(t => t.id == req.body.track);
 			const trackTarget = renderer.timeline.find(t => t.id == req.body.trackTarget);
