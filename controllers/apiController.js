@@ -906,7 +906,7 @@ exports.projectItemPUTcrop = (req, res, next) => {
 			
 			rendererManager.saveRenderer(req.params.projectID, renderer).then(
 				() => {
-					res.json({msg: 'Item removed'});
+					res.json({msg: 'Item moved', item});
 				},
 				err => next(err)
 			);
