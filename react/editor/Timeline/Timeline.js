@@ -162,7 +162,10 @@ export default class Timeline extends Component {
   onRemove = (item = {}) => {
     const itemPath =
       item?.id?.split(":") || this.state.selectedItems?.[0]?.split(":");
-    let data = this.props.items.filter(arr => arr.id === itemPath[0])[0];
+    let track = Editor.findTrack(this.props.items, itemPath[0]);
+    console.log(track);
+    let data = Editor.findItem(track, Number(itemPath[1]));
+    console.log(data);
     const url = `${server.apiUrl}/project/${this.props.project}/item`;
     const params = {
       method: "DELETE",
@@ -171,7 +174,7 @@ export default class Timeline extends Component {
       },
       body: JSON.stringify({
         track: itemPath[0],
-        item: data?.items[itemPath[1]]?.id
+        item: data?.item?.id
       })
     };
     fetch(url, params)
@@ -502,72 +505,151 @@ export default class Timeline extends Component {
   };
 
   onMoving(item, callback) {
-    console.log(item);
-    callback(this.itemMove(item));
+    const searchTrack = Editor.findTrack(
+      this.props.items,
+      item?.id?.split(":")?.[0]
+    );
+    let itemTrack = Editor.findItem(
+      searchTrack,
+      Number(item?.id?.split(":")?.[1])
+    );
+    const length = formattedDateFromString(
+      timeManager.subDuration(itemTrack.item?.out, itemTrack.item?.in)
+    );
+    const subTime = formattedDateFromString(
+      timeManager.subDuration(
+        moment(item.end).format("HH:mm:ss,SSS"),
+        moment(item.start).format("HH:mm:ss,SSS")
+      )
+    );
+    console.log("length", subTime);
+    const range = Moment.range(
+      formattedDateFromString(itemTrack.item?.in),
+      formattedDateFromString(itemTrack.item?.out)
+    );
+    if (length && subTime <= length) {
+      this.setState(
+        {
+          isResize: subTime < length
+        },
+        () => {
+          callback(this.itemMove(item));
+        }
+      );
+    }
   }
 
   onMove(item) {
     item.className = "video";
-
     item = this.itemMove(item);
-
     if (item !== null) {
-      const itemPath = item.id.split(":");
-      const currentItem = Editor.findTrack(this.props.items, itemPath[0]);
-      const url = `${server.apiUrl}/project/${this.props.project}/item/move`;
-      const params = {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          track: itemPath[0],
-          trackTarget: item.group,
-          item: currentItem?.[0]?.id,
-          time: Timeline.dateToString(item.start)
-        })
-      };
+      if (!!this.state.isResize) {
+        let track = Editor.findTrack(
+          this.props.items,
+          item?.id?.split(":")?.[0]
+        );
+        let itemTrack = Editor.findItem(
+          track,
+          Number(item?.id?.split(":")?.[1])
+        );
+        console.log("itemTrack", itemTrack);
+        let direction =
+          item.end < formattedDateFromString(itemTrack.item.out)
+            ? "back"
+            : "front";
+        let time =
+          item.end < formattedDateFromString(itemTrack.item.out)
+            ? Timeline.dateToString(item.end)
+            : Timeline.dateToString(item.start);
+        const url = `${server.apiUrl}/project/${this.props.project}/item/crop`;
+        const params = {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            track: item?.group,
+            direction: direction,
+            item: itemTrack?.item?.id,
+            time: time
+          })
+        };
 
-      fetch(url, params)
-        .then(response => response.json())
-        .then(data => {
-          if (typeof data.err !== "undefined") {
-            alert(`${data.err}\n\n${data.msg}`);
-          } else {
-            if (itemPath[0] === item?.group) {
+        fetch(url, params)
+          .then(response => response.json())
+          .then(data => {
+            if (typeof data.err !== "undefined") {
+              alert(`${data.err}\n\n${data.msg}`);
+            } else {
               // Same track
               this.props.loadData();
-            } else {
-              // Moving between tracks
-              const trackType = item.group.includes("audio")
-                ? "audio"
-                : "video";
-              const prevTrack = Editor.findTrack(
-                this.props.items,
-                itemPath[0]
-              )?.[0];
-              const newTrack = Editor.findTrack(
-                this.props.items,
-                item.group
-              )?.[0];
-              console.log("aaaaa", newTrack);
-              console.log("aaaaa", prevTrack);
-
-              const addTrack = newTrack?.items?.length === 0; //
-              const delTrack = Editor.findItem(prevTrack, 1) === null;
-              console.log("delTrack", delTrack);
-              if (addTrack && delTrack) this.addTrack(trackType, prevTrack.id);
-              else if (addTrack) this.addTrack(trackType, null);
-              else if (delTrack) this.delTrack(prevTrack.id);
-              else this.props.loadData();
             }
-          }
-        })
-        .catch(error => console.log(error.message));
+          })
+          .catch(error => console.log(error.message));
+        // if (item.end < formattedDateFromString(itemTrack.item.out)) {
+        //   console.log("Backword");
+        // } else if (item.start > formattedDateFromString(itemTrack.item.in)) {
+        //   console.log("forwar");
+        // }
+      } else {
+        const itemPath = item.id.split(":");
+        const currentItem = Editor.findTrack(this.props.items, itemPath[0]);
+        const url = `${server.apiUrl}/project/${this.props.project}/item/move`;
+        const params = {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            track: itemPath[0],
+            trackTarget: item.group,
+            item: currentItem?.[0]?.id,
+            time: Timeline.dateToString(item.start)
+          })
+        };
+
+        fetch(url, params)
+          .then(response => response.json())
+          .then(data => {
+            if (typeof data.err !== "undefined") {
+              alert(`${data.err}\n\n${data.msg}`);
+            } else {
+              if (itemPath[0] === item?.group) {
+                // Same track
+                this.props.loadData();
+              } else {
+                // Moving between tracks
+                const trackType = item.group.includes("audio")
+                  ? "audio"
+                  : "video";
+                const prevTrack = Editor.findTrack(
+                  this.props.items,
+                  itemPath[0]
+                )?.[0];
+                const newTrack = Editor.findTrack(
+                  this.props.items,
+                  item.group
+                )?.[0];
+                console.log("aaaaa", newTrack);
+                console.log("aaaaa", prevTrack);
+
+                const addTrack = newTrack?.items?.length === 0; //
+                const delTrack = Editor.findItem(prevTrack, 1) === null;
+                console.log("delTrack", delTrack);
+                if (addTrack && delTrack)
+                  this.addTrack(trackType, prevTrack.id);
+                else if (addTrack) this.addTrack(trackType, null);
+                else if (delTrack) this.delTrack(prevTrack.id);
+                else this.props.loadData();
+              }
+            }
+          })
+          .catch(error => console.log(error.message));
+      }
     }
   }
 
-  itemMove(item) {
+  itemMove = item => {
     if (item.start.getFullYear() < 1970) return null;
     // Deny move before zero time
     else {
@@ -590,9 +672,8 @@ export default class Timeline extends Component {
               item.group.includes("texttrack") &&
               itemPath[0].includes("texttrack")
             )
-          ){
+          ) {
             return null;
-
           }
         }
       }
@@ -694,7 +775,7 @@ export default class Timeline extends Component {
         return null;
       }
     }
-  }
+  };
 
   addTrack(type, delTrack) {
     const url = `${server.apiUrl}/project/${this.props.project}/track`;
