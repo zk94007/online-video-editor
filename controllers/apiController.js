@@ -880,7 +880,7 @@ exports.projectItemPUTcrop = (req, res, next) => {
 				return;
 			}
 
-			if (direction == 'front') {
+			if (req.body.direction == 'front') {
 				if (req.body.time > item.in) {
 					const duration = timeManager.subDuration(req.body.time, item.in);
 					item.in = req.body.time;
@@ -891,7 +891,7 @@ exports.projectItemPUTcrop = (req, res, next) => {
 					item.in = req.body.time;
 					item.clip.left = timeManager.subDuration(item.clip.left, duration);
 				}
-			} else if (direction == 'back') {
+			} else if (req.body.direction == 'back') {
 				if (req.body.time < item.out) {
 					const duration = timeManager.subDuration(item.out, req.body.time);
 					item.out = req.body.time;
