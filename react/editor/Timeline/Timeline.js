@@ -17,6 +17,7 @@ import { extendMoment } from "moment-range";
 import { formattedDateFromString } from "../../utils";
 import AlertErrorDialog from "../../_core/Dialog/Dialogs/AlertErroDialog";
 const Moment = extendMoment(moment);
+import { TimelineHeader } from "../style";
 
 export default class Timeline extends Component {
   constructor(props) {
@@ -180,9 +181,7 @@ export default class Timeline extends Component {
     const itemPath =
       item?.id?.split(":") || this.state.selectedItems?.[0]?.split(":");
     let track = Editor.findTrack(this.props.items, itemPath[0]);
-    console.log(track);
     let data = Editor.findItem(track, Number(itemPath[1]));
-    console.log(data);
     const url = `${server.apiUrl}/project/${this.props.project}/item`;
     const params = {
       method: "DELETE",
@@ -350,23 +349,47 @@ export default class Timeline extends Component {
             msg={this.state.error}
           />
         )}
+        <TimelineHeader>
+          <div>
+            <button onClick={this.buttonSplit}>
+              <i className="material-icons" aria-hidden="true">
+                flip
+              </i>
+              Split in point
+            </button>
+            {/*<button><i className="material-icons" aria-hidden="true">menu</i>Vlastnosti</button>*/}
+            <button onClick={this.onRemove}>
+              <i className="material-icons" aria-hidden="true">
+                remove
+              </i>
+              Remove
+            </button>
+          </div>
+          <div id="time">
+            {this.state.timePointer} / {this.state.duration}
+          </div>
+          <div>
+            <button onClick={this.buttonSplit}>
+              <i className="material-icons" aria-hidden="true">
+                zoom_in
+              </i>
+              Zoom in
+            </button>
+            <button onClick={this.buttonSplit}>
+              <i className="material-icons" aria-hidden="true">
+                zoom_out
+              </i>
+              Zoom out
+            </button>
+            <button onClick={this.buttonSplit}>
+              <i className="material-icons" aria-hidden="true">
+                remove
+              </i>
+              Fit To Screen
+            </button>
+          </div>
+        </TimelineHeader>
         {/*<button><i className="material-icons" aria-hidden="true">photo_filter</i>Přidat přechod</button>*/}
-        <button onClick={this.buttonSplit}>
-          <i className="material-icons" aria-hidden="true">
-            flip
-          </i>
-          Split in point
-        </button>
-        {/*<button><i className="material-icons" aria-hidden="true">menu</i>Vlastnosti</button>*/}
-        <button onClick={this.onRemove}>
-          <i className="material-icons" aria-hidden="true">
-            remove
-          </i>
-          Remove
-        </button>
-        <div id="time">
-          {this.state.timePointer} / {this.state.duration}
-        </div>
         <div id="vis-timeline" />
         {this.state.showAddFilterDialog && (
           <AddFilterDialog
