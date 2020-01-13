@@ -434,24 +434,9 @@ export default class Editor extends Component {
    * @param {String} trackId
    * @return {null|Object}
    */
-  static findTrack(timeline, trackId) {
-    let track = null;
-    // for (let videotrack of timeline.video) {
-    //   if (videotrack.id === trackId) {
-    //     track = videotrack;
-    //     break;
-    //   }
-    // }
-    // if (track === null) {
-    //   for (let audiotrack of timeline.audio) {
-    //     if (audiotrack.id === trackId) {
-    //       track = audiotrack;
-    //       break;
-    //     }
-    //   }
-    // }
-
-    return track;
+  static findTrack(timeline = [], trackId) {
+    let track = timeline.filter(data => data.id === trackId);
+    return track?.[0]?.items;
   }
 
   /**

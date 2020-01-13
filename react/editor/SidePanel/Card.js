@@ -14,7 +14,7 @@ import {
 import moment from "moment";
 import Icon from "../../_core/Icon";
 
-export const CardComponent = props => {
+export const CardComponent = ({ support = "", ...props }) => {
   const isAudio = props?.item?.name?.search(
     /([a-zA-Z0-9\s_\\.\-\(\):])+(.mp3|.aac|.wav|.wma)$/i
   );
@@ -39,7 +39,8 @@ export const CardComponent = props => {
     event.dataTransfer.effectAllowed = "move";
     var objectItem = {
       content: id,
-      target: "itemType"
+      target: "itemType",
+      support: support
     };
     event.dataTransfer.setData("text", JSON.stringify(objectItem));
   };

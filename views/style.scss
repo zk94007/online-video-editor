@@ -30,6 +30,12 @@ svg.open {
 svg.caret {
   transition: transform 0.2s ease-in-out;
 }
+.vis-foreground .vis-group {
+  border-bottom: 1px solid #555555 !important;
+}
+.vis-custom-time{
+  z-index: 1000;
+}
 .react-waves {
   display: flex !important;
   flex-direction: column;
@@ -133,8 +139,8 @@ a {
   flex-direction: column;
 
   video {
-    width: 480px;
-    height: 240px;
+    width: 380px;
+    height: 200px;
     background: #000;
   }
 }
@@ -207,7 +213,6 @@ a {
 .prev-toolbar {
   border: 1px solid #2b2c2f;
   display: inline-block;
-  margin-top: 10px;
   padding: 0 4px 0 4px;
   border-radius: 5px;
   background: #25282d;

@@ -14,10 +14,12 @@ export const BackgroundCard = ({
   name,
   color = "false",
   image,
-  video = false
+  video = false,
+  support = ""
 }) => {
   const refer = useRef(null);
   const [isShow, setShow] = useState(null);
+
   useEffect(() => {
     if (video && refer?.current) {
       refer.current.addEventListener("mouseover", () => {
@@ -37,8 +39,25 @@ export const BackgroundCard = ({
       }
     };
   }, []);
+
+  const handleObjectItemDragStart = (event, id) => {
+    var dragSrcEl = event.target;
+    event.dataTransfer.effectAllowed = "move";
+    var objectItem = {
+      content: id,
+      target: "itemType",
+      support: support
+    };
+    event.dataTransfer.setData("text", JSON.stringify(objectItem));
+  };
+
   return (
-    <Card>
+    <Card
+      draggable="true"
+      onDragStart={event =>
+        handleObjectItemDragStart(event, name?.toLowerCase())
+      }
+    >
       <Preview ref={refer}>
         <DefaultWrapper color={color}>
           {image && <Image src={image} />}

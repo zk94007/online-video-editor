@@ -43,6 +43,11 @@ exports.projectPOST = (req, res, next) => {
 				id: 'videotrack0',
 				items: [],
 				transitions: []
+			},
+			{
+				id: 'videotrack1',
+				items: [],
+				transitions: []
 			}
 		]
 	};
@@ -445,7 +450,8 @@ exports.projectFilePUT = (req, res, next) => {
 			}
 
 			track.items.push({
-				id: req.params.fileID,
+				id: generate('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890', 16),
+				resource_id: resource.id,
 				in: req.body.in,
 				out: req.body.out,
 				clip: {
@@ -497,7 +503,7 @@ exports.projectTextAnimationPOST = (req, res, next) => {
 		return;
 	}
 
-	rendererManager.loadRenderer(req.body.projectID).then(
+	rendererManager.loadRenderer(req.params.projectID).then(
 		(renderer) => {
 			const track = renderer.timeline.find(t => t.id == req.body.track);
 			if (track === null) {
@@ -705,7 +711,7 @@ exports.projectItemPUTmove = (req, res, next) => {
 		}
 	}
 
-	rendererManager.loadRenderer(req.params,projectID).then(
+	rendererManager.loadRenderer(req.params.projectID).then(
 		(renderer) => {
 			const track = renderer.timeline.find(t => t.id == req.body.track);
 			const trackTarget = renderer.timeline.find(t => t.id == req.body.trackTarget);
@@ -734,11 +740,18 @@ exports.projectItemPUTmove = (req, res, next) => {
 				track.transitions.splice(track.transitions.findIndex(transition => transition.itemA == req.body.item || transition.itemB == req.body.item), 1);
 			}
 
+			const duration = timeManager.subDuration(item.out, item.in);
+			item.in = req.body.time;
+			item.out = timeManager.addDuration(item.in, duration);
 			trackTarget.items.push(item);
 
 			rendererManager.saveRenderer(req.params.projectID, renderer).then(
 				() => {
-					res.json({msg: 'Item removed'});
+					res.json({
+						msg: 'Item removed',
+						track,
+						trackTarget
+					});
 				},
 				err => next(err)
 			);
@@ -799,7 +812,7 @@ exports.projectItemPUTsplit = (req, res, next) => {
 			}
 
 			const leftDuration = timeManager.subDuration(req.body.time, item.in);
-			const rightDuration = timeManager.subDuration(time.out, req.body.time);
+			const rightDuration = timeManager.subDuration(item.out, req.body.time);
 
 			const itemLeft = JSON.parse(JSON.stringify(item));
 			const itemRight = JSON.parse(JSON.stringify(item));
@@ -867,7 +880,7 @@ exports.projectItemPUTcrop = (req, res, next) => {
 				return;
 			}
 
-			if (direction == 'front') {
+			if (req.body.direction == 'front') {
 				if (req.body.time > item.in) {
 					const duration = timeManager.subDuration(req.body.time, item.in);
 					item.in = req.body.time;
@@ -878,7 +891,7 @@ exports.projectItemPUTcrop = (req, res, next) => {
 					item.in = req.body.time;
 					item.clip.left = timeManager.subDuration(item.clip.left, duration);
 				}
-			} else if (direction == 'back') {
+			} else if (req.body.direction == 'back') {
 				if (req.body.time < item.out) {
 					const duration = timeManager.subDuration(item.out, req.body.time);
 					item.out = req.body.time;
@@ -893,7 +906,7 @@ exports.projectItemPUTcrop = (req, res, next) => {
 			
 			rendererManager.saveRenderer(req.params.projectID, renderer).then(
 				() => {
-					res.json({msg: 'Item removed'});
+					res.json({msg: 'Item moved', item});
 				},
 				err => next(err)
 			);

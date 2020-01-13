@@ -15,6 +15,7 @@ import AddFilterDialog from "./AddFilterDialog";
 import moment from "moment";
 import { extendMoment } from "moment-range";
 import { formattedDateFromString } from "../../utils";
+import AlertErrorDialog from "../../_core/Dialog/Dialogs/AlertErroDialog";
 const Moment = extendMoment(moment);
 
 export default class Timeline extends Component {
@@ -27,11 +28,11 @@ export default class Timeline extends Component {
       selectedItems: [],
       showAddFilterDialog: false,
       duration: "00:00:00,000",
-      timePointer: "00:00:00,000"
+      timePointer: "00:00:00,000",
+      error: false
     };
 
     this.onSelect = this.onSelect.bind(this);
-    this.onTimeChange = this.onTimeChange.bind(this);
     this.onMoving = this.onMoving.bind(this);
     this.onMove = this.onMove.bind(this);
     this.buttonFilter = this.buttonFilter.bind(this);
@@ -49,62 +50,81 @@ export default class Timeline extends Component {
       orientation: "top",
       min: new Date(1970, 0, 1),
       max: new Date(1970, 0, 1, 23, 59, 59, 999),
-      showCurrentTime: false,
+      showCurrentTime: true,
       start: new Date(1970, 0, 1),
       end: new Date(1970, 0, 1, 0, 0, 10, 0),
       multiselect: false,
-      multiselectPerGroup: true,
+      multiselectPerGroup: false,
       stack: false,
       zoomMin: 1000 * 80,
       editable: true,
+      itemsAlwaysDraggable: {
+        item: true,
+        range: true
+      },
       zoomMax: 216000,
       onRemove: this.onRemove,
       onMove: this.onMove,
+      onMoving: this.onMoving,
       onAdd: item => {
-        const type =
-          this.props?.resources[item?.content]?.mime?.includes("audio/") ||
-          this.props?.resources[item?.content]?.mimeType?.includes("audio/")
-            ? "audiotrack0"
-            : "videotrack0";
-        let startDate = item?.start;
-        let length = this.props?.resources[item?.content]?.length
-          ? this.props?.resources[item?.content]?.length
-          : moment(startDate)
-              .add(3, "s")
-              .format("HH:mm:ss,SSS");
-
-        this.props.items
-          .filter(val => val.id === type)?.[0]
-          ?.items?.map(data => {
-            const start = formattedDateFromString(data.in);
-            const end = formattedDateFromString(data.out);
-            // const range = moment.range(moment(start), moment(end));
-            const duration = timeManager.addDuration(
-              moment(startDate).format("HH:mm:ss,SSS"),
-              length
-            );
-            let currentRange = moment.range(
-              startDate,
-              formattedDateFromString(duration)
-            );
-            if (currentRange.contains(start) || currentRange.contains(end)) {
-              startDate = moment(formattedDateFromString(data.out)).add(2, "s");
-            }
-            // if (
-            //   range.contains(formattedDateFromString(duration)) ||
-            //   range.contains(startDate)
-            // ) {
-            //   startDate = moment(formattedDateFromString(data.out)).add(2, "s");
-            // }
+        if (item?.group?.includes(item?.support)) {
+          let startDate = item?.start;
+          let length = this.props?.resources[item?.content]?.length
+            ? this.props?.resources[item?.content]?.length
+            : moment(startDate)
+                .add(3, "s")
+                .format("HH:mm:ss,SSS");
+          length =
+            item?.support === "text"
+              ? moment(startDate)
+                  .add(3, "s")
+                  .format("HH:mm:ss,SSS")
+              : length;
+          this.props.items
+            .filter(val => val.id === item?.group)?.[0]
+            ?.items?.map(data => {
+              const start = formattedDateFromString(data.in);
+              const end = formattedDateFromString(data.out);
+              // const range = moment.range(moment(start), moment(end));
+              const duration = timeManager.addDuration(
+                moment(startDate).format("HH:mm:ss,SSS"),
+                length
+              );
+              let currentRange = moment.range(
+                startDate,
+                formattedDateFromString(duration)
+              );
+              if (currentRange.contains(start) || currentRange.contains(end)) {
+                startDate = moment(formattedDateFromString(data.out)).add(
+                  2,
+                  "s"
+                );
+              }
+              // if (
+              //   range.contains(formattedDateFromString(duration)) ||
+              //   range.contains(startDate)
+              // ) {
+              //   startDate = moment(formattedDateFromString(data.out)).add(2, "s");
+              // }
+            });
+          this.onInsert(
+            item?.content,
+            startDate,
+            item?.support,
+            item?.group,
+            length
+          );
+        } else {
+          this.setState({
+            error: `can't drag on ${item?.group}`
           });
-        this.onInsert(item?.content, startDate);
+        }
       },
       onDropObjectOnItem: (objectData, item, callback) => {},
       timeAxis: {
         scale: "second",
         step: 2
       },
-      onMoving: this.onMoving,
       format: {
         minorLabels: {
           millisecond: "SSS [ms]",
@@ -142,7 +162,10 @@ export default class Timeline extends Component {
   onRemove = (item = {}) => {
     const itemPath =
       item?.id?.split(":") || this.state.selectedItems?.[0]?.split(":");
-    let data = this.props.items.filter(arr => arr.id === itemPath[0])[0];
+    let track = Editor.findTrack(this.props.items, itemPath[0]);
+    console.log(track);
+    let data = Editor.findItem(track, Number(itemPath[1]));
+    console.log(data);
     const url = `${server.apiUrl}/project/${this.props.project}/item`;
     const params = {
       method: "DELETE",
@@ -151,10 +174,9 @@ export default class Timeline extends Component {
       },
       body: JSON.stringify({
         track: itemPath[0],
-        item: data?.items[itemPath[1]]?.id
+        item: data?.item?.id
       })
     };
-    console.log("Dateeee",data)
     fetch(url, params)
       .then(response => response.json())
       .then(data => {
@@ -166,47 +188,49 @@ export default class Timeline extends Component {
       .catch(error => this.props.fetchError(error.message));
   };
 
-  onInsert = (id, startTime) => {
-    // Get duration for image files
-    let duration = null;
-    let support =
-      this.props.resources[id].mime?.includes("audio/") ||
-      this.props.resources[id].mimeType?.includes("audio/")
-        ? "audio"
-        : "video";
-    if (
-      new RegExp(/^image\//).test(this.props.resources[id]?.mime) ||
-      new RegExp(/^image\//).test(this.props.resources[id]?.mimeType)
-    ) {
-      support = "video";
-      duration = moment(startTime).add(3, "s");
-    }
-
-    const track =
-      this.props.resources[id].mime?.includes("audio/") ||
-      this.props.resources[id].mimeType?.includes("audio/")
-        ? "audiotrack0"
-        : "videotrack0";
-
+  onInsert = (id, startTime, support, group, length) => {
     // Send request to API
-    const url = `${server.apiUrl}/project/${this.props.project}/file/${id}`;
-    const params = {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        track: track,
-        support: support,
-        in: moment(startTime).format("HH:mm:ss,SSS"),
-        out: this.props.resources[id]?.length
-          ? timeManager.addDuration(
-              moment(startTime).format("HH:mm:ss,SSS"),
-              this.props.resources[id]?.length
-            )
-          : duration?.format("HH:mm:ss,SSS")
-      })
-    };
+    let url = "";
+    let params = "";
+    if (support === "text") {
+      url = `${server.apiUrl}/project/${this.props.project}/textanimation`;
+      params = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          track: group,
+          textAnimation: id,
+          in: moment(startTime).format("HH:mm:ss,SSS"),
+          out: this.props.resources[id]?.length
+            ? timeManager.addDuration(
+                moment(startTime).format("HH:mm:ss,SSS"),
+                this.props.resources[id]?.length
+              )
+            : length
+        })
+      };
+    } else {
+      url = `${server.apiUrl}/project/${this.props.project}/file/${id}`;
+      params = {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          track: group,
+          support: support,
+          in: moment(startTime).format("HH:mm:ss,SSS"),
+          out: this.props.resources[id]?.length
+            ? timeManager.addDuration(
+                moment(startTime).format("HH:mm:ss,SSS"),
+                this.props.resources[id]?.length
+              )
+            : length
+        })
+      };
+    }
 
     fetch(url, params)
       .then(response => response.json())
@@ -218,6 +242,19 @@ export default class Timeline extends Component {
         }
       })
       .catch(error => this.props.fetchError(error.message));
+  };
+
+  getIcons = text => {
+    switch (text) {
+      case "texttrack0":
+        return "text_fields";
+      case "audiotrack0":
+        return "audiotrack";
+      case "videotrack0":
+        return "videocam";
+      default:
+        return "videocam";
+    }
   };
 
   componentDidUpdate(prevProps) {
@@ -232,9 +269,10 @@ export default class Timeline extends Component {
     for (let track of tracks) {
       groups.push({
         id: track.id,
-        content: `<div style="height: 66px; align-items: center;display: flex; justify-content: center; border-bottom: none; text-transform: capitalize">${
-          track?.id?.split("0")?.[0]?.split("track")?.[0]
-        }</div>`,
+        content: `<div style="height: 40px; align-items: center;display: flex; justify-content: center; border-bottom: none; text-transform: capitalize">
+        <i class="material-icons" aria-hidden="true">${this.getIcons(
+          track.id
+        )}</i></div>`,
         className: "timeline-group"
       });
 
@@ -242,23 +280,25 @@ export default class Timeline extends Component {
       let index = 0;
 
       for (let item of track.items) {
-        if (item.resource === "blank") {
+        if (item?.resource === "blank") {
           actualTime = timeManager.addDuration(item.length, actualTime);
         } else {
-          let content = this.props.resources[item.id].name;
+          let content =
+            this.props.resources?.[item?.resource_id]?.name ||
+            item?.textAnimation;
           if (item?.filters?.length > 0)
             content =
               '<div class="filter"></div><i class="filter material-icons">flare</i>' +
               content;
           // todo Subtract transition duration
-          let endTime = item.out.split(/:|,/);
-          let startTime = item.in.split(/:|,/);
+          // let endTime = item?.out?.split(/:|,/);
+          // let startTime = item?.in?.split(/:|,/);
           items.push({
             id: track.id + ":" + index,
             content: content,
             align: "center",
-            start: formattedDateFromString(item.in),
-            end: formattedDateFromString(item.out),
+            start: formattedDateFromString(item?.in),
+            end: formattedDateFromString(item?.out),
             group: track.id,
             className: videoMatch.test(track.id) ? "video" : "audio"
           });
@@ -283,12 +323,16 @@ export default class Timeline extends Component {
           event.preventDefault();
         }}
       >
-        <button onClick={this.buttonFilter}>
-          <i className="material-icons" aria-hidden="true">
-            flare
-          </i>
-          Filters
-        </button>
+        {!!this.state.error && (
+          <AlertErrorDialog
+            onClose={() =>
+              this.setState({
+                error: false
+              })
+            }
+            msg={this.state.error}
+          />
+        )}
         {/*<button><i className="material-icons" aria-hidden="true">photo_filter</i>Přidat přechod</button>*/}
         <button onClick={this.buttonSplit}>
           <i className="material-icons" aria-hidden="true">
@@ -342,7 +386,7 @@ export default class Timeline extends Component {
     const item = this.getItem(this.state.selectedItems[0]);
     const splitTime = Timeline.dateToString(this.timeline.getCustomTime());
     const splitItemTime = timeManager.subDuration(splitTime, item.start);
-    if (splitTime <= item.start || splitTime >= item.end) return;
+    if (splitTime <= item.item.in || splitTime >= item.item.out) return;
 
     const itemPath = this.state.selectedItems[0].split(":");
     const url = `${server.apiUrl}/project/${this.props.project}/item/split`;
@@ -353,7 +397,7 @@ export default class Timeline extends Component {
       },
       body: JSON.stringify({
         track: itemPath[0],
-        item: Number(itemPath[1]),
+        item: item.item.id,
         time: splitItemTime
       })
     };
@@ -405,7 +449,7 @@ export default class Timeline extends Component {
 
   getItem(trackIndex) {
     const itemPath = trackIndex.split(":");
-    const trackItems = Editor.findTrack(this.props.items, itemPath[0]).items;
+    const trackItems = Editor.findTrack(this.props.items, itemPath[0]);
     return Editor.findItem(trackItems, Number(itemPath[1]));
   }
 
@@ -414,7 +458,7 @@ export default class Timeline extends Component {
     const items = [];
     let time = "00:00:00,000";
     let index = 0;
-    for (let item of track.items) {
+    for (let item of track) {
       if (item.resource === "blank") {
         time = timeManager.addDuration(item.length, time);
       } else {
@@ -434,26 +478,22 @@ export default class Timeline extends Component {
     return items;
   }
 
-  onTimeChange(event) {
-    const timePointer = Timeline.dateToString(event.time);
-
+  onTimeChange = event => {
+    const timePointer = Timeline;
     if (event.time.getFullYear() < 1970) {
       this.timeline.setCustomTime(new Date(1970, 0, 1));
       this.timeline.setCustomTimeTitle("00:00:00,000");
       this.setState({ timePointer: "00:00:00,000" });
     } else if (timePointer > this.state.duration) {
-      const parsedDuration = this.state.duration.match(
-        /^(\d{2,}):(\d{2}):(\d{2}),(\d{3})$/
-      );
       this.timeline.setCustomTime(
         new Date(
           1970,
           0,
           1,
-          parsedDuration[1],
-          parsedDuration[2],
-          parsedDuration[3],
-          parsedDuration[4]
+          event.time.getHours(),
+          event.time.getMinutes(),
+          event.time.getSeconds(),
+          event.time.getMilliseconds()
         )
       );
       this.timeline.setCustomTimeTitle(this.state.duration);
@@ -462,65 +502,154 @@ export default class Timeline extends Component {
       this.setState({ timePointer: timePointer });
       this.timeline.setCustomTimeTitle(timePointer);
     }
-  }
+  };
 
   onMoving(item, callback) {
-    callback(this.itemMove(item));
+    const searchTrack = Editor.findTrack(
+      this.props.items,
+      item?.id?.split(":")?.[0]
+    );
+    let itemTrack = Editor.findItem(
+      searchTrack,
+      Number(item?.id?.split(":")?.[1])
+    );
+    const length = formattedDateFromString(
+      timeManager.subDuration(itemTrack.item?.out, itemTrack.item?.in)
+    );
+    const subTime = formattedDateFromString(
+      timeManager.subDuration(
+        moment(item.end).format("HH:mm:ss,SSS"),
+        moment(item.start).format("HH:mm:ss,SSS")
+      )
+    );
+    console.log("length", subTime);
+    const range = Moment.range(
+      formattedDateFromString(itemTrack.item?.in),
+      formattedDateFromString(itemTrack.item?.out)
+    );
+    if (length && subTime <= length) {
+      this.setState(
+        {
+          isResize: subTime < length
+        },
+        () => {
+          callback(this.itemMove(item));
+        }
+      );
+    }
   }
 
   onMove(item) {
     item.className = "video";
-
     item = this.itemMove(item);
-
     if (item !== null) {
-      const itemPath = item.id.split(":");
-      const url = `${server.apiUrl}/project/${this.props.project}/item/move`;
-      const params = {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          track: itemPath[0],
-          trackTarget: item.group,
-          item: Number(itemPath[1]),
-          time: Timeline.dateToString(item.start)
-        })
-      };
+      if (!!this.state.isResize) {
+        let track = Editor.findTrack(
+          this.props.items,
+          item?.id?.split(":")?.[0]
+        );
+        let itemTrack = Editor.findItem(
+          track,
+          Number(item?.id?.split(":")?.[1])
+        );
+        console.log("itemTrack", itemTrack);
+        let direction =
+          item.end < formattedDateFromString(itemTrack.item.out)
+            ? "back"
+            : "front";
+        let time =
+          item.end < formattedDateFromString(itemTrack.item.out)
+            ? Timeline.dateToString(item.end)
+            : Timeline.dateToString(item.start);
+        const url = `${server.apiUrl}/project/${this.props.project}/item/crop`;
+        const params = {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            track: item?.group,
+            direction: direction,
+            item: itemTrack?.item?.id,
+            time: time
+          })
+        };
 
-      fetch(url, params)
-        .then(response => response.json())
-        .then(data => {
-          if (typeof data.err !== "undefined") {
-            alert(`${data.err}\n\n${data.msg}`);
-          } else {
-            if (itemPath[0] === item.group) {
+        fetch(url, params)
+          .then(response => response.json())
+          .then(data => {
+            if (typeof data.err !== "undefined") {
+              alert(`${data.err}\n\n${data.msg}`);
+            } else {
               // Same track
               this.props.loadData();
-            } else {
-              // Moving between tracks
-              const trackType = item.group.includes("audio")
-                ? "audio"
-                : "video";
-              const prevTrack = Editor.findTrack(this.props.items, itemPath[0]);
-              const newTrack = Editor.findTrack(this.props.items, item.group);
-
-              const addTrack = newTrack.items.length === 0; //
-              const delTrack = Editor.findItem(prevTrack.items, 1) === null;
-
-              if (addTrack && delTrack) this.addTrack(trackType, prevTrack.id);
-              else if (addTrack) this.addTrack(trackType, null);
-              else if (delTrack) this.delTrack(prevTrack.id);
-              else this.props.loadData();
             }
-          }
-        })
-        .catch(error => this.props.fetchError(error.message));
+          })
+          .catch(error => console.log(error.message));
+        // if (item.end < formattedDateFromString(itemTrack.item.out)) {
+        //   console.log("Backword");
+        // } else if (item.start > formattedDateFromString(itemTrack.item.in)) {
+        //   console.log("forwar");
+        // }
+      } else {
+        const itemPath = item.id.split(":");
+        const currentItem = Editor.findTrack(this.props.items, itemPath[0]);
+        const url = `${server.apiUrl}/project/${this.props.project}/item/move`;
+        const params = {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            track: itemPath[0],
+            trackTarget: item.group,
+            item: currentItem?.[0]?.id,
+            time: Timeline.dateToString(item.start)
+          })
+        };
+
+        fetch(url, params)
+          .then(response => response.json())
+          .then(data => {
+            if (typeof data.err !== "undefined") {
+              alert(`${data.err}\n\n${data.msg}`);
+            } else {
+              if (itemPath[0] === item?.group) {
+                // Same track
+                this.props.loadData();
+              } else {
+                // Moving between tracks
+                const trackType = item.group.includes("audio")
+                  ? "audio"
+                  : "video";
+                const prevTrack = Editor.findTrack(
+                  this.props.items,
+                  itemPath[0]
+                )?.[0];
+                const newTrack = Editor.findTrack(
+                  this.props.items,
+                  item.group
+                )?.[0];
+                console.log("aaaaa", newTrack);
+                console.log("aaaaa", prevTrack);
+
+                const addTrack = newTrack?.items?.length === 0; //
+                const delTrack = Editor.findItem(prevTrack, 1) === null;
+                console.log("delTrack", delTrack);
+                if (addTrack && delTrack)
+                  this.addTrack(trackType, prevTrack.id);
+                else if (addTrack) this.addTrack(trackType, null);
+                else if (delTrack) this.delTrack(prevTrack.id);
+                else this.props.loadData();
+              }
+            }
+          })
+          .catch(error => console.log(error.message));
+      }
     }
   }
 
-  itemMove(item) {
+  itemMove = item => {
     if (item.start.getFullYear() < 1970) return null;
     // Deny move before zero time
     else {
@@ -538,7 +667,14 @@ export default class Timeline extends Component {
             itemPath[0].includes("audiotrack")
           )
         ) {
-          return null;
+          if (
+            !(
+              item.group.includes("texttrack") &&
+              itemPath[0].includes("texttrack")
+            )
+          ) {
+            return null;
+          }
         }
       }
 
@@ -639,7 +775,7 @@ export default class Timeline extends Component {
         return null;
       }
     }
-  }
+  };
 
   addTrack(type, delTrack) {
     const url = `${server.apiUrl}/project/${this.props.project}/track`;
