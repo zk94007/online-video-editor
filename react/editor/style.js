@@ -12,15 +12,6 @@ const EditSection = styled.div`
   flex: 1;
 `;
 
-const ProjectTitleContainer = styled.div`
-  height: 85px;
-  display: flex;
-  flex-direction: column;
-  -webkit-box-pack: center;
-  justify-content: center;
-  padding: 0px 24px;
-`;
-
 const ProjectTitle = styled.div`
   display: inline-block;
   align-items: center;
@@ -55,7 +46,6 @@ const ProjectInput = styled.input`
 export {
   Container,
   EditSection,
-  ProjectTitleContainer,
   ProjectTitle,
   ProjectInput
 };

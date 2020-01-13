@@ -15,12 +15,8 @@ import SidePanel from "./SidePanel/SidePanel";
 import Timeline from "./Timeline/Timeline";
 import SideMenu from "./SideMenu/SideMenu";
 
-import {
-  Container,
-  EditSection,
-  ProjectTitle,
-  ProjectInput
-} from "./style";
+import { Container, EditSection, ProjectTitle, ProjectInput } from "./style";
+import axios from "axios";
 
 export default class Editor extends Component {
   constructor(props) {
@@ -49,7 +45,7 @@ export default class Editor extends Component {
       activeState: "Media",
       logos: {},
       titleClicked: false,
-      projectName: "Untitled Project"
+      projectName: ""
     };
 
     this.loadData();
@@ -72,13 +68,38 @@ export default class Editor extends Component {
 
   handleClickOutside = event => {
     if (this.projectRef && !this.projectRef.contains(event.target)) {
-      this.setState({
-        titleClicked: !this.state.titleClicked,
-        projectName: this.state.projectName
-          ? this.state.projectName
-          : "Untitled Project"
-      });
+      if (this.state.projectName) {
+        this.onProjectRename();
+      } else {
+        this.setState({
+          projectName: this.state.prevProject
+        });
+      }
     }
+  };
+
+  onProjectRename = () => {
+    axios
+      .post(
+        `${server.apiUrl}/project/${this.state.project}/projectName`,
+        JSON.stringify({
+          projectID: this.state.project,
+          projectName: this.state.projectName
+        }),
+        {
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      )
+      .then(data => {
+        if (typeof data.err === "undefined") {
+          this.loadData();
+        } else {
+          alert(`${data.err}\n\n${data.msg}`);
+        }
+      })
+      .catch(error => this.openFetchErrorDialog(error.message));
   };
 
   render() {
@@ -266,7 +287,9 @@ export default class Editor extends Component {
           this.setState({
             resources: data.resources,
             timeline: data.timeline,
-            logos: data.logos
+            logos: data.logos,
+            projectName: data.projectName,
+            prevProject: data.projectName
           });
           this.setState({ loading: false });
         } else {
