@@ -57,7 +57,13 @@ export default class Timeline extends Component {
       multiselectPerGroup: false,
       stack: false,
       zoomMin: 1000 * 80,
-      editable: true,
+      editable: {
+        overrideItems: false,
+        add: true,
+        updateTime: true,
+        updateGroup: true,
+        remove: true
+      },
       itemsAlwaysDraggable: {
         item: true,
         range: true
@@ -157,6 +163,17 @@ export default class Timeline extends Component {
     this.timeline.on("timechange", this.onTimeChange);
     this.timeline.on("moving", this.onMoving);
     this.timeline.on("move", this.onMove);
+    container.addEventListener("DOMNodeInserted", () => {
+      if (
+        !document.querySelector(".customize-bar") &&
+        document.querySelector(".vis-custom-time ")
+      ) {
+        const element = document.createElement("div");
+        element.setAttribute("class", "customize-bar");
+        container.removeEventListener("DOMNodeInserted", null);
+        document.querySelector(".vis-custom-time ").appendChild(element);
+      }
+    });
   }
 
   onRemove = (item = {}) => {
