@@ -17,6 +17,7 @@ import { extendMoment } from "moment-range";
 import { formattedDateFromString } from "../../utils";
 import AlertErrorDialog from "../../_core/Dialog/Dialogs/AlertErroDialog";
 const Moment = extendMoment(moment);
+import { TimelineHeader } from "../style";
 
 export default class Timeline extends Component {
   constructor(props) {
@@ -180,9 +181,7 @@ export default class Timeline extends Component {
     const itemPath =
       item?.id?.split(":") || this.state.selectedItems?.[0]?.split(":");
     let track = Editor.findTrack(this.props.items, itemPath[0]);
-    console.log(track);
     let data = Editor.findItem(track, Number(itemPath[1]));
-    console.log(data);
     const url = `${server.apiUrl}/project/${this.props.project}/item`;
     const params = {
       method: "DELETE",
@@ -300,6 +299,12 @@ export default class Timeline extends Component {
         if (item?.resource === "blank") {
           actualTime = timeManager.addDuration(item.length, actualTime);
         } else {
+          const timeIn = actualTime.match(/^(\d{2,}):(\d{2}):(\d{2}),(\d{3})$/);
+          actualTime = timeManager.addDuration(actualTime, item.out);
+          actualTime = timeManager.subDuration(actualTime, item.in);
+          const timeOut = actualTime.match(
+            /^(\d{2,}):(\d{2}):(\d{2}),(\d{3})$/
+          );
           let content =
             this.props.resources?.[item?.resource_id]?.name ||
             item?.textAnimation;
@@ -322,7 +327,13 @@ export default class Timeline extends Component {
           index++;
         }
       }
+      if (actualTime > duration) {
+        duration = actualTime;
+      }
     }
+
+    if (this.state.duration !== duration) this.setState({ duration: duration });
+
     this.timeline.setData({
       items: items,
       groups: groups
@@ -350,23 +361,47 @@ export default class Timeline extends Component {
             msg={this.state.error}
           />
         )}
+        <TimelineHeader>
+          <div>
+            <button onClick={this.buttonSplit}>
+              <i className="material-icons" aria-hidden="true">
+                flip
+              </i>
+              Split in point
+            </button>
+            {/*<button><i className="material-icons" aria-hidden="true">menu</i>Vlastnosti</button>*/}
+            <button onClick={this.onRemove}>
+              <i className="material-icons" aria-hidden="true">
+                remove
+              </i>
+              Remove
+            </button>
+          </div>
+          <div id="time">
+            {this.state.timePointer} / {this.state.duration}
+          </div>
+          <div>
+            <button onClick={this.buttonSplit}>
+              <i className="material-icons" aria-hidden="true">
+                zoom_in
+              </i>
+              Zoom in
+            </button>
+            <button onClick={this.buttonSplit}>
+              <i className="material-icons" aria-hidden="true">
+                zoom_out
+              </i>
+              Zoom out
+            </button>
+            <button onClick={this.buttonSplit}>
+              <i className="material-icons" aria-hidden="true">
+                remove
+              </i>
+              Fit To Screen
+            </button>
+          </div>
+        </TimelineHeader>
         {/*<button><i className="material-icons" aria-hidden="true">photo_filter</i>Přidat přechod</button>*/}
-        <button onClick={this.buttonSplit}>
-          <i className="material-icons" aria-hidden="true">
-            flip
-          </i>
-          Split in point
-        </button>
-        {/*<button><i className="material-icons" aria-hidden="true">menu</i>Vlastnosti</button>*/}
-        <button onClick={this.onRemove}>
-          <i className="material-icons" aria-hidden="true">
-            remove
-          </i>
-          Remove
-        </button>
-        <div id="time">
-          {this.state.timePointer} / {this.state.duration}
-        </div>
         <div id="vis-timeline" />
         {this.state.showAddFilterDialog && (
           <AddFilterDialog
@@ -497,24 +532,25 @@ export default class Timeline extends Component {
 
   onTimeChange = event => {
     const timePointer = Timeline;
+    console.log("aaaaa", event.time);
     if (event.time.getFullYear() < 1970) {
       this.timeline.setCustomTime(new Date(1970, 0, 1));
       this.timeline.setCustomTimeTitle("00:00:00,000");
       this.setState({ timePointer: "00:00:00,000" });
     } else if (timePointer > this.state.duration) {
-      this.timeline.setCustomTime(
-        new Date(
-          1970,
-          0,
-          1,
-          event.time.getHours(),
-          event.time.getMinutes(),
-          event.time.getSeconds(),
-          event.time.getMilliseconds()
-        )
+      console.log("KAB TAK CHUP");
+      let date = new Date(
+        1970,
+        0,
+        1,
+        event.time.getHours(),
+        event.time.getMinutes(),
+        event.time.getSeconds(),
+        event.time.getMilliseconds()
       );
-      this.timeline.setCustomTimeTitle(this.state.duration);
-      this.setState({ timePointer: this.state.duration });
+      this.timeline.setCustomTime(date);
+      this.timeline.setCustomTimeTitle(Timeline.dateToString(date));
+      this.setState({ timePointer: Timeline.dateToString(date) });
     } else {
       this.setState({ timePointer: timePointer });
       this.timeline.setCustomTimeTitle(timePointer);

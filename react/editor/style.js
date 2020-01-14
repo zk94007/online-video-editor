@@ -43,9 +43,10 @@ const ProjectInput = styled.input`
   padding: 0.5rem 0.75rem;
 `;
 
-export {
-  Container,
-  EditSection,
-  ProjectTitle,
-  ProjectInput
-};
+const TimelineHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+export { Container, EditSection, ProjectTitle, ProjectInput, TimelineHeader };
