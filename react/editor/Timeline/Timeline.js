@@ -299,6 +299,12 @@ export default class Timeline extends Component {
         if (item?.resource === "blank") {
           actualTime = timeManager.addDuration(item.length, actualTime);
         } else {
+          const timeIn = actualTime.match(/^(\d{2,}):(\d{2}):(\d{2}),(\d{3})$/);
+          actualTime = timeManager.addDuration(actualTime, item.out);
+          actualTime = timeManager.subDuration(actualTime, item.in);
+          const timeOut = actualTime.match(
+            /^(\d{2,}):(\d{2}):(\d{2}),(\d{3})$/
+          );
           let content =
             this.props.resources?.[item?.resource_id]?.name ||
             item?.textAnimation;
@@ -321,7 +327,13 @@ export default class Timeline extends Component {
           index++;
         }
       }
+      if (actualTime > duration) {
+        duration = actualTime;
+      }
     }
+
+    if (this.state.duration !== duration) this.setState({ duration: duration });
+
     this.timeline.setData({
       items: items,
       groups: groups
@@ -520,24 +532,25 @@ export default class Timeline extends Component {
 
   onTimeChange = event => {
     const timePointer = Timeline;
+    console.log("aaaaa", event.time);
     if (event.time.getFullYear() < 1970) {
       this.timeline.setCustomTime(new Date(1970, 0, 1));
       this.timeline.setCustomTimeTitle("00:00:00,000");
       this.setState({ timePointer: "00:00:00,000" });
     } else if (timePointer > this.state.duration) {
-      this.timeline.setCustomTime(
-        new Date(
-          1970,
-          0,
-          1,
-          event.time.getHours(),
-          event.time.getMinutes(),
-          event.time.getSeconds(),
-          event.time.getMilliseconds()
-        )
+      console.log("KAB TAK CHUP");
+      let date = new Date(
+        1970,
+        0,
+        1,
+        event.time.getHours(),
+        event.time.getMinutes(),
+        event.time.getSeconds(),
+        event.time.getMilliseconds()
       );
-      this.timeline.setCustomTimeTitle(this.state.duration);
-      this.setState({ timePointer: this.state.duration });
+      this.timeline.setCustomTime(date);
+      this.timeline.setCustomTimeTitle(Timeline.dateToString(date));
+      this.setState({ timePointer: Timeline.dateToString(date) });
     } else {
       this.setState({ timePointer: timePointer });
       this.timeline.setCustomTimeTitle(timePointer);
