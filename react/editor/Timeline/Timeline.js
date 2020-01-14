@@ -547,13 +547,11 @@ export default class Timeline extends Component {
 
   onTimeChange = event => {
     const timePointer = Timeline;
-    console.log("aaaaa", event.time);
     if (event.time.getFullYear() < 1970) {
       this.timeline.setCustomTime(new Date(1970, 0, 1));
       this.timeline.setCustomTimeTitle("00:00:00,000");
       this.setState({ timePointer: "00:00:00,000" });
     } else if (timePointer > this.state.duration) {
-      console.log("KAB TAK CHUP");
       let date = new Date(
         1970,
         0,
@@ -590,7 +588,6 @@ export default class Timeline extends Component {
         moment(item.start).format("HH:mm:ss,SSS")
       )
     );
-    console.log("length", subTime);
     const range = Moment.range(
       formattedDateFromString(itemTrack.item?.in),
       formattedDateFromString(itemTrack.item?.out)
@@ -620,7 +617,6 @@ export default class Timeline extends Component {
           track,
           Number(item?.id?.split(":")?.[1])
         );
-        console.log("itemTrack", itemTrack);
         let direction =
           item.end < formattedDateFromString(itemTrack.item.out)
             ? "back"
@@ -698,12 +694,8 @@ export default class Timeline extends Component {
                   this.props.items,
                   item.group
                 )?.[0];
-                console.log("aaaaa", newTrack);
-                console.log("aaaaa", prevTrack);
-
                 const addTrack = newTrack?.items?.length === 0; //
                 const delTrack = Editor.findItem(prevTrack, 1) === null;
-                console.log("delTrack", delTrack);
                 if (addTrack && delTrack)
                   this.addTrack(trackType, prevTrack.id);
                 else if (addTrack) this.addTrack(trackType, null);
