@@ -167,6 +167,7 @@ export default class Timeline extends Component {
     this.timeline.on("timechange", this.onTimeChange);
     this.timeline.on("moving", this.onMoving);
     this.timeline.on("move", this.onMove);
+    this.timeline.on("click", this.onClickTimeline);
     container.addEventListener("DOMNodeInserted", () => {
       if (
         !document.querySelector(".customize-bar") &&
@@ -178,8 +179,23 @@ export default class Timeline extends Component {
         document.querySelector(".vis-custom-time ").appendChild(element);
       }
     });
+    this.timeline.fit();
   }
-
+  onClickTimeline = event => {
+    if (!event?.item) {
+      let date = new Date(
+        1970,
+        0,
+        1,
+        event?.time.getHours(),
+        event?.time.getMinutes(),
+        event?.time.getSeconds(),
+        event?.time.getMilliseconds()
+      );
+      this.timeline.setCustomTime(date);
+      this.setState({ timePointer: Timeline.dateToString(date) });
+    }
+  };
   onRemove = (item = {}) => {
     const itemPath =
       item?.id?.split(":") || this.state.selectedItems?.[0]?.split(":");
@@ -290,7 +306,9 @@ export default class Timeline extends Component {
       let isVideo = videoMatch.test(track.id);
       groups.push({
         id: track.id,
-        content: `<div style="height: ${isVideo ? "60px": "30px"}; align-items: center;display: flex; justify-content: center; border-bottom: none; text-transform: capitalize">
+        content: `<div style="height: ${
+          isVideo ? "60px" : "30px"
+        }; align-items: center;display: flex; justify-content: center; border-bottom: none; text-transform: capitalize">
         <i class="material-icons" aria-hidden="true">${this.getIcons(
           track.id
         )}</i></div>`,
@@ -348,7 +366,7 @@ export default class Timeline extends Component {
       groups: groups
     });
 
-    this.timeline.fit();
+    // this.timeline.fit();
   }
 
   onFitScreen = () => {
