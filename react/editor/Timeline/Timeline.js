@@ -69,9 +69,12 @@ export default class Timeline extends Component {
         item: true,
         range: true
       },
-      zoomMax: 216000,
+      zoomMax: 315360000000000,
       onRemove: this.onRemove,
       onMove: this.onMove,
+      zoomable: false,
+      zoomKey:"ctrlKey",
+      horizontalScroll: true,
       onMoving: this.onMoving,
       onAdd: item => {
         if (item?.group?.includes(item?.support)) {
@@ -342,6 +345,18 @@ export default class Timeline extends Component {
     this.timeline.fit();
   }
 
+  onFitScreen = () => {
+    this.timeline.fit()
+  }
+
+  onZoomIn = () => {
+    this.timeline.zoomIn(1)
+  }
+
+  onZoomOut = () => {
+    this.timeline.zoomOut(0.1)
+  }
+
   render() {
     return (
       <div
@@ -381,19 +396,19 @@ export default class Timeline extends Component {
             {this.state.timePointer} / {this.state.duration}
           </div>
           <div>
-            <button onClick={this.buttonSplit}>
+            <button onClick={this.onZoomIn}>
               <i className="material-icons" aria-hidden="true">
                 zoom_in
               </i>
               Zoom in
             </button>
-            <button onClick={this.buttonSplit}>
+            <button onClick={this.onZoomOut}>
               <i className="material-icons" aria-hidden="true">
                 zoom_out
               </i>
               Zoom out
             </button>
-            <button onClick={this.buttonSplit}>
+            <button onClick={this.onFitScreen}>
               <i className="material-icons" aria-hidden="true">
                 remove
               </i>
