@@ -73,7 +73,7 @@ export default class Timeline extends Component {
       onRemove: this.onRemove,
       onMove: this.onMove,
       zoomable: false,
-      zoomKey:"ctrlKey",
+      zoomKey: "ctrlKey",
       horizontalScroll: true,
       onMoving: this.onMoving,
       onAdd: item => {
@@ -87,7 +87,7 @@ export default class Timeline extends Component {
           length =
             item?.support === "text"
               ? moment(startDate)
-                  .add(3, "s")
+                  .add(5, "s")
                   .format("HH:mm:ss,SSS")
               : length;
           this.props.items
@@ -285,10 +285,12 @@ export default class Timeline extends Component {
     let duration = "00:00:00,000";
     const tracks = [...this.props.items];
     const videoMatch = new RegExp(/^videotrack\d+/);
+    const textMatch = new RegExp(/^texttrack\d+/);
     for (let track of tracks) {
+      let isVideo = videoMatch.test(track.id);
       groups.push({
         id: track.id,
-        content: `<div style="height: 40px; align-items: center;display: flex; justify-content: center; border-bottom: none; text-transform: capitalize">
+        content: `<div style="height: ${isVideo ? "60px": "30px"}; align-items: center;display: flex; justify-content: center; border-bottom: none; text-transform: capitalize">
         <i class="material-icons" aria-hidden="true">${this.getIcons(
           track.id
         )}</i></div>`,
@@ -325,7 +327,11 @@ export default class Timeline extends Component {
             start: formattedDateFromString(item?.in),
             end: formattedDateFromString(item?.out),
             group: track.id,
-            className: videoMatch.test(track.id) ? "video" : "audio"
+            className: videoMatch.test(track.id)
+              ? "video"
+              : !!textMatch.test(track.id)
+              ? "text"
+              : "audio"
           });
           index++;
         }
@@ -346,16 +352,16 @@ export default class Timeline extends Component {
   }
 
   onFitScreen = () => {
-    this.timeline.fit()
-  }
+    this.timeline.fit();
+  };
 
   onZoomIn = () => {
-    this.timeline.zoomIn(1)
-  }
+    this.timeline.zoomIn(1);
+  };
 
   onZoomOut = () => {
-    this.timeline.zoomOut(0.1)
-  }
+    this.timeline.zoomOut(0.1);
+  };
 
   render() {
     return (
