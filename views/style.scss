@@ -33,7 +33,40 @@ svg.caret {
 .vis-foreground .vis-group {
   border-bottom: 1px solid #555555 !important;
 }
-.vis-custom-time{
+.vis-custom-time {
+  z-index: 1000;
+  background: #fff !important;
+  top: 10px !important;
+}
+.vis-custom-time .customize-bar {
+  position: absolute;
+  top: 0;
+  right: initial;
+  bottom: initial;
+  left: 8px;
+  background: #fff;
+  cursor: pointer;
+  transform: translate(-14px, -50%);
+  width: 14px;
+  height: 13px;
+  border-radius: 4px 4px 2px 2px;
+  z-index: 500;
+}
+.vis-custom-time .customize-bar:before {
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 9px 7px 0;
+  border-color: #fff transparent transparent;
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+}
+.vis-custom-time div:first-child {
+  position: relative;
+  width: 2px;
+  top: -7px !important;
   z-index: 1000;
 }
 .react-waves {
@@ -457,18 +490,27 @@ tr:nth-child(even) {
 }
 
 .vis-item {
-  height: 4em;
+  height: 1.7em;
 
   &.video,
-  &.audio {
+  &.audio,
+  &.text {
     border-radius: 10px;
     color: #fff;
     padding: 2px;
   }
 
+  &.text {
+    background-color: #766af6;
+    .vis-item-content {
+      padding: 0 2px;
+    }
+  }
+
   &.video {
     background-color: #27438b;
     border-color: #1d346e;
+    height: 50px;
 
     &.stick-right {
       border-right: 5px solid #4caf50;
@@ -482,7 +524,9 @@ tr:nth-child(even) {
   &.audio {
     background-color: #2d7741;
     border-color: #1f512c;
-
+    .vis-item-content {
+      padding: 0 2px;
+    }
     &.stick-right {
       border-right: 5px solid #30acff;
     }
