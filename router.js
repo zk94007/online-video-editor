@@ -11,8 +11,8 @@ const apiController = require('./controllers/apiController');
 const errorController = require('./controllers/errorController');
 
 // Vis timeline resources
-router.get('/vis.css', (req, res) => res.sendFile(__dirname + '/node_modules/vis-timeline/dist/vis-timeline-graph2d.min.css'));
-router.get('/vis.js', (req, res) => res.sendFile(__dirname + '/node_modules/vis-timeline/dist/vis-timeline-graph2d.min.js'));
+router.get('/vis.css', (req, res) => res.sendFile(__dirname + '/react/_lib/vis-timeline/vis.css'));
+router.get('/vis.js', (req, res) => res.sendFile(__dirname + '/react/_lib/vis-timeline/vis.js'));
 
 // API route
 router.all('/api', apiController.default);

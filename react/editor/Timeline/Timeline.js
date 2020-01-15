@@ -5,7 +5,7 @@
 
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import vis from "vis-timeline";
+import vis from "../../_lib/vis-timeline/vis"; //Customized vis-timeline
 
 import { server } from "../../../config";
 import timeManager from "../../../models/timeManager";
