@@ -30,7 +30,8 @@ export default class Timeline extends Component {
       showAddFilterDialog: false,
       duration: "00:00:00,000",
       timePointer: "00:00:00,000",
-      error: false
+      error: false,
+      position: null
     };
 
     this.onSelect = this.onSelect.bind(this);
@@ -167,7 +168,24 @@ export default class Timeline extends Component {
     this.timeline.on("timechange", this.onTimeChange);
     this.timeline.on("moving", this.onMoving);
     this.timeline.on("move", this.onMove);
-    this.timeline.on("click", this.onClickTimeline);
+    this.timeline.on("mouseDown", event => {
+      this.setState({
+        position: {
+          x: event.pageX,
+          y: event.pageY
+        }
+      });
+    });
+    this.timeline.on("mouseUp", event => {
+      if (
+        this.state?.position?.x === event.pageX &&
+        this.state?.position?.y === event.pageY
+      ) {
+        this.onClickTimeline(event);
+      } else {
+        return null;
+      }
+    });
     container.addEventListener("DOMNodeInserted", () => {
       if (
         !document.querySelector(".customize-bar") &&
@@ -182,7 +200,12 @@ export default class Timeline extends Component {
     this.timeline.fit();
   }
   onClickTimeline = event => {
-    if (!event?.item) {
+    if (this.state.movingTimline) {
+      this.setState({
+        movingTimline: false
+      });
+    }
+    if (!event?.item && !this.state.movingTimline) {
       let date = new Date(
         1970,
         0,
