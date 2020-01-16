@@ -31,7 +31,7 @@ export default class Timeline extends Component {
       duration: "00:00:00,000",
       timePointer: "00:00:00,000",
       error: false,
-      position: null
+      movingTimePointer: false
     };
 
     this.onSelect = this.onSelect.bind(this);
@@ -74,11 +74,11 @@ export default class Timeline extends Component {
       onRemove: this.onRemove,
       onMove: this.onMove,
       zoomable: false,
+      moveable: false,
       zoomKey: "ctrlKey",
       horizontalScroll: true,
       onMoving: this.onMoving,
       onAdd: item => {
-        console.log("aaa",this.timeline.itemsData.get())
         if (item?.group?.includes(item?.support)) {
           let startDate = item?.start;
           let length = this.props?.resources[item?.content]?.length
@@ -170,21 +170,20 @@ export default class Timeline extends Component {
     this.timeline.on("moving", this.onMoving);
     this.timeline.on("move", this.onMove);
     this.timeline.on("mouseDown", event => {
-      this.setState({
-        position: {
-          x: event.pageX,
-          y: event.pageY
-        }
-      });
+      if (!event?.item && event?.time) {
+        this.setState({movingTimePointer: true});
+        this.updateTimePointer(event.time);
+      }
+    });
+    this.timeline.on("mouseMove", event => {
+      if (this.state.movingTimePointer && event?.time) {
+        this.updateTimePointer(event.time);
+      }
     });
     this.timeline.on("mouseUp", event => {
-      if (
-        this.state?.position?.x === event.pageX &&
-        this.state?.position?.y === event.pageY
-      ) {
-        this.onClickTimeline(event);
-      } else {
-        return null;
+      if (this.state.movingTimePointer && event?.time) {
+        this.updateTimePointer(event.time);
+        this.setState({movingTimePointer: false});
       }
     });
     container.addEventListener("DOMNodeInserted", () => {
@@ -200,26 +199,20 @@ export default class Timeline extends Component {
     });
     this.timeline.fit();
   }
-  onClickTimeline = event => {
-    if (this.state.movingTimline) {
-      this.setState({
-        movingTimline: false
-      });
-    }
-    if (!event?.item && !this.state.movingTimline) {
-      let date = new Date(
-        1970,
-        0,
-        1,
-        event?.time.getHours(),
-        event?.time.getMinutes(),
-        event?.time.getSeconds(),
-        event?.time.getMilliseconds()
-      );
-      this.timeline.setCustomTime(date);
-      this.setState({ timePointer: Timeline.dateToString(date) });
-    }
-  };
+  updateTimePointer = time => {
+    let date = new Date(
+      1970,
+      0,
+      1,
+      time.getHours(),
+      time.getMinutes(),
+      time.getSeconds(),
+      time.getMilliseconds()
+    );
+    this.timeline.setCustomTime(date);
+    this.setState({ timePointer: Timeline.dateToString(date) });
+  }
+
   onRemove = (item = {}) => {
     const itemPath =
       item?.id?.split(":") || this.state.selectedItems?.[0]?.split(":");
