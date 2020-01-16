@@ -307,7 +307,7 @@ export default class Timeline extends Component {
       groups.push({
         id: track.id,
         content: `<div style="height: ${
-          isVideo ? "60px" : "30px"
+          isVideo ? "60px" : "40px"
         }; align-items: center;display: flex; justify-content: center; border-bottom: none; text-transform: capitalize">
         <i class="material-icons" aria-hidden="true">${this.getIcons(
           track.id
