@@ -64,7 +64,7 @@ export default class Timeline extends Component {
         add: true,
         updateTime: true,
         updateGroup: true,
-        remove: true
+        remove: false
       },
       itemsAlwaysDraggable: {
         item: true,
@@ -78,6 +78,7 @@ export default class Timeline extends Component {
       horizontalScroll: true,
       onMoving: this.onMoving,
       onAdd: item => {
+        console.log("aaa",this.timeline.itemsData.get())
         if (item?.group?.includes(item?.support)) {
           let startDate = item?.start;
           let length = this.props?.resources[item?.content]?.length
@@ -319,7 +320,7 @@ export default class Timeline extends Component {
     if (prevProps.items === this.props.items) return;
 
     const groups = [];
-    const items = [];
+    const items = new vis.DataSet([]);
 
     let duration = "00:00:00,000";
     const tracks = [...this.props.items];
@@ -361,7 +362,7 @@ export default class Timeline extends Component {
           // todo Subtract transition duration
           // let endTime = item?.out?.split(/:|,/);
           // let startTime = item?.in?.split(/:|,/);
-          items.push({
+          items.update({
             id: track.id + ":" + index,
             content: content,
             align: "center",
@@ -432,12 +433,12 @@ export default class Timeline extends Component {
               Split in point
             </button>
             {/*<button><i className="material-icons" aria-hidden="true">menu</i>Vlastnosti</button>*/}
-            {/* <button onClick={this.onRemove}>
+            <button onClick={this.onRemove}>
               <i className="material-icons" aria-hidden="true">
                 remove
               </i>
               Remove
-            </button> */}
+            </button>
           </div>
           <div id="time">
             {this.state.timePointer} / {this.state.duration}
