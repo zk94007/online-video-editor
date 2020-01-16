@@ -409,12 +409,12 @@ export default class Timeline extends Component {
               Split in point
             </button>
             {/*<button><i className="material-icons" aria-hidden="true">menu</i>Vlastnosti</button>*/}
-            <button onClick={this.onRemove}>
+            {/* <button onClick={this.onRemove}>
               <i className="material-icons" aria-hidden="true">
                 remove
               </i>
               Remove
-            </button>
+            </button> */}
           </div>
           <div id="time">
             {this.state.timePointer} / {this.state.duration}
