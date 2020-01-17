@@ -44,6 +44,7 @@ export default class Timeline extends Component {
     this.getItem = this.getItem.bind(this);
     this.addTrack = this.addTrack.bind(this);
     this.delTrack = this.delTrack.bind(this);
+    this.updateTimePointer = this.updateTimePointer.bind(this);
   }
 
   componentDidMount() {
@@ -73,20 +74,13 @@ export default class Timeline extends Component {
       zoomMax: 315360000000000,
       // onRemove: this.onRemove,
       // onMove: this.onMove,
+      moveable: false,
       zoomable: false,
       zoomKey: "ctrlKey",
       horizontalScroll: true,
       onMoving: this.onMoving,
       onAdd: item => {
         if (item?.group?.includes(item?.support)) {
-          console.log(
-            "aaa",
-            this.timeline.itemsData.get({
-              filter: function(data) {
-                return data.group == item?.group;
-              }
-            })
-          );
           const videoMatch = new RegExp(/^videotrack\d+/);
           const textMatch = new RegExp(/^texttrack\d+/);
           const resource = this.props?.resources?.[item?.content];
@@ -214,21 +208,20 @@ export default class Timeline extends Component {
     this.timeline.on("moving", this.onMoving);
     this.timeline.on("move", this.onMove);
     this.timeline.on("mouseDown", event => {
-      this.setState({
-        position: {
-          x: event.pageX,
-          y: event.pageY
-        }
-      });
+      if (!event?.item && event.time) {
+        this.setState({movingTimePointer: true});
+        this.updateTimePointer(event.time);
+      }
+    });
+    this.timeline.on("mouseMove", event => {
+      if (this.state.movingTimePointer && event.time) {
+        this.updateTimePointer(event.time);
+      }
     });
     this.timeline.on("mouseUp", event => {
-      if (
-        this.state?.position?.x === event.pageX &&
-        this.state?.position?.y === event.pageY
-      ) {
-        this.onClickTimeline(event);
-      } else {
-        return null;
+      if (this.state.movingTimePointer && event.time) {
+        this.setState({movingTimePointer: false});
+        this.updateTimePointer(event.time);
       }
     });
     container.addEventListener("DOMNodeInserted", () => {
@@ -244,25 +237,18 @@ export default class Timeline extends Component {
     });
     this.timeline.fit();
   }
-  onClickTimeline = event => {
-    if (this.state.movingTimline) {
-      this.setState({
-        movingTimline: false
-      });
-    }
-    if (!event?.item && !this.state.movingTimline) {
-      let date = new Date(
-        1970,
-        0,
-        1,
-        event?.time.getHours(),
-        event?.time.getMinutes(),
-        event?.time.getSeconds(),
-        event?.time.getMilliseconds()
-      );
-      this.timeline.setCustomTime(date);
-      this.setState({ timePointer: Timeline.dateToString(date) });
-    }
+  updateTimePointer = time => {
+    let date = new Date(
+      1970,
+      0,
+      1,
+      time.getHours(),
+      time.getMinutes(),
+      time.getSeconds(),
+      time.getMilliseconds()
+    );
+    this.timeline.setCustomTime(date);
+    this.setState({ timePointer: this.dateToString(date) });
   };
   onRemove = () => {
     const itemPath = this.state.selectedItems?.[0]?.split(":");
