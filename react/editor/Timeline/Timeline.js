@@ -71,61 +71,105 @@ export default class Timeline extends Component {
         range: true
       },
       zoomMax: 315360000000000,
-      onRemove: this.onRemove,
-      onMove: this.onMove,
+      // onRemove: this.onRemove,
+      // onMove: this.onMove,
       zoomable: false,
-      moveable: false,
       zoomKey: "ctrlKey",
       horizontalScroll: true,
       onMoving: this.onMoving,
       onAdd: item => {
         if (item?.group?.includes(item?.support)) {
-          let startDate = item?.start;
-          let length = this.props?.resources[item?.content]?.length
-            ? this.props?.resources[item?.content]?.length
-            : moment(startDate)
-                .add(3, "s")
-                .format("HH:mm:ss,SSS");
-          length =
-            item?.support === "text"
-              ? moment(startDate)
-                  .add(5, "s")
-                  .format("HH:mm:ss,SSS")
-              : length;
-          this.props.items
-            .filter(val => val.id === item?.group)?.[0]
-            ?.items?.map(data => {
-              const start = formattedDateFromString(data.in);
-              const end = formattedDateFromString(data.out);
-              // const range = moment.range(moment(start), moment(end));
-              const duration = timeManager.addDuration(
-                moment(startDate).format("HH:mm:ss,SSS"),
-                length
-              );
-              let currentRange = moment.range(
-                startDate,
-                formattedDateFromString(duration)
-              );
-              if (currentRange.contains(start) || currentRange.contains(end)) {
-                startDate = moment(formattedDateFromString(data.out)).add(
-                  2,
-                  "s"
-                );
+          console.log(
+            "aaa",
+            this.timeline.itemsData.get({
+              filter: function(data) {
+                return data.group == item?.group;
               }
-              // if (
-              //   range.contains(formattedDateFromString(duration)) ||
-              //   range.contains(startDate)
-              // ) {
-              //   startDate = moment(formattedDateFromString(data.out)).add(2, "s");
-              // }
-            });
-          this.onInsert(
-            item?.content,
-            startDate,
-            item?.support,
-            item?.group,
-            length
+            })
           );
+          const videoMatch = new RegExp(/^videotrack\d+/);
+          const textMatch = new RegExp(/^texttrack\d+/);
+          const resource = this.props?.resources?.[item?.content];
+          const startDate = item?.start;
+          const length = resource?.length
+            ? formattedDateFromString(
+                timeManager.addDuration(
+                  this.dateToString(item?.start),
+                  resource?.length
+                )
+              )
+            : formattedDateFromString(
+                moment(startDate)
+                  .add(3, "s")
+                  .format("HH:mm:ss,SSS")
+              );
+          const right = timeManager.subDuration(
+            this.dateToString(length),
+            this.dateToString(startDate)
+          );
+          // let startDate = item?.start;
+          // let length = this.props?.resources[item?.content]?.length
+          //   ? this.props?.resources[item?.content]?.length
+          //   : moment(startDate)
+          //       .add(3, "s")
+          //       .format("HH:mm:ss,SSS");
+          // length =
+          //   item?.support === "text"
+          //     ? moment(startDate)
+          //         .add(5, "s")
+          //         .format("HH:mm:ss,SSS")
+          //     : length;
+          // this.props.items
+          //   .filter(val => val.id === item?.group)?.[0]
+          //   ?.items?.map(data => {
+          //     const start = formattedDateFromString(data.in);
+          //     const end = formattedDateFromString(data.out);
+          //     // const range = moment.range(moment(start), moment(end));
+          //     const duration = timeManager.addDuration(
+          //       moment(startDate).format("HH:mm:ss,SSS"),
+          //       length
+          //     );
+          //     let currentRange = moment.range(
+          //       startDate,
+          //       formattedDateFromString(duration)
+          //     );
+          //     if (currentRange.contains(start) || currentRange.contains(end)) {
+          //       startDate = moment(formattedDateFromString(data.out)).add(
+          //         2,
+          //         "s"
+          //       );
+          //     }
+          //     // if (
+          //     //   range.contains(formattedDateFromString(duration)) ||
+          //     //   range.contains(startDate)
+          //     // ) {
+          //     //   startDate = moment(formattedDateFromString(data.out)).add(2, "s");
+          //     // }
+          //   });
+          // this.onInsert(
+          //   item?.content,
+          //   startDate,
+          //   item?.support,
+          //   item?.group,
+          //   length
+          // );
+          this.timeline.itemsData.add({
+            ...item,
+            type: "range",
+            ...(resource?.id
+              ? { resource_id: resource?.id }
+              : { textAnimation: item?.content }),
+            end: length,
+            clip: {
+              left: "00:00:00,000",
+              right
+            },
+            className: videoMatch.test(item?.group)
+              ? "video"
+              : !!textMatch.test(item?.group)
+              ? "text"
+              : "audio"
+          });
         } else {
           this.setState({
             error: `can't drag on ${item?.group}`
@@ -170,20 +214,21 @@ export default class Timeline extends Component {
     this.timeline.on("moving", this.onMoving);
     this.timeline.on("move", this.onMove);
     this.timeline.on("mouseDown", event => {
-      if (!event?.item && event?.time) {
-        this.setState({movingTimePointer: true});
-        this.updateTimePointer(event.time);
-      }
-    });
-    this.timeline.on("mouseMove", event => {
-      if (this.state.movingTimePointer && event?.time) {
-        this.updateTimePointer(event.time);
-      }
+      this.setState({
+        position: {
+          x: event.pageX,
+          y: event.pageY
+        }
+      });
     });
     this.timeline.on("mouseUp", event => {
-      if (this.state.movingTimePointer && event?.time) {
-        this.updateTimePointer(event.time);
-        this.setState({movingTimePointer: false});
+      if (
+        this.state?.position?.x === event.pageX &&
+        this.state?.position?.y === event.pageY
+      ) {
+        this.onClickTimeline(event);
+      } else {
+        return null;
       }
     });
     container.addEventListener("DOMNodeInserted", () => {
@@ -199,45 +244,51 @@ export default class Timeline extends Component {
     });
     this.timeline.fit();
   }
-  updateTimePointer = time => {
-    let date = new Date(
-      1970,
-      0,
-      1,
-      time.getHours(),
-      time.getMinutes(),
-      time.getSeconds(),
-      time.getMilliseconds()
-    );
-    this.timeline.setCustomTime(date);
-    this.setState({ timePointer: Timeline.dateToString(date) });
-  }
-
-  onRemove = (item = {}) => {
-    const itemPath =
-      item?.id?.split(":") || this.state.selectedItems?.[0]?.split(":");
-    let track = Editor.findTrack(this.props.items, itemPath[0]);
-    let data = Editor.findItem(track, Number(itemPath[1]));
-    const url = `${server.apiUrl}/project/${this.props.project}/item`;
-    const params = {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        track: itemPath[0],
-        item: data?.item?.id
-      })
-    };
-    fetch(url, params)
-      .then(response => response.json())
-      .then(data => {
-        if (typeof data.err !== "undefined") {
-          alert(`${data.err}\n\n${data.msg}`);
-        }
-        this.props.loadData();
-      })
-      .catch(error => this.props.fetchError(error.message));
+  onClickTimeline = event => {
+    if (this.state.movingTimline) {
+      this.setState({
+        movingTimline: false
+      });
+    }
+    if (!event?.item && !this.state.movingTimline) {
+      let date = new Date(
+        1970,
+        0,
+        1,
+        event?.time.getHours(),
+        event?.time.getMinutes(),
+        event?.time.getSeconds(),
+        event?.time.getMilliseconds()
+      );
+      this.timeline.setCustomTime(date);
+      this.setState({ timePointer: Timeline.dateToString(date) });
+    }
+  };
+  onRemove = () => {
+    const itemPath = this.state.selectedItems?.[0]?.split(":");
+    this.timeline.itemsData.remove(itemPath);
+    // let track = Editor.findTrack(this.props.items, itemPath[0]);
+    // let data = Editor.findItem(track, Number(itemPath[1]));
+    // const url = `${server.apiUrl}/project/${this.props.project}/item`;
+    // const params = {
+    //   method: "DELETE",
+    //   headers: {
+    //     "Content-Type": "application/json"
+    //   },
+    //   body: JSON.stringify({
+    //     track: itemPath[0],
+    //     item: data?.item?.id
+    //   })
+    // };
+    // fetch(url, params)
+    //   .then(response => response.json())
+    //   .then(data => {
+    //     if (typeof data.err !== "undefined") {
+    //       alert(`${data.err}\n\n${data.msg}`);
+    //     }
+    //     this.props.loadData();
+    //   })
+    //   .catch(error => this.props.fetchError(error.message));
   };
 
   onInsert = (id, startTime, support, group, length) => {
@@ -312,7 +363,7 @@ export default class Timeline extends Component {
   componentDidUpdate(prevProps) {
     if (prevProps.items === this.props.items) return;
 
-    const groups = [];
+    const groups = new vis.DataSet([]);
     const items = new vis.DataSet([]);
 
     let duration = "00:00:00,000";
@@ -321,7 +372,7 @@ export default class Timeline extends Component {
     const textMatch = new RegExp(/^texttrack\d+/);
     for (let track of tracks) {
       let isVideo = videoMatch.test(track.id);
-      groups.push({
+      groups.add({
         id: track.id,
         content: `<div style="height: ${
           isVideo ? "60px" : "40px"
@@ -612,37 +663,38 @@ export default class Timeline extends Component {
   };
 
   onMoving(item, callback) {
-    const searchTrack = Editor.findTrack(
-      this.props.items,
-      item?.id?.split(":")?.[0]
-    );
-    let itemTrack = Editor.findItem(
-      searchTrack,
-      Number(item?.id?.split(":")?.[1])
-    );
-    const length = formattedDateFromString(
-      timeManager.subDuration(itemTrack.item?.out, itemTrack.item?.in)
-    );
-    const subTime = formattedDateFromString(
-      timeManager.subDuration(
-        moment(item.end).format("HH:mm:ss,SSS"),
-        moment(item.start).format("HH:mm:ss,SSS")
-      )
-    );
-    const range = Moment.range(
-      formattedDateFromString(itemTrack.item?.in),
-      formattedDateFromString(itemTrack.item?.out)
-    );
-    if (length && subTime <= length) {
-      this.setState(
-        {
-          isResize: subTime < length
-        },
-        () => {
-          callback(this.itemMove(item));
-        }
-      );
-    }
+    console.log(item)
+    // const searchTrack = Editor.findTrack(
+    //   this.props.items,
+    //   item?.id?.split(":")?.[0]
+    // );
+    // let itemTrack = Editor.findItem(
+    //   searchTrack,
+    //   Number(item?.id?.split(":")?.[1])
+    // );
+    // const length = formattedDateFromString(
+    //   timeManager.subDuration(itemTrack.item?.out, itemTrack.item?.in)
+    // );
+    // const subTime = formattedDateFromString(
+    //   timeManager.subDuration(
+    //     moment(item.end).format("HH:mm:ss,SSS"),
+    //     moment(item.start).format("HH:mm:ss,SSS")
+    //   )
+    // );
+    // const range = Moment.range(
+    //   formattedDateFromString(itemTrack.item?.in),
+    //   formattedDateFromString(itemTrack.item?.out)
+    // );
+    // if (length && subTime <= length) {
+    //   this.setState(
+    //     {
+    //       isResize: subTime < length
+    //     },
+    //     () => {
+    //       callback(this.itemMove(item));
+    //     }
+    //   );
+    // }
   }
 
   onMove(item) {
@@ -932,7 +984,7 @@ export default class Timeline extends Component {
    * @param {Date} date
    * @return {string} Duration in format '00:00:00,000'
    */
-  static dateToString(date) {
+  dateToString = date => {
     let string = `${date.getHours()}:`;
     if (string.length < 3) string = "0" + string;
 
@@ -940,7 +992,7 @@ export default class Timeline extends Component {
     string += `00${date.getSeconds()},`.slice(-3);
     string += `${date.getMilliseconds()}000`.slice(0, 3);
     return string;
-  }
+  };
 }
 
 Timeline.propTypes = {
