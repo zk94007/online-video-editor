@@ -147,23 +147,34 @@ export default class Timeline extends Component {
           //   item?.group,
           //   length
           // );
-          this.timeline.itemsData.add({
-            ...item,
-            type: "range",
-            ...(resource?.id
-              ? { resource_id: resource?.id }
-              : { textAnimation: item?.content }),
-            end: length,
-            clip: {
-              left: "00:00:00,000",
-              right
-            },
-            className: videoMatch.test(item?.group)
-              ? "video"
-              : !!textMatch.test(item?.group)
-              ? "text"
-              : "audio"
+          var overlapping = this.timeline.itemsData.get({
+            filter: function(testItem) {
+              if (testItem.id == item.id) {
+                return false;
+              }
+              return item.start <= testItem.end && length >= testItem.start;
+            }
           });
+          console.log("aaaa",overlapping)
+          if (overlapping.length == 0) {
+            this.timeline.itemsData.add({
+              ...item,
+              type: "range",
+              ...(resource?.id
+                ? { resource_id: resource?.id }
+                : { textAnimation: item?.content }),
+              end: length,
+              clip: {
+                left: "00:00:00,000",
+                right
+              },
+              className: videoMatch.test(item?.group)
+                ? "video"
+                : !!textMatch.test(item?.group)
+                ? "text"
+                : "audio"
+            });
+          }
         } else {
           this.setState({
             error: `can't drag on ${item?.group}`
