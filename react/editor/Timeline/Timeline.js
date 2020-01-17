@@ -36,7 +36,7 @@ export default class Timeline extends Component {
 
     this.onSelect = this.onSelect.bind(this);
     this.onMoving = this.onMoving.bind(this);
-    this.onMove = this.onMove.bind(this);
+    // this.onMove = this.onMove.bind(this);
     this.buttonFilter = this.buttonFilter.bind(this);
     this.buttonSplit = this.buttonSplit.bind(this);
     this.buttonDel = this.buttonDel.bind(this);
@@ -663,7 +663,23 @@ export default class Timeline extends Component {
   };
 
   onMoving(item, callback) {
-    console.log(item)
+    if (item?.group?.includes(item?.support)) {
+      var overlapping = this.timeline.itemsData.get({
+        filter: function(testItem) {
+          if (testItem.id == item.id) {
+            return false;
+          }
+          return item.start <= testItem.end && item.end >= testItem.start;
+        }
+      });
+
+      if (overlapping.length == 0) {
+        callback(item);
+      }
+    } else {
+      return false;
+    }
+
     // const searchTrack = Editor.findTrack(
     //   this.props.items,
     //   item?.id?.split(":")?.[0]
@@ -697,110 +713,110 @@ export default class Timeline extends Component {
     // }
   }
 
-  onMove(item) {
-    item.className = "video";
-    item = this.itemMove(item);
-    if (item !== null) {
-      if (!!this.state.isResize) {
-        let track = Editor.findTrack(
-          this.props.items,
-          item?.id?.split(":")?.[0]
-        );
-        let itemTrack = Editor.findItem(
-          track,
-          Number(item?.id?.split(":")?.[1])
-        );
-        let direction =
-          item.end < formattedDateFromString(itemTrack.item.out)
-            ? "back"
-            : "front";
-        let time =
-          item.end < formattedDateFromString(itemTrack.item.out)
-            ? Timeline.dateToString(item.end)
-            : Timeline.dateToString(item.start);
-        const url = `${server.apiUrl}/project/${this.props.project}/item/crop`;
-        const params = {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            track: item?.group,
-            direction: direction,
-            item: itemTrack?.item?.id,
-            time: time
-          })
-        };
+  // onMove(item) {
+  //   item.className = "video";
+  //   item = this.itemMove(item);
+  //   if (item !== null) {
+  //     if (!!this.state.isResize) {
+  //       let track = Editor.findTrack(
+  //         this.props.items,
+  //         item?.id?.split(":")?.[0]
+  //       );
+  //       let itemTrack = Editor.findItem(
+  //         track,
+  //         Number(item?.id?.split(":")?.[1])
+  //       );
+  //       let direction =
+  //         item.end < formattedDateFromString(itemTrack.item.out)
+  //           ? "back"
+  //           : "front";
+  //       let time =
+  //         item.end < formattedDateFromString(itemTrack.item.out)
+  //           ? Timeline.dateToString(item.end)
+  //           : Timeline.dateToString(item.start);
+  //       const url = `${server.apiUrl}/project/${this.props.project}/item/crop`;
+  //       const params = {
+  //         method: "PUT",
+  //         headers: {
+  //           "Content-Type": "application/json"
+  //         },
+  //         body: JSON.stringify({
+  //           track: item?.group,
+  //           direction: direction,
+  //           item: itemTrack?.item?.id,
+  //           time: time
+  //         })
+  //       };
 
-        fetch(url, params)
-          .then(response => response.json())
-          .then(data => {
-            if (typeof data.err !== "undefined") {
-              alert(`${data.err}\n\n${data.msg}`);
-            } else {
-              // Same track
-              this.props.loadData();
-            }
-          })
-          .catch(error => console.log(error.message));
-        // if (item.end < formattedDateFromString(itemTrack.item.out)) {
-        //   console.log("Backword");
-        // } else if (item.start > formattedDateFromString(itemTrack.item.in)) {
-        //   console.log("forwar");
-        // }
-      } else {
-        const itemPath = item.id.split(":");
-        const currentItem = Editor.findTrack(this.props.items, itemPath[0]);
-        const url = `${server.apiUrl}/project/${this.props.project}/item/move`;
-        const params = {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            track: itemPath[0],
-            trackTarget: item.group,
-            item: currentItem?.[0]?.id,
-            time: Timeline.dateToString(item.start)
-          })
-        };
+  //       fetch(url, params)
+  //         .then(response => response.json())
+  //         .then(data => {
+  //           if (typeof data.err !== "undefined") {
+  //             alert(`${data.err}\n\n${data.msg}`);
+  //           } else {
+  //             // Same track
+  //             this.props.loadData();
+  //           }
+  //         })
+  //         .catch(error => console.log(error.message));
+  //       // if (item.end < formattedDateFromString(itemTrack.item.out)) {
+  //       //   console.log("Backword");
+  //       // } else if (item.start > formattedDateFromString(itemTrack.item.in)) {
+  //       //   console.log("forwar");
+  //       // }
+  //     } else {
+  //       const itemPath = item.id.split(":");
+  //       const currentItem = Editor.findTrack(this.props.items, itemPath[0]);
+  //       const url = `${server.apiUrl}/project/${this.props.project}/item/move`;
+  //       const params = {
+  //         method: "PUT",
+  //         headers: {
+  //           "Content-Type": "application/json"
+  //         },
+  //         body: JSON.stringify({
+  //           track: itemPath[0],
+  //           trackTarget: item.group,
+  //           item: currentItem?.[0]?.id,
+  //           time: Timeline.dateToString(item.start)
+  //         })
+  //       };
 
-        fetch(url, params)
-          .then(response => response.json())
-          .then(data => {
-            if (typeof data.err !== "undefined") {
-              alert(`${data.err}\n\n${data.msg}`);
-            } else {
-              if (itemPath[0] === item?.group) {
-                // Same track
-                this.props.loadData();
-              } else {
-                // Moving between tracks
-                const trackType = item.group.includes("audio")
-                  ? "audio"
-                  : "video";
-                const prevTrack = Editor.findTrack(
-                  this.props.items,
-                  itemPath[0]
-                )?.[0];
-                const newTrack = Editor.findTrack(
-                  this.props.items,
-                  item.group
-                )?.[0];
-                const addTrack = newTrack?.items?.length === 0; //
-                const delTrack = Editor.findItem(prevTrack, 1) === null;
-                if (addTrack && delTrack)
-                  this.addTrack(trackType, prevTrack.id);
-                else if (addTrack) this.addTrack(trackType, null);
-                else if (delTrack) this.delTrack(prevTrack.id);
-                else this.props.loadData();
-              }
-            }
-          })
-          .catch(error => console.log(error.message));
-      }
-    }
-  }
+  //       fetch(url, params)
+  //         .then(response => response.json())
+  //         .then(data => {
+  //           if (typeof data.err !== "undefined") {
+  //             alert(`${data.err}\n\n${data.msg}`);
+  //           } else {
+  //             if (itemPath[0] === item?.group) {
+  //               // Same track
+  //               this.props.loadData();
+  //             } else {
+  //               // Moving between tracks
+  //               const trackType = item.group.includes("audio")
+  //                 ? "audio"
+  //                 : "video";
+  //               const prevTrack = Editor.findTrack(
+  //                 this.props.items,
+  //                 itemPath[0]
+  //               )?.[0];
+  //               const newTrack = Editor.findTrack(
+  //                 this.props.items,
+  //                 item.group
+  //               )?.[0];
+  //               const addTrack = newTrack?.items?.length === 0; //
+  //               const delTrack = Editor.findItem(prevTrack, 1) === null;
+  //               if (addTrack && delTrack)
+  //                 this.addTrack(trackType, prevTrack.id);
+  //               else if (addTrack) this.addTrack(trackType, null);
+  //               else if (delTrack) this.delTrack(prevTrack.id);
+  //               else this.props.loadData();
+  //             }
+  //           }
+  //         })
+  //         .catch(error => console.log(error.message));
+  //     }
+  //   }
+  // }
 
   itemMove = item => {
     if (item.start.getFullYear() < 1970) return null;
