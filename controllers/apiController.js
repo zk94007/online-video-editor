@@ -66,7 +66,6 @@ exports.projectPOST = (req, res, next) => {
 	);
 };
 
-
 exports.projectGET = (req, res) => {
 	rendererManager.loadRenderer(req.params.projectID).then(
 		(renderer) => {
@@ -101,6 +100,34 @@ exports.projectNamePOST = (req, res, next) => {
 					res.json({
 						msg: `Project name has updated`,
 						projectName: renderer.projectName
+					});
+				},
+				err => next(err)
+			);
+		},
+		err => fileErr(err, res)
+	);
+};
+
+exports.projectTimelinePOST = (req, res, next) => {
+	if (!isset(req.body.projectTimeline)) {
+		res.status(400);
+		res.json({
+			err: 'Missing parameters.',
+			msg: 'Missing required parameters: projectTimeline.',
+		});
+		return;
+	}
+
+	rendererManager.loadRenderer(req.body.projectID).then(
+		(renderer) => {
+			renderer.projectTimeline = req.body.projectTimeline;
+
+			rendererManager.saveRenderer(req.params.projectID, renderer).then(
+				() => {
+					res.json({
+						msg: `Project name has updated`,
+						projectTimeline: renderer.projectTimeline
 					});
 				},
 				err => next(err)
@@ -234,7 +261,6 @@ exports.projectFilePOST = (req, res, next) => {
 	req.pipe(req.busboy); // Pipe it trough busboy
 };
 
-
 exports.projectFileDELETE = (req, res, next) => {
 	rendererManager.loadRenderer(req.params.projectID).then(
 		(renderer) => {
@@ -347,7 +373,6 @@ exports.projectLogoPOST = (req, res, next) => {
 	req.pipe(req.busboy); // Pipe it trough busboy
 };
 
-
 exports.projectLogoDELETE = (req, res, next) => {
 	rendererManager.loadRenderer(req.params.projectID).then(
 		(renderer) => {
@@ -395,525 +420,6 @@ exports.projectLogoDELETE = (req, res, next) => {
 		err => fileErr(err, res)
 	);
 };
-
-
-exports.projectFilePUT = (req, res, next) => {
-
-	// Required parameters: track
-	if (!isset(req.body.track) || !isset(req.body.support) || !isset(req.body.in) || !isset(req.body.out)) {
-		res.status(400);
-		res.json({
-			err: 'Missing parameters.',
-			msg: 'Missing required parameters; ( track | support | in | out )',
-		});
-		return;
-	}
-
-	if (!req.body.track.includes(req.body.support)) {
-		res.status(400);
-		res.json({
-			err: 'Unsupported file type.',
-			msg: 'Please import exact type of resource into the track.',
-		});
-		return;
-	}
-
-	if (!timeManager.isValidDuration(req.body.in) || !timeManager.isValidDuration(req.body.out)) {
-		res.status(400);
-		res.json({
-			err: 'Invalid time format.',
-			msg: 'To insert on the timeline, you must specify a duration of 00:00:00,000.',
-		});
-		return;
-	}
-
-	rendererManager.loadRenderer(req.params.projectID).then(
-		(renderer) => {
-			const resource = renderer.resources[req.params.fileID];
-			if (!resource) {
-				res.status(404);
-				res.json({
-					err: 'Source not found.',
-					msg: 'The resource is not in the project.'
-				});
-				return;
-			}
-
-			const track = renderer.timeline.find(t => t.id === req.body.track);
-			if (track === null) {
-				res.status(404);
-				res.json({
-					err: 'Track not found.',
-					msg: `The specified track "${req.body.track}" is not in the project.`,
-				});
-				return;
-			}
-
-			track.items.push({
-				id: generate('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890', 16),
-				resource_id: resource.id,
-				in: req.body.in,
-				out: req.body.out,
-				clip: {
-					left: '00:00:00,000',
-					right: timeManager.subDuration(req.body.out, req.body.in)
-				}
-			});
-
-			rendererManager.saveRenderer(req.params.projectID, renderer).then(
-				() => {
-					res.json({
-						msg: 'Item added to timeline',
-						timeline: req.body.track,
-					});
-				},
-				err => next(err)
-			);
-		},
-		err => fileErr(err, res)
-	);
-
-};
-
-exports.projectTextAnimationPOST = (req, res, next) => {
-	if (!isset(req.body.track, req.body.textAnimation, req.body.in, req.body.out)) {
-		res.status(400);
-		res.json({
-			err: 'Missing parameters.',
-			msg: 'Missing required parameters: track, textAnimation, in, out.',
-		});
-		return;
-	}
-
-	if (!timeManager.isValidDuration(req.body.in) || !timeManager.isValidDuration(req.body.out)) {
-		res.status(400);
-		res.json({
-			err: 'Incorrect parameters.',
-			msg: 'In/Out must be nonzero, in the format 00:00:00,000.',
-		});
-		return;
-	}
-
-	if (!req.body.track.includes('texttrack')) {
-		res.status(400);
-		res.json({
-			err: 'Incorrect action.',
-			msg: 'Text animation should be inserted on texttracks.',
-		});
-		return;
-	}
-
-	rendererManager.loadRenderer(req.params.projectID).then(
-		(renderer) => {
-			const track = renderer.timeline.find(t => t.id == req.body.track);
-			if (track === null) {
-				res.status(404);
-				res.json({
-					err: 'Track not found.',
-					msg: `The specified track "${req.body.track}" is not in the project.`,
-				});
-				return;
-			}
-
-			track.items.push({
-				id: generate('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890', 16),
-				textAnimation: req.body.textAnimation,
-				in: req.body.in,
-				out: req.body.out,
-				clip: {
-					left: '00:00:00,000',
-					right: timeManager.subDuration(req.body.out, req.body.in)
-				}
-			});
-
-			rendererManager.saveRenderer(req.params.projectID, renderer).then(
-				() => {
-					res.json({
-						msg: 'Item added to timeline',
-						timeline: req.body.track,
-					});
-				},
-				err => next(err)
-			);
-		},
-		err => fileErr(err, res)
-	);
-};
-
-exports.projectTransitionPOST = (req, res, next) => {
-
-	// Required parameters: track, itemA, itemB, transition, duration
-	if (!isset(req.body.track, req.body.itemA, req.body.itemB, req.body.transition, req.body.duration)) {
-		res.status(400);
-		res.json({
-			err: 'Missing parameters.',
-			msg: 'Missing required parameters: track, itemA, itemB, transition, duration.',
-		});
-		return;
-	}
-
-	if (!timeManager.isValidDuration(req.body.duration)) {
-		res.status(400);
-		res.json({
-			err: 'Incorrect parameters.',
-			msg: 'Duration must be nonzero, in the format 00:00:00,000.',
-		});
-		return;
-	}
-
-	rendererManager.loadRenderer(req.body.projectID).then(
-		(renderer) => {
-			const track = renderer.timeline.find(t => t.id == req.body.track);
-			if (track === null) {
-				res.status(404);
-				res.json({
-					err: 'Track not found.',
-					msg: `The specified track "${req.body.track}" is not in the project.`,
-				});
-				return;
-			}
-
-			const itemA = track.items.find(item => item.id == req.body.itemA);
-			const itemB = track.items.find(item => item.id == req.body.itemB);
-
-			if (!itemA || !itemB) {
-				res.status(404);
-				res.json({
-					err: 'Item not found.',
-					msg: `${req.body.itemA} or ${req.body.itemA} is not on track "${req.body.track}".`,
-				});
-				return;
-			}
-
-			if (itemA.out !== itemB.in) {
-				res.status(400);
-				res.json({
-					err: 'Incorrect parameters.',
-					msg: 'itemA must directly follow itemB.',
-				});
-				return;
-			}
-
-			const durationA = timeManager.subDuration(itemA.out, itemA.in);
-			const durationB = timeManager.subDuration(itemB.out, itemB.in);
-
-			if (req.body.duration > durationA || req.body.duration > durationB) {
-				res.status(400);
-				res.json({
-					err: 'Transition time too long.',
-					msg: 'The transition is longer than one of the transition items.',
-				});
-				return;
-			}
-
-			track.transitions.push({
-				id: generate('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890', 16),
-				itemA: req.body.itemA,
-				itemB: req.body.itemB,
-				transition: req.body.transition,
-				duration: req.body.duration
-			});
-
-
-			rendererManager.saveRenderer(req.params.projectID, renderer).then(
-				() => {
-					res.json({
-						msg: 'Item added to timeline',
-						timeline: req.body.track,
-					});
-				},
-				err => next(err)
-			);
-		},
-		err => fileErr(err, res)
-	);
-};
-
-exports.projectItemDELETE = (req, res, next) => {
-	// Required parameters: track, item
-	if (!isset(req.body.track, req.body.item)) {
-		res.status(400);
-		res.json({
-			err: 'Missing parameters.',
-			msg: 'Missing required parameters: track, item.',
-		});
-		return;
-	}
-
-	rendererManager.loadRenderer(req.params.projectID).then(
-		(renderer) => {
-			const track = renderer.timeline.find(t => t.id == req.body.track);
-			if (track === null) {
-				res.status(404);
-				res.json({
-					err: 'Track not found.',
-					msg: `The specified track "${req.body.track}" is not in the project.`,
-				});
-				return;
-			}
-			
-			const item = track.items.find(item => item.id == req.body.item);
-			if (item === null) {
-				res.status(404);
-				res.json({
-					err: 'Item not found.',
-					msg: `${req.body.item} is not on track "${req.body.track}".`,
-				});
-				return;
-			}
-
-			track.items.splice(track.items.findIndex(item => item.id == req.body.item), 1);
-
-			if (track.id.includes('videotrack')) {
-				track.transitions.splice(track.transitions.findIndex(transition => transition.itemA == req.body.item || transition.itemB == req.body.item), 1);
-			}
-
-			rendererManager.saveRenderer(req.params.projectID, renderer).then(
-				() => {
-					res.json({msg: 'Item removed'});
-				},
-				err => next(err)
-			);
-		},
-		err => fileErr(err, res)
-	);
-};
-
-exports.projectItemPUTmove = (req, res, next) => {
-
-	// Required parameters: track, trackTarget, item, time
-	if (!isset(req.body.track, req.body.trackTarget, req.body.item, req.body.time)) {
-		res.status(400);
-		res.json({
-			err: 'Missing parameters.',
-			msg: 'Missing required parameters: track, trackTarget, item, time.',
-		});
-		return;
-	}
-
-	if (req.body.time !== '00:00:00,000' && !timeManager.isValidDuration(req.body.time)) {
-		res.status(400);
-		res.json({
-			err: 'Wrong parameter.',
-			msg: 'The time parameter must be in the format 00:00:00,000.',
-		});
-		return;
-	}
-
-	if (!(req.body.trackTarget.includes('videotrack') && req.body.track.includes('videotrack'))) {
-		if (!(req.body.trackTarget.includes('audiotrack') && req.body.track.includes('audiotrack'))) {
-			res.status(400);
-			res.json({
-				err: 'Incompatible tracks.',
-				msg: 'You cannot move items between video and audio tracks.',
-			});
-			return;
-		}
-	}
-
-	rendererManager.loadRenderer(req.params.projectID).then(
-		(renderer) => {
-			const track = renderer.timeline.find(t => t.id == req.body.track);
-			const trackTarget = renderer.timeline.find(t => t.id == req.body.trackTarget);
-
-			if (track === null || trackTarget === null) {
-				res.status(404);
-				res.json({
-					err: 'Track not found.',
-					msg: `The specified track "${req.body.track}" or "${trackTarget}" is not in the project.`,
-				});
-				return;
-			}
-
-			const item = track.items.find(item => item.id == req.body.item);
-			if (item === null) {
-				res.status(404);
-				res.json({
-					err: 'Item not found.',
-					msg: `${req.body.item} is not on track "${req.body.track}".`,
-				});
-				return;
-			}
-
-			track.items.splice(track.items.findIndex(item => item.id == req.body.item), 1);
-			if (track.id.includes('videotrack')) {
-				track.transitions.splice(track.transitions.findIndex(transition => transition.itemA == req.body.item || transition.itemB == req.body.item), 1);
-			}
-
-			const duration = timeManager.subDuration(item.out, item.in);
-			item.in = req.body.time;
-			item.out = timeManager.addDuration(item.in, duration);
-			trackTarget.items.push(item);
-
-			rendererManager.saveRenderer(req.params.projectID, renderer).then(
-				() => {
-					res.json({
-						msg: 'Item removed',
-						track,
-						trackTarget
-					});
-				},
-				err => next(err)
-			);
-		},
-		err => fileErr(err, res)
-	);
-};
-
-exports.projectItemPUTsplit = (req, res, next) => {
-	// Required parameters: track, item, time
-	if (!isset(req.body.track, req.body.item, req.body.time)) {
-		res.status(400);
-		res.json({
-			err: 'Missing parameters.',
-			msg: 'Missing required parameters: track, item, time.',
-		});
-		return;
-	}
-
-	if (!timeManager.isValidDuration(req.body.time)) {
-		res.status(400);
-		res.json({
-			err: 'Wrong parameter.',
-			msg: 'The time parameter must be positive, in the format 00:00:00,000.',
-		});
-		return;
-	}
-
-	rendererManager.loadRenderer(req.params.projectID).then(
-		(renderer) => {
-			const track = renderer.timeline.find(t => t.id == req.body.track);
-			if (track === null) {
-				res.status(404);
-				res.json({
-					err: 'Track not found.',
-					msg: `The specified track "${req.body.track}" is not in the project.`,
-				});
-				return;
-			}
-
-			const item = track.items.find(item => item.id == req.body.item);
-			if (item === null) {
-				res.status(404);
-				res.json({
-					err: 'Item not found.',
-					msg: `Item ${req.body.item} is not on "${req.body.track}".`,
-				});
-				return;
-			}
-
-			if (req.body.time < item.in || req.body.time > item.out) {
-				res.status(400);
-				res.json({
-					err: 'Parameter out of range.',
-					msg: `The time parameter must be between ${item.in} and a ${item.out}`,
-				});
-				return;
-			}
-
-			const leftDuration = timeManager.subDuration(req.body.time, item.in);
-			const rightDuration = timeManager.subDuration(item.out, req.body.time);
-
-			const itemLeft = JSON.parse(JSON.stringify(item));
-			const itemRight = JSON.parse(JSON.stringify(item));
-
-			itemLeft.out = req.body.time;
-			itemRight.in = req.body.time;
-
-			itemLeft.clip.right = timeManager.subDuration(itemLeft.clip.right, rightDuration);
-			itemRight.clip.left = timeManager.addDuration(itemRight.clip.left, leftDuration);
-
-			track.items.splice(track.items.findIndex(item => item.id == req.body.item), 1);
-			track.items.push(itemLeft);
-			track.items.push(itemRight);
-			
-			rendererManager.saveRenderer(req.params.projectID, renderer).then(
-				() => {
-					res.json({msg: 'Item removed'});
-				},
-				err => next(err)
-			);
-		},
-		err => fileErr(err, res)
-	);
-};
-
-exports.projectItemPUTcrop = (req, res, next) => {
-	// Required parameters: track, item, time
-	if (!isset(req.body.track, req.body.item, req.body.time, req.body.direction)) {
-		res.status(400);
-		res.json({
-			err: 'Missing parameters.',
-			msg: 'Missing required parameters: track, item, time, direction.',
-		});
-		return;
-	}
-
-	if (!timeManager.isValidDuration(req.body.time)) {
-		res.status(400);
-		res.json({
-			err: 'Wrong parameter.',
-			msg: 'The time parameter must be positive, in the format 00:00:00,000.',
-		});
-		return;
-	}
-
-	rendererManager.loadRenderer(req.params.projectID).then(
-		(renderer) => {
-			const track = renderer.timeline.find(t => t.id == req.body.track);
-			if (track === null) {
-				res.status(404);
-				res.json({
-					err: 'Track not found.',
-					msg: `The specified track "${req.body.track}" is not in the project.`,
-				});
-				return;
-			}
-
-			const item = track.items.find(item => item.id == req.body.item);
-			if (item === null) {
-				res.status(404);
-				res.json({
-					err: 'Item not found.',
-					msg: `Item ${req.body.item} is not on "${req.body.track}".`,
-				});
-				return;
-			}
-
-			if (req.body.direction == 'front') {
-				if (req.body.time > item.in) {
-					const duration = timeManager.subDuration(req.body.time, item.in);
-					item.in = req.body.time;
-					item.clip.left = timeManager.addDuration(item.clip.left, duration);
-				}
-				if (req.body.time < item.in) {
-					const duration = timeManager.subDuration(item.in, req.body.time);
-					item.in = req.body.time;
-					item.clip.left = timeManager.subDuration(item.clip.left, duration);
-				}
-			} else if (req.body.direction == 'back') {
-				if (req.body.time < item.out) {
-					const duration = timeManager.subDuration(item.out, req.body.time);
-					item.out = req.body.time;
-					item.clip.right = timeManager.subDuration(item.clip.right, duration);
-				}
-				if (req.body.time > item.out) {
-					const duration = timeManager.subDuration(req.body.time, item.out);
-					item.out = req.body.time;
-					item.clip.right = timeManager.addDuration(item.clip.right, duration);
-				}
-			}
-			
-			rendererManager.saveRenderer(req.params.projectID, renderer).then(
-				() => {
-					res.json({msg: 'Item moved', item});
-				},
-				err => next(err)
-			);
-		},
-		err => fileErr(err, res)
-	);
-}
 
 exports.projectFilterPOST = (req, res, next) => {
 

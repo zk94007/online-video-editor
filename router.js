@@ -17,45 +17,23 @@ router.get('/vis.js', (req, res) => res.sendFile(__dirname + '/react/_lib/vis-ti
 // API route
 router.all('/api', apiController.default);
 
+// Project
+router.get('/api/project/:projectID', apiController.projectGET);
 router.post('/api/project', apiController.projectPOST);
 
-router.get('/api/project/:projectID', apiController.projectGET);
-
-router.put('/api/project/:projectID', apiController.projectPUT);
-
+// Update Project
 router.post('/api/project/:projectID/projectName', apiController.projectNamePOST);
+router.post('/api/project/:projectID/projectTimeline', apiController.projectTimelinePOST);
 
+// Resources API
 router.post('/api/project/:projectID/import', apiController.projectImportPOST);
-
 router.post('/api/project/:projectID/file', apiController.projectFilePOST);
-
 router.delete('/api/project/:projectID/file/:fileID', apiController.projectFileDELETE);
-
 router.post('/api/project/:projectID/logo', apiController.projectLogoPOST);
-
 router.delete('/api/project/:projectID/logo/:fileID', apiController.projectLogoDELETE);
 
-router.put('/api/project/:projectID/file/:fileID', apiController.projectFilePUT);
-
-router.post('/api/project/:projectID/filter', apiController.projectFilterPOST);
-
-router.delete('/api/project/:projectID/filter', apiController.projectFilterDELETE);
-
-router.post('/api/project/:projectID/transition', apiController.projectTransitionPOST);
-
-router.post('/api/project/:projectID/textanimation', apiController.projectTextAnimationPOST);
-
-router.delete('/api/project/:projectID/item', apiController.projectItemDELETE);
-
-router.put('/api/project/:projectID/item/move', apiController.projectItemPUTmove);
-
-router.put('/api/project/:projectID/item/split', apiController.projectItemPUTsplit);
-
-router.put('/api/project/:projectID/item/crop', apiController.projectItemPUTcrop);
-
-router.post('/api/project/:projectID/track', apiController.projectTrackPOST);
-
-router.delete('/api/project/:projectID/track', apiController.projectTrackDELETE);
+// Render
+router.put('/api/project/:projectID', apiController.projectPUT);
 
 // Error handling
 router.use(errorController.default);
