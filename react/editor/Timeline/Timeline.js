@@ -215,7 +215,7 @@ export default class Timeline extends Component {
     this.timeline.on("select", this.onSelect);
     this.timeline.on("timechange", this.onTimeChange);
     this.timeline.on("moving", this.onMoving);
-    this.timeline.on("move", this.onMove);
+    // this.timeline.on("move", this.onMove);
     this.timeline.on("mouseDown", event => {
       if (!event?.item && event.time) {
         this.setState({ movingTimePointer: true });
@@ -665,7 +665,10 @@ export default class Timeline extends Component {
       DateToString(item?.start),
       DateToString(item?.end)
     );
-    if (item?.group?.includes(item?.support)) {
+    if (
+      item?.group?.includes(item?.support) &&
+      item.start > new Date(1970, 0, 1)
+    ) {
       if (
         formattedDateFromString(length) > formattedDateFromString(oriLength)
       ) {
@@ -674,14 +677,38 @@ export default class Timeline extends Component {
         }
       } else if (length == oriLength) {
         var overlapping = this.timeline.itemsData.get({
-          filter: function(testItem) {
+          filter: testItem => {
             if (testItem.id == item.id) {
               return false;
             }
             return item.start <= testItem.end && item.end >= testItem.start;
           }
         });
-        if (overlapping.length == 0) {
+        if (!!overlapping?.length) {
+          let length = timeManager.subDuration(
+            DateToString(item.end),
+            DateToString(item.start)
+          );
+          item.start =
+            overlapping?.[0]?.start > item.start
+              ? overlapping?.[0]?.end
+              : formattedDateFromString(
+                  timeManager.leftDuration(
+                    DateToString(overlapping?.[0]?.start),
+                    length
+                  )
+                );
+          item.end =
+            overlapping?.[0]?.end < item.end
+              ? overlapping?.[0]?.start
+              : formattedDateFromString(
+                  timeManager.addDuration(
+                    DateToString(overlapping?.[0]?.end),
+                    length
+                  )
+                );
+          callback(item);
+        } else if (overlapping.length == 0) {
           callback(item);
         }
       }
