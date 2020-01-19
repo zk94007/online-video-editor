@@ -14,10 +14,11 @@ import Editor from "../Editor";
 import AddFilterDialog from "./AddFilterDialog";
 import moment from "moment";
 import { extendMoment } from "moment-range";
-import { formattedDateFromString } from "../../utils";
+import { formattedDateFromString, DateToString } from "../../utils";
 import AlertErrorDialog from "../../_core/Dialog/Dialogs/AlertErroDialog";
 const Moment = extendMoment(moment);
 import { TimelineHeader } from "../style";
+const generate = require("nanoid/generate");
 
 export default class Timeline extends Component {
   constructor(props) {
@@ -38,8 +39,6 @@ export default class Timeline extends Component {
     this.onMoving = this.onMoving.bind(this);
     // this.onMove = this.onMove.bind(this);
     this.buttonFilter = this.buttonFilter.bind(this);
-    this.buttonSplit = this.buttonSplit.bind(this);
-    this.buttonDel = this.buttonDel.bind(this);
     this.closeAddFilterDialog = this.closeAddFilterDialog.bind(this);
     this.getItem = this.getItem.bind(this);
     this.addTrack = this.addTrack.bind(this);
@@ -155,7 +154,6 @@ export default class Timeline extends Component {
               return item.start <= testItem.end && length >= testItem.start;
             }
           });
-          console.log("aaaa",overlapping)
           if (overlapping.length == 0) {
             this.timeline.itemsData.add({
               ...item,
@@ -220,7 +218,7 @@ export default class Timeline extends Component {
     this.timeline.on("move", this.onMove);
     this.timeline.on("mouseDown", event => {
       if (!event?.item && event.time) {
-        this.setState({movingTimePointer: true});
+        this.setState({ movingTimePointer: true });
         this.updateTimePointer(event.time);
       }
     });
@@ -231,7 +229,7 @@ export default class Timeline extends Component {
     });
     this.timeline.on("mouseUp", event => {
       if (this.state.movingTimePointer && event.time) {
-        this.setState({movingTimePointer: false});
+        this.setState({ movingTimePointer: false });
         this.updateTimePointer(event.time);
       }
     });
@@ -536,73 +534,59 @@ export default class Timeline extends Component {
     this.setState({ showAddFilterDialog: false });
   }
 
-  buttonSplit() {
+  buttonSplit = () => {
     if (this.state.selectedItems.length !== 1) return;
 
-    const item = this.getItem(this.state.selectedItems[0]);
-    const splitTime = Timeline.dateToString(this.timeline.getCustomTime());
-    const splitItemTime = timeManager.subDuration(splitTime, item.start);
-    if (splitTime <= item.item.in || splitTime >= item.item.out) return;
+    let item = this.timeline?.itemsData?.get({
+      filter: item => {
+        return item.id == this.state.selectedItems?.[0];
+      }
+    });
+    let cloneItem = { ...item?.[0] };
+    let start = DateToString(cloneItem?.start);
+    let end = DateToString(cloneItem?.end);
+    let time = "00:00:00,000";
+    let startTime = time;
+    time = timeManager.addDuration(time, end);
+    time = timeManager.subDuration(time, start);
+    const splitTime = DateToString(this.timeline.getCustomTime());
+    const splitItemTime = timeManager.subDuration(splitTime, startTime);
+    if (splitTime <= start || splitTime >= end) return;
+    const leftDuration = timeManager.subDuration(splitItemTime, start);
+    const rightDuration = timeManager.subDuration(end, splitItemTime);
+    const itemLeft = { ...cloneItem };
+    const itemRight = { ...cloneItem };
 
-    const itemPath = this.state.selectedItems[0].split(":");
-    const url = `${server.apiUrl}/project/${this.props.project}/item/split`;
-    const params = {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        track: itemPath[0],
-        item: item.item.id,
-        time: splitItemTime
-      })
-    };
+    itemLeft.end = splitItemTime;
+    itemRight.start = splitItemTime;
+    itemLeft.clip.right = timeManager.subDuration(
+      itemLeft.clip.right,
+      rightDuration
+    );
+    itemRight.clip.left = timeManager.addDuration(
+      itemRight.clip.left,
+      leftDuration
+    );
+    if (itemRight && itemLeft) {
+      itemRight.id = generate(
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890",
+        16
+      );
+      itemLeft.id = generate(
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890",
+        16
+      );
+      itemLeft.start = typeof itemLeft.start === "string" ? formattedDateFromString(itemLeft.start) : itemLeft.start;
+      itemLeft.end = typeof itemLeft.end === "string" ? formattedDateFromString(itemLeft.end) : itemLeft.end;
+      itemRight.start = typeof itemRight.start === "string" ? formattedDateFromString(itemRight.start) : itemRight.start;
+      itemRight.end = typeof itemRight.end === "string" ? formattedDateFromString(itemRight.end) : itemRight.end;
 
-    fetch(url, params)
-      .then(response => response.json())
-      .then(data => {
-        if (typeof data.err === "undefined") {
-          this.props.loadData();
-        } else {
-          alert(`${data.err}\n\n${data.msg}`);
-        }
-      })
-      .catch(error => this.props.fetchError(error.message));
-  }
-
-  buttonDel() {
-    if (this.state.selectedItems.length !== 1) return;
-
-    const itemPath = this.state.selectedItems[0].split(":");
-    const url = `${server.apiUrl}/project/${this.props.project}/item`;
-    const params = {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        track: itemPath[0],
-        item: Number(itemPath[1])
-      })
-    };
-
-    fetch(url, params)
-      .then(response => response.json())
-      .then(data => {
-        if (typeof data.err === "undefined") {
-          const track = Editor.findTrack(this.props.items, itemPath[0]);
-          if (Editor.findItem(track.items, 1) === null)
-            this.delTrack(itemPath[0]);
-          else this.props.loadData();
-
-          this.setState({ selectedItems: [] });
-        } else {
-          alert(`${data.err}\n\n${data.msg}`);
-        }
-      })
-      .catch(error => this.props.fetchError(error.message));
-  }
-
+      this.timeline?.itemsData?.remove(this.state?.selectedItems);
+      this.timeline?.itemsData?.add(itemLeft);
+      this.timeline?.itemsData?.add(itemRight);
+    }
+  };
+  
   getItem(trackIndex) {
     const itemPath = trackIndex.split(":");
     const trackItems = Editor.findTrack(this.props.items, itemPath[0]);
@@ -651,8 +635,8 @@ export default class Timeline extends Component {
         event.time.getMilliseconds()
       );
       this.timeline.setCustomTime(date);
-      this.timeline.setCustomTimeTitle(Timeline.dateToString(date));
-      this.setState({ timePointer: Timeline.dateToString(date) });
+      this.timeline.setCustomTimeTitle(DateToString(date));
+      this.setState({ timePointer: DateToString(date) });
     } else {
       this.setState({ timePointer: timePointer });
       this.timeline.setCustomTimeTitle(timePointer);

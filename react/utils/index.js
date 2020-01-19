@@ -12,6 +12,16 @@ export const handleObjectItemDragStart = (event, id, text = false) => {
   event.dataTransfer.setData("text", JSON.stringify(objectItem));
 };
 
+export const DateToString = date => {
+  let string = `${date.getHours()}:`;
+  if (string.length < 3) string = "0" + string;
+
+  string += `00${date.getMinutes()}:`.slice(-3);
+  string += `00${date.getSeconds()},`.slice(-3);
+  string += `${date.getMilliseconds()}000`.slice(0, 3);
+  return string;
+};
+
 export const formattedDateFromString = date => {
   let splittedDate = date.split(/:|,/);
   return new Date(
