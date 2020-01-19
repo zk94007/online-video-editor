@@ -36,7 +36,7 @@ export default class Timeline extends Component {
     };
 
     this.onSelect = this.onSelect.bind(this);
-    this.onMoving = this.onMoving.bind(this);
+    // this.onMoving = this.onMoving.bind(this);
     // this.onMove = this.onMove.bind(this);
     this.buttonFilter = this.buttonFilter.bind(this);
     this.closeAddFilterDialog = this.closeAddFilterDialog.bind(this);
@@ -576,17 +576,29 @@ export default class Timeline extends Component {
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890",
         16
       );
-      itemLeft.start = typeof itemLeft.start === "string" ? formattedDateFromString(itemLeft.start) : itemLeft.start;
-      itemLeft.end = typeof itemLeft.end === "string" ? formattedDateFromString(itemLeft.end) : itemLeft.end;
-      itemRight.start = typeof itemRight.start === "string" ? formattedDateFromString(itemRight.start) : itemRight.start;
-      itemRight.end = typeof itemRight.end === "string" ? formattedDateFromString(itemRight.end) : itemRight.end;
+      itemLeft.start =
+        typeof itemLeft.start === "string"
+          ? formattedDateFromString(itemLeft.start)
+          : itemLeft.start;
+      itemLeft.end =
+        typeof itemLeft.end === "string"
+          ? formattedDateFromString(itemLeft.end)
+          : itemLeft.end;
+      itemRight.start =
+        typeof itemRight.start === "string"
+          ? formattedDateFromString(itemRight.start)
+          : itemRight.start;
+      itemRight.end =
+        typeof itemRight.end === "string"
+          ? formattedDateFromString(itemRight.end)
+          : itemRight.end;
 
       this.timeline?.itemsData?.remove(this.state?.selectedItems);
       this.timeline?.itemsData?.add(itemLeft);
       this.timeline?.itemsData?.add(itemRight);
     }
   };
-  
+
   getItem(trackIndex) {
     const itemPath = trackIndex.split(":");
     const trackItems = Editor.findTrack(this.props.items, itemPath[0]);
@@ -643,19 +655,35 @@ export default class Timeline extends Component {
     }
   };
 
-  onMoving(item, callback) {
+  onMoving = (item, callback) => {
+    let itemData = this.timeline?.itemsData.get(item?.id);
+    const oriLength = timeManager.subDuration(
+      DateToString(itemData?.start),
+      DateToString(itemData?.end)
+    );
+    const length = timeManager.subDuration(
+      DateToString(item?.start),
+      DateToString(item?.end)
+    );
     if (item?.group?.includes(item?.support)) {
-      var overlapping = this.timeline.itemsData.get({
-        filter: function(testItem) {
-          if (testItem.id == item.id) {
-            return false;
-          }
-          return item.start <= testItem.end && item.end >= testItem.start;
+      if (
+        formattedDateFromString(length) > formattedDateFromString(oriLength)
+      ) {
+        if (item?.start > itemData?.start || item?.end < itemData?.end) {
+          callback(item);
         }
-      });
-
-      if (overlapping.length == 0) {
-        callback(item);
+      } else if (length == oriLength) {
+        var overlapping = this.timeline.itemsData.get({
+          filter: function(testItem) {
+            if (testItem.id == item.id) {
+              return false;
+            }
+            return item.start <= testItem.end && item.end >= testItem.start;
+          }
+        });
+        if (overlapping.length == 0) {
+          callback(item);
+        }
       }
     } else {
       return false;
@@ -692,7 +720,7 @@ export default class Timeline extends Component {
     //     }
     //   );
     // }
-  }
+  };
 
   // onMove(item) {
   //   item.className = "video";
