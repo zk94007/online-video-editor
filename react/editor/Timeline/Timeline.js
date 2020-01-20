@@ -681,7 +681,7 @@ export default class Timeline extends Component {
             if (testItem.id == item.id) {
               return false;
             }
-            return item.start <= testItem.end && item.end >= testItem.start;
+            return item.start < testItem.end && item.end > testItem.start;
           }
         });
         if (!!overlapping?.length) {
