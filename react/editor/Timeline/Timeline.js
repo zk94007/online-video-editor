@@ -173,6 +173,15 @@ export default class Timeline extends Component {
                 : "audio"
             });
           }
+        } else if (
+          item?.support === "transition" &&
+          (item?.group === "videotrack0" || item?.group === "videotrack1")
+        ) {
+          const data = this.timeline.itemsData.get({
+            filter: data => {
+              return data?.group === item?.group;
+            }
+          });
         } else {
           this.setState({
             error: `can't drag on ${item?.group}`
