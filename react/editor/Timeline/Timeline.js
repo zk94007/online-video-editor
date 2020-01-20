@@ -690,7 +690,7 @@ export default class Timeline extends Component {
             DateToString(item.start)
           );
           item.start =
-            overlapping?.[0]?.start > item.start
+            overlapping?.[0]?.start < item.start
               ? overlapping?.[0]?.end
               : formattedDateFromString(
                   timeManager.leftDuration(
@@ -699,7 +699,7 @@ export default class Timeline extends Component {
                   )
                 );
           item.end =
-            overlapping?.[0]?.end < item.end
+            overlapping?.[0]?.end > item.end
               ? overlapping?.[0]?.start
               : formattedDateFromString(
                   timeManager.addDuration(
