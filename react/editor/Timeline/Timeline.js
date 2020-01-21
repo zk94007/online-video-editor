@@ -173,6 +173,48 @@ export default class Timeline extends Component {
                 : "audio"
             });
           }
+        } else if (
+          (item?.support === "transition" &&
+            item?.group.includes("videotrack0")) ||
+          item?.group.includes("videotrack1")
+        ) {
+          const itemsIndex = [];
+          const items = this.timeline.itemsData.get({
+            filter: data => {
+              return (
+                data.group === "videotrack0" || data.group === "videotrack1"
+              );
+            }
+          });
+          for (let i = 0; i < items.length - 1; i++) {
+            if (item.start <= items[i + 1].end && items[i].end <= item.start) {
+              itemsIndex.push(i);
+              itemsIndex.push(i + 1);
+            }
+          }
+          const length1 = items?.[itemsIndex?.[0]];
+          const length2 = items?.[itemsIndex?.[1]];
+          if (length1 && length2) {
+            let duration = timeManager.subDuration(
+              DateToString(length2.start),
+              DateToString(length1.end)
+            );
+            if (
+              formattedDateFromString(duration) <
+              formattedDateFromString("00:00:03,000")
+            ) {
+              this.timeline.itemsData.add({
+                ...item,
+                start: length1?.end,
+                end: length2?.start,
+                type: "range",
+                itemA: length1?.id,
+                itemB: length2?.id,
+                transition: item?.content,
+                duration: formattedDateFromString(duration)
+              });
+            }
+          }
         } else {
           this.setState({
             error: `can't drag on ${item?.group}`
@@ -709,6 +751,17 @@ export default class Timeline extends Component {
                 );
           callback(item);
         } else if (overlapping.length == 0) {
+          let transition = this.timeline?.itemsData.get({
+            filter: val => {
+              return (
+                (val?.transition && val?.itemA === item.id) ||
+                val?.itemB === item.id
+              );
+            }
+          });
+          if (!!transition?.length) {
+            this.timeline?.itemsData?.remove(transition?.[0].id);
+          }
           callback(item);
         }
       }
