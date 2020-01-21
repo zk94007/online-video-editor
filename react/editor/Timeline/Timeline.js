@@ -84,8 +84,6 @@ export default class Timeline extends Component {
           const textMatch = new RegExp(/^texttrack\d+/);
           const resource = this.props?.resources?.[item?.content];
           let startDate = item?.start;
-
-          console.log("start date", startDate);
           let length = resource?.length
             ? formattedDateFromString(
                 timeManager.addDuration(
@@ -157,7 +155,6 @@ export default class Timeline extends Component {
               if (testItem.id == item.id) {
                 return false;
               }
-              const differenceTime = testItem.end - testItem.start;
               return item.start <= testItem.end && length >= testItem.start;
             }
           });
@@ -182,65 +179,36 @@ export default class Timeline extends Component {
             });
           } else {
             const items = this.timeline.itemsData.get();
-
-            console.log(items);
             const itemsIndex = [];
-            for (let i = 0; i < items.length-1; i++) {
+            for (let i = 0; i < items.length; i++) {
 
-              console.log("coming item end", length)
-              console.log("second item end", items[i+1]);
-              console.log("first item ", items[i].start);
-              console.log("coming item start", item.start);
+              if(item.start < items[0].start){
+                itemsIndex.push(0);
+                break;
+              }
 
-              if(length <= items[i + 1].end  &&  items[i].start <= item.start){
+              if(item.start < items){
+                break;
+              }
+
+                var nextItemEndSplittedTime = items[i+1].end.toString().split(" ")[4].split(":").join("");
+                var itemStartSplittedTime = items[i].start.toString().split(" ")[4].split(":").join("");
+                var comingItemStartSplittedTime = item.start.toString().split(" ")[4].split(":").join("");
+
+              if(parseInt(comingItemStartSplittedTime) <= parseInt(nextItemEndSplittedTime)  &&  parseInt(itemStartSplittedTime) <= parseInt(comingItemStartSplittedTime)){
                 itemsIndex.push(i);
                   itemsIndex.push(i+1);
-              };
-
-              //   var nextItemStartSplittedTime = items[i+1].start.toString().split(" ")[4].split(":");
-              //   var itemsplittedEndTime = items[i].end.toString().split(" ")[4].split(":");
-              //   var comingItemStartSplittedTime = item.start.toString().split(" ")[4].split(":");
-              //   var comingItemsplittedEndTime = length.toString().split(" ")[4].split(":");
-
-              // if(parseInt(comingItemsplittedEndTime[0]) < parseInt(nextItemStartSplittedTime[0])  &&  parseInt(itemsplittedEndTime[0]) < parseInt(comingItemStartSplittedTime[0])){
-              //   console.log("true1");  
-                
-              //   itemsIndex.push(i);
-              //     itemsIndex.push(i+1);
-              //     break;
-              // }
-              // else if(parseInt(comingItemsplittedEndTime[1]) < parseInt(nextItemStartSplittedTime[1])  &&  parseInt(itemsplittedEndTime[1]) < parseInt(comingItemStartSplittedTime[1])){
-              //   console.log("true2");
-                
-              //   itemsIndex.push(i);
-              //   itemsIndex.push(i+1);
-              //   break;
-              // }
-              // else if(parseInt(comingItemsplittedEndTime[2]) < parseInt(nextItemStartSplittedTime[2])  &&  parseInt(itemsplittedEndTime[2]) < parseInt(comingItemStartSplittedTime[2])){
-              //   console.log("true3");
-              
-              //   itemsIndex.push(i);
-              //   itemsIndex.push(i+1);
-              // }
-              // console.log("First item start", itemStartSplittedTime);
-              // console.log("first item end", itemsplittedEndTime);
-              // console.log("Second item start", nextItemStartSplittedTime);
-              // console.log("Second item end", nextItemsplittedEndTime);
-              // console.log("Coming item start", comingItemStartSplittedTime);
-              // console.log("Coming item end", comingItemsplittedEndTime);
-
+                  break;
+              }
             }
-            console.log(itemsIndex);
-            console.log(itemsIndex[itemsIndex.length-1]);
-            console.log(itemsIndex[itemsIndex.length-2]);
 
-
-            console.log(startDate);
-            console.log(length);
-
-
-            startDate = items[itemsIndex[itemsIndex.length-2]].end;
-            length = items[itemsIndex[itemsIndex.length-1]].start;
+            if(itemsIndex.length > 1){
+              startDate = items[itemsIndex[itemsIndex.length-2]].end;
+              length = items[itemsIndex[itemsIndex.length-1]].start;
+            } else if(itemsIndex.length === 1){
+            
+              length = items[0].start;
+            }
             const rightModified = timeManager.subDuration(
               this.dateToString(length),
               this.dateToString(startDate)
