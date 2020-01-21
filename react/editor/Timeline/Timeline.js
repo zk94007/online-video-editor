@@ -83,8 +83,10 @@ export default class Timeline extends Component {
           const videoMatch = new RegExp(/^videotrack\d+/);
           const textMatch = new RegExp(/^texttrack\d+/);
           const resource = this.props?.resources?.[item?.content];
-          const startDate = item?.start;
-          const length = resource?.length
+          let startDate = item?.start;
+
+          console.log("start date", startDate);
+          let length = resource?.length
             ? formattedDateFromString(
                 timeManager.addDuration(
                   this.dateToString(item?.start),
@@ -146,14 +148,20 @@ export default class Timeline extends Component {
           //   item?.group,
           //   length
           // );
+          // console.log("items data", this.timeline.itemsData);
+
+         
+
           var overlapping = this.timeline.itemsData.get({
             filter: function(testItem) {
               if (testItem.id == item.id) {
                 return false;
               }
+              const differenceTime = testItem.end - testItem.start;
               return item.start <= testItem.end && length >= testItem.start;
             }
           });
+
           if (overlapping.length == 0) {
             this.timeline.itemsData.add({
               ...item,
@@ -165,6 +173,88 @@ export default class Timeline extends Component {
               clip: {
                 left: "00:00:00,000",
                 right
+              },
+              className: videoMatch.test(item?.group)
+                ? "video"
+                : !!textMatch.test(item?.group)
+                ? "text"
+                : "audio"
+            });
+          } else {
+            const items = this.timeline.itemsData.get();
+
+            console.log(items);
+            const itemsIndex = [];
+            for (let i = 0; i < items.length-1; i++) {
+
+              console.log("coming item end", length)
+              console.log("second item end", items[i+1]);
+              console.log("first item ", items[i].start);
+              console.log("coming item start", item.start);
+
+              if(length <= items[i + 1].end  &&  items[i].start <= item.start){
+                itemsIndex.push(i);
+                  itemsIndex.push(i+1);
+              };
+
+              //   var nextItemStartSplittedTime = items[i+1].start.toString().split(" ")[4].split(":");
+              //   var itemsplittedEndTime = items[i].end.toString().split(" ")[4].split(":");
+              //   var comingItemStartSplittedTime = item.start.toString().split(" ")[4].split(":");
+              //   var comingItemsplittedEndTime = length.toString().split(" ")[4].split(":");
+
+              // if(parseInt(comingItemsplittedEndTime[0]) < parseInt(nextItemStartSplittedTime[0])  &&  parseInt(itemsplittedEndTime[0]) < parseInt(comingItemStartSplittedTime[0])){
+              //   console.log("true1");  
+                
+              //   itemsIndex.push(i);
+              //     itemsIndex.push(i+1);
+              //     break;
+              // }
+              // else if(parseInt(comingItemsplittedEndTime[1]) < parseInt(nextItemStartSplittedTime[1])  &&  parseInt(itemsplittedEndTime[1]) < parseInt(comingItemStartSplittedTime[1])){
+              //   console.log("true2");
+                
+              //   itemsIndex.push(i);
+              //   itemsIndex.push(i+1);
+              //   break;
+              // }
+              // else if(parseInt(comingItemsplittedEndTime[2]) < parseInt(nextItemStartSplittedTime[2])  &&  parseInt(itemsplittedEndTime[2]) < parseInt(comingItemStartSplittedTime[2])){
+              //   console.log("true3");
+              
+              //   itemsIndex.push(i);
+              //   itemsIndex.push(i+1);
+              // }
+              // console.log("First item start", itemStartSplittedTime);
+              // console.log("first item end", itemsplittedEndTime);
+              // console.log("Second item start", nextItemStartSplittedTime);
+              // console.log("Second item end", nextItemsplittedEndTime);
+              // console.log("Coming item start", comingItemStartSplittedTime);
+              // console.log("Coming item end", comingItemsplittedEndTime);
+
+            }
+            console.log(itemsIndex);
+            console.log(itemsIndex[itemsIndex.length-1]);
+            console.log(itemsIndex[itemsIndex.length-2]);
+
+
+            console.log(startDate);
+            console.log(length);
+
+
+            startDate = items[itemsIndex[itemsIndex.length-2]].end;
+            length = items[itemsIndex[itemsIndex.length-1]].start;
+            const rightModified = timeManager.subDuration(
+              this.dateToString(length),
+              this.dateToString(startDate)
+            );
+            this.timeline.itemsData.add({
+              ...item,
+              type: "range",
+              ...(resource?.id
+                ? { resource_id: resource?.id }
+                : { textAnimation: item?.content }),
+              end: length,
+              clip: {
+                left: "00:00:00,000",
+                rightModified
               },
               className: videoMatch.test(item?.group)
                 ? "video"
