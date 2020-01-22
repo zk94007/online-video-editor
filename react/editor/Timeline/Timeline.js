@@ -83,8 +83,8 @@ export default class Timeline extends Component {
           const videoMatch = new RegExp(/^videotrack\d+/);
           const textMatch = new RegExp(/^texttrack\d+/);
           const resource = this.props?.resources?.[item?.content];
-          const startDate = item?.start;
-          const length = resource?.length
+          let startDate = item?.start;
+          let length = resource?.length
             ? formattedDateFromString(
                 timeManager.addDuration(
                   this.dateToString(item?.start),
@@ -146,6 +146,8 @@ export default class Timeline extends Component {
           //   item?.group,
           //   length
           // );
+          // console.log("items data", this.timeline.itemsData);
+
           var overlapping = this.timeline.itemsData.get({
             filter: function(testItem) {
               if (testItem.id == item.id) {
@@ -154,6 +156,7 @@ export default class Timeline extends Component {
               return item.start <= testItem.end && length >= testItem.start;
             }
           });
+
           if (overlapping.length == 0) {
             this.timeline.itemsData.add({
               ...item,
@@ -165,6 +168,73 @@ export default class Timeline extends Component {
               clip: {
                 left: "00:00:00,000",
                 right
+              },
+              className: videoMatch.test(item?.group)
+                ? "video"
+                : !!textMatch.test(item?.group)
+                ? "text"
+                : "audio"
+            });
+          } else {
+            const items = this.timeline.itemsData.get();
+            const itemsIndex = [];
+            for (let i = 0; i < items.length; i++) {
+              if (item.start < items[0].start) {
+                itemsIndex.push(0);
+                break;
+              }
+              if (item.start < items) {
+                break;
+              }
+              var nextItemEndSplittedTime = items[i + 1].end
+                .toString()
+                .split(" ")[4]
+                .split(":")
+                .join("");
+              var itemStartSplittedTime = items[i].start
+                .toString()
+                .split(" ")[4]
+                .split(":")
+                .join("");
+              var comingItemStartSplittedTime = item.start
+                .toString()
+                .split(" ")[4]
+                .split(":")
+                .join("");
+              if (
+                parseInt(comingItemStartSplittedTime) <=
+                  parseInt(nextItemEndSplittedTime) &&
+                parseInt(itemStartSplittedTime) <=
+                  parseInt(comingItemStartSplittedTime)
+              ) {
+                itemsIndex.push(i);
+                itemsIndex.push(i + 1);
+                break;
+              }
+            }
+            if (itemsIndex.length > 1) {
+              item.start = items[itemsIndex[itemsIndex.length - 2]].end;
+              startDate = items[itemsIndex[itemsIndex.length - 2]].end;
+              length = items[itemsIndex[itemsIndex.length - 1]].start;
+            } else if (itemsIndex.length === 1) {
+              const newDate = new Date(1970, 0, 1);
+              item.start = newDate;
+              length = items[0].start;
+            }
+            const rightModified = timeManager.subDuration(
+              this.dateToString(length),
+              this.dateToString(startDate)
+            );
+            this.timeline.itemsData.add({
+              ...item,
+              type: "range",
+              ...(resource?.id
+                ? { resource_id: resource?.id }
+                : { textAnimation: item?.content }),
+              end: length,
+              clip: {
+                left: "00:00:00,000",
+                rightModified
               },
               className: videoMatch.test(item?.group)
                 ? "video"
