@@ -148,8 +148,6 @@ export default class Timeline extends Component {
           // );
           // console.log("items data", this.timeline.itemsData);
 
-         
-
           var overlapping = this.timeline.itemsData.get({
             filter: function(testItem) {
               if (testItem.id == item.id) {
@@ -181,32 +179,46 @@ export default class Timeline extends Component {
             const items = this.timeline.itemsData.get();
             const itemsIndex = [];
             for (let i = 0; i < items.length; i++) {
-
-              if(item.start < items[0].start){
+              if (item.start < items[0].start) {
                 itemsIndex.push(0);
                 break;
               }
-
-              if(item.start < items){
+              if (item.start < items) {
                 break;
               }
-
-                var nextItemEndSplittedTime = items[i+1].end.toString().split(" ")[4].split(":").join("");
-                var itemStartSplittedTime = items[i].start.toString().split(" ")[4].split(":").join("");
-                var comingItemStartSplittedTime = item.start.toString().split(" ")[4].split(":").join("");
-
-              if(parseInt(comingItemStartSplittedTime) <= parseInt(nextItemEndSplittedTime)  &&  parseInt(itemStartSplittedTime) <= parseInt(comingItemStartSplittedTime)){
+              var nextItemEndSplittedTime = items[i + 1].end
+                .toString()
+                .split(" ")[4]
+                .split(":")
+                .join("");
+              var itemStartSplittedTime = items[i].start
+                .toString()
+                .split(" ")[4]
+                .split(":")
+                .join("");
+              var comingItemStartSplittedTime = item.start
+                .toString()
+                .split(" ")[4]
+                .split(":")
+                .join("");
+              if (
+                parseInt(comingItemStartSplittedTime) <=
+                  parseInt(nextItemEndSplittedTime) &&
+                parseInt(itemStartSplittedTime) <=
+                  parseInt(comingItemStartSplittedTime)
+              ) {
                 itemsIndex.push(i);
-                  itemsIndex.push(i+1);
-                  break;
+                itemsIndex.push(i + 1);
+                break;
               }
             }
-
-            if(itemsIndex.length > 1){
-              startDate = items[itemsIndex[itemsIndex.length-2]].end;
-              length = items[itemsIndex[itemsIndex.length-1]].start;
-            } else if(itemsIndex.length === 1){
-            
+            if (itemsIndex.length > 1) {
+              item.start = items[itemsIndex[itemsIndex.length - 2]].end;
+              startDate = items[itemsIndex[itemsIndex.length - 2]].end;
+              length = items[itemsIndex[itemsIndex.length - 1]].start;
+            } else if (itemsIndex.length === 1) {
+              const newDate = new Date(1970, 0, 1);
+              item.start = newDate;
               length = items[0].start;
             }
             const rightModified = timeManager.subDuration(
