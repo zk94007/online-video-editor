@@ -762,46 +762,61 @@ export default class Timeline extends Component {
             return item.start < testItem.end && item.end > testItem.start;
           }
         });
-
         if (overlapping.length > 0) {
           const items = this.timeline.itemsData.get();
-            const itemsIndex = [];
-            for (let i = 0; i < items.length - 1; i++) {    
-              var nextItemEndSplittedTime = items[i + 1].end
-                .toString()
-                .split(" ")[4]
-                .split(":")
-                .join("");
-              var itemStartSplittedTime = items[i].start
-                .toString()
-                .split(" ")[4]
-                .split(":")
-                .join("");
-              var comingItemStartSplittedTime = item.start
-                .toString()
-                .split(" ")[4]
-                .split(":")
-                .join("");
-              if (
-                parseInt(comingItemStartSplittedTime) <=
-                  parseInt(nextItemEndSplittedTime) &&
-                parseInt(itemStartSplittedTime) <=
-                  parseInt(comingItemStartSplittedTime)
-              ) {
-                itemsIndex.push(i);
-                itemsIndex.push(i + 1);
+          const itemsIndex = [];
+
+          // sorting items
+          for (let i = 0; i < items.length - 1; i++) {
+            for (let j = 0; j < items.length - 1; j++) {
+              if (items[j].end > items[j + 1].end) {
+                let check = items[j];
+                items[j] = items[j + 1];
+                items[j + 1] = check;
               }
             }
-
-            if (itemsIndex.length > 1) {
-              item.start = items[itemsIndex[itemsIndex.length - 2]].end;
-               item.end = items[itemsIndex[itemsIndex.length - 1]].start;
-            } 
+          }
+          // checking overlapping issue
+          for (let i = 0; i < items.length - 1; i++) {
+            var nextItemEndSplittedTime = items[i + 1].end
+              .toString()
+              .split(" ")[4]
+              .split(":")
+              .join("");
+            var itemStartSplittedTime = items[i].start
+              .toString()
+              .split(" ")[4]
+              .split(":")
+              .join("");
+            var comingItemStartSplittedTime = item.start
+              .toString()
+              .split(" ")[4]
+              .split(":")
+              .join("");
+            if (
+              parseInt(comingItemStartSplittedTime) <=
+                parseInt(nextItemEndSplittedTime) &&
+              parseInt(itemStartSplittedTime) <=
+                parseInt(comingItemStartSplittedTime)
+            ) {
+              itemsIndex.push(i);
+              itemsIndex.push(i + 1);
+            }
+          }
+          // checking zero index item overlapping issue
+          if (item.start < items[0].start) {
+            item.start = items[0].end;
+            item.end = items[1].start;
+            callback(item);
+          } else if (itemsIndex.length > 1) {
+            item.start = items[itemsIndex[itemsIndex.length - 2]].end;
+            item.end = items[itemsIndex[itemsIndex.length - 1]].start;
             item.clip.right = timeManager.subDuration(
               this.dateToString(item.end),
               this.dateToString(item.start)
-            );   
-          callback(item); 
+            );
+            callback(item);
+          }
         } else if (overlapping.length == 0) {
           let transition = this.timeline?.itemsData.get({
             filter: val => {
@@ -813,13 +828,11 @@ export default class Timeline extends Component {
           });
           if (!!transition?.length) {
             this.timeline?.itemsData?.remove(transition?.[0].id);
-
           }
-
-          }   
-
-          callback(item);
         }
+
+        callback(item);
+      }
     } else {
       return false;
     }
