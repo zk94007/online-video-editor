@@ -502,19 +502,31 @@ tr:nth-child(even) {
 
   &.text {
     background-color: #766af6;
-    &.vis-selected{
+    &.vis-selected {
       background-color: #5c52cc;
     }
     .vis-item-content {
       padding: 0 2px;
     }
   }
-
+  &.transition {
+    top: 18px !important;
+    background-color: transparent;
+    .vis-item-overflow {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    i {
+      color: #45d3ae;
+      font-size: 31px;
+    }
+  }
   &.video {
     background-color: #27438b;
     border-color: #1d346e;
     height: 50px;
-    &.vis-selected{
+    &.vis-selected {
       background-color: #0e2254;
     }
 
@@ -530,7 +542,7 @@ tr:nth-child(even) {
   &.audio {
     background-color: #2d7741;
     border-color: #1f512c;
-    &.vis-selected{
+    &.vis-selected {
       background-color: #144221;
     }
     .vis-item-content {

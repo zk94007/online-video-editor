@@ -100,53 +100,6 @@ export default class Timeline extends Component {
             this.dateToString(length),
             this.dateToString(startDate)
           );
-          // let startDate = item?.start;
-          // let length = this.props?.resources[item?.content]?.length
-          //   ? this.props?.resources[item?.content]?.length
-          //   : moment(startDate)
-          //       .add(3, "s")
-          //       .format("HH:mm:ss,SSS");
-          // length =
-          //   item?.support === "text"
-          //     ? moment(startDate)
-          //         .add(5, "s")
-          //         .format("HH:mm:ss,SSS")
-          //     : length;
-          // this.props.items
-          //   .filter(val => val.id === item?.group)?.[0]
-          //   ?.items?.map(data => {
-          //     const start = formattedDateFromString(data.in);
-          //     const end = formattedDateFromString(data.out);
-          //     // const range = moment.range(moment(start), moment(end));
-          //     const duration = timeManager.addDuration(
-          //       moment(startDate).format("HH:mm:ss,SSS"),
-          //       length
-          //     );
-          //     let currentRange = moment.range(
-          //       startDate,
-          //       formattedDateFromString(duration)
-          //     );
-          //     if (currentRange.contains(start) || currentRange.contains(end)) {
-          //       startDate = moment(formattedDateFromString(data.out)).add(
-          //         2,
-          //         "s"
-          //       );
-          //     }
-          //     // if (
-          //     //   range.contains(formattedDateFromString(duration)) ||
-          //     //   range.contains(startDate)
-          //     // ) {
-          //     //   startDate = moment(formattedDateFromString(data.out)).add(2, "s");
-          //     // }
-          //   });
-          // this.onInsert(
-          //   item?.content,
-          //   startDate,
-          //   item?.support,
-          //   item?.group,
-          //   length
-          // );
-          // console.log("items data", this.timeline.itemsData);
 
           var overlapping = this.timeline.itemsData.get({
             filter: function(testItem) {
@@ -234,7 +187,7 @@ export default class Timeline extends Component {
               end: length,
               clip: {
                 left: "00:00:00,000",
-                rightModified
+                right: rightModified
               },
               className: videoMatch.test(item?.group)
                 ? "video"
@@ -269,14 +222,55 @@ export default class Timeline extends Component {
               DateToString(length2.start),
               DateToString(length1.end)
             );
-            if (
-              formattedDateFromString(duration) <
-              formattedDateFromString("00:00:03,000")
-            ) {
+            if (duration === "00:00:00,000") {
+              this.timeline.itemsData.update({
+                ...length2,
+                start: formattedDateFromString(
+                  timeManager.addDuration(
+                    DateToString(length2?.start),
+                    "00:00:01,000"
+                  )
+                ),
+                clip: {
+                  left: timeManager.addDuration(
+                    length2?.clip?.left,
+                    "00:00:01,000"
+                  ),
+                  right: length2?.clip?.right
+                }
+              });
+              this.timeline.itemsData.update({
+                ...length1,
+                end: formattedDateFromString(
+                  timeManager.leftDuration(
+                    DateToString(length1?.end),
+                    "00:00:01,000"
+                  )
+                ),
+                clip: {
+                  right: timeManager.leftDuration(
+                    length2?.clip?.right,
+                    "00:00:01,000"
+                  ),
+                  left: length2?.clip?.left
+                }
+              });
               this.timeline.itemsData.add({
                 ...item,
-                start: length1?.end,
-                end: length2?.start,
+                content: `<i class="material-icons" aria-hidden="true">compare_arrows</i>`,
+                start: formattedDateFromString(
+                  timeManager.leftDuration(
+                    DateToString(length1?.end),
+                    "00:00:01,000"
+                  )
+                ),
+                end: formattedDateFromString(
+                  timeManager.addDuration(
+                    DateToString(length1?.end),
+                    "00:00:01,000"
+                  )
+                ),
+                className: "transition",
                 type: "range",
                 itemA: length1?.id,
                 itemB: length2?.id,
@@ -371,87 +365,55 @@ export default class Timeline extends Component {
     this.timeline.setCustomTime(date);
     this.setState({ timePointer: this.dateToString(date) });
   };
+
   onRemove = () => {
-    const itemPath = this.state.selectedItems?.[0]?.split(":");
-    this.timeline.itemsData.remove(itemPath);
-    // let track = Editor.findTrack(this.props.items, itemPath[0]);
-    // let data = Editor.findItem(track, Number(itemPath[1]));
-    // const url = `${server.apiUrl}/project/${this.props.project}/item`;
-    // const params = {
-    //   method: "DELETE",
-    //   headers: {
-    //     "Content-Type": "application/json"
-    //   },
-    //   body: JSON.stringify({
-    //     track: itemPath[0],
-    //     item: data?.item?.id
-    //   })
-    // };
-    // fetch(url, params)
-    //   .then(response => response.json())
-    //   .then(data => {
-    //     if (typeof data.err !== "undefined") {
-    //       alert(`${data.err}\n\n${data.msg}`);
-    //     }
-    //     this.props.loadData();
-    //   })
-    //   .catch(error => this.props.fetchError(error.message));
-  };
-
-  onInsert = (id, startTime, support, group, length) => {
-    // Send request to API
-    let url = "";
-    let params = "";
-    if (support === "text") {
-      url = `${server.apiUrl}/project/${this.props.project}/textanimation`;
-      params = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          track: group,
-          textAnimation: id,
-          in: moment(startTime).format("HH:mm:ss,SSS"),
-          out: this.props.resources[id]?.length
-            ? timeManager.addDuration(
-                moment(startTime).format("HH:mm:ss,SSS"),
-                this.props.resources[id]?.length
-              )
-            : length
-        })
-      };
-    } else {
-      url = `${server.apiUrl}/project/${this.props.project}/file/${id}`;
-      params = {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          track: group,
-          support: support,
-          in: moment(startTime).format("HH:mm:ss,SSS"),
-          out: this.props.resources[id]?.length
-            ? timeManager.addDuration(
-                moment(startTime).format("HH:mm:ss,SSS"),
-                this.props.resources[id]?.length
-              )
-            : length
-        })
-      };
-    }
-
-    fetch(url, params)
-      .then(response => response.json())
-      .then(data => {
-        if (typeof data.err === "undefined") {
-          this.props.loadData();
-        } else {
-          alert(`${data.err}\n\n${data.msg}`);
+    const itemPath = this.state.selectedItems?.[0];
+    const item = this.timeline.itemsData.get(itemPath, {
+      filter: data => {
+        return !!data.transition;
+      }
+    });
+    if (item) {
+      const transitionItems = this.timeline.itemsData.get([
+        item?.itemA,
+        item?.itemB
+      ]);
+      this.timeline.itemsData.update({
+        ...transitionItems?.[0],
+        end: formattedDateFromString(
+          timeManager.addDuration(
+            DateToString(transitionItems?.[0]?.end),
+            "00:00:01,000"
+          )
+        ),
+        clip: {
+          ...transitionItems?.[0].clip,
+          right: timeManager?.addDuration(
+            transitionItems?.[0].clip.right,
+            "00:00:01,000"
+          )
         }
-      })
-      .catch(error => this.props.fetchError(error.message));
+      });
+      this.timeline.itemsData.update({
+        ...transitionItems?.[1],
+        start: formattedDateFromString(
+          timeManager.subDuration(
+            DateToString(transitionItems?.[1]?.start),
+            "00:00:01,000"
+          )
+        ),
+        clip: {
+          ...transitionItems?.[1].clip,
+          left: timeManager?.subDuration(
+            transitionItems?.[1].clip.left,
+            "00:00:01,000"
+          )
+        }
+      });
+      this.timeline.itemsData.remove(itemPath);
+    } else {
+      this.timeline.itemsData.remove(itemPath);
+    }
   };
 
   getIcons = text => {
