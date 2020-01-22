@@ -106,7 +106,11 @@ export default class Timeline extends Component {
               if (testItem.id == item.id) {
                 return false;
               }
-              return item.start <= testItem.end && length >= testItem.start;
+              return (
+                testItem?.group === item?.group &&
+                item.start <= testItem.end &&
+                length >= testItem.start
+              );
             }
           });
 
