@@ -60,6 +60,12 @@ export default class Editor extends Component {
   componentDidMount() {
     localStorage.setItem("id", this.props?.match?.params?.id);
     window.addEventListener("click", this.handleClickOutside);
+    window.addEventListener("keyup", event => {
+      if (event.keyCode === 13) {
+        event.preventDefault();
+        this.handleClickOutside();
+      }
+    });
   }
 
   componentWillUnmount() {
@@ -67,12 +73,20 @@ export default class Editor extends Component {
   }
 
   handleClickOutside = event => {
-    if (this.projectRef && !this.projectRef.contains(event.target)) {
+    if (this.projectRef && !this.projectRef.contains(event?.target)) {
       if (this.state.projectName) {
-        this.onProjectRename();
+        this.setState(
+          {
+            titleClicked: false
+          },
+          () => {
+            this.onProjectRename();
+          }
+        );
       } else {
         this.setState({
-          projectName: this.state.prevProject
+          projectName: this.state.prevProject,
+          titleClicked: false
         });
       }
     }
