@@ -735,6 +735,7 @@ export default class Timeline extends Component {
 
   onMoving = (item, callback) => {
     let itemData = this.timeline?.itemsData.get(item?.id);
+
     const oriLength = timeManager.subDuration(
       DateToString(itemData?.start),
       DateToString(itemData?.end)
@@ -754,16 +755,32 @@ export default class Timeline extends Component {
           callback(item);
         }
       } else if (length == oriLength) {
-        var overlapping = this.timeline.itemsData.get({
-          filter: testItem => {
-            if (testItem.id == item.id) {
-              return false;
-            }
-            return item.start < testItem.end && item.end > testItem.start;
+        const itemsMain = this.timeline.itemsData.get();
+        const items = [];
+        const itemGroup = item.group;
+        // filtering specific group items
+        for (let i = 0; i < itemsMain.length; i++) {
+          if (
+            itemsMain[i].group[itemsMain[i].group.length - 1] !==
+            itemGroup[itemGroup.length - 1]
+          ) {
+            delete itemsMain[i];
           }
+        }
+        for (let i = 0; i < itemsMain.length; i++) {
+          if (!!itemsMain[i]) {
+            items.push(itemsMain[i]);
+          }
+        }
+        // checking overlapping of same group items
+        const overlapping = itemsMain.filter(testItem => {
+          if (testItem.id == item.id) {
+            return false;
+          }
+          return item.start < testItem.end && item.end > testItem.start;
         });
+
         if (overlapping.length > 0) {
-          const items = this.timeline.itemsData.get();
           const itemsIndex = [];
 
           // sorting items
@@ -778,12 +795,12 @@ export default class Timeline extends Component {
           }
           // checking overlapping issue
           for (let i = 0; i < items.length - 1; i++) {
-            var nextItemEndSplittedTime = items[i + 1].end
+            var nextItemEndSplittedTime = items[i + 1].start
               .toString()
               .split(" ")[4]
               .split(":")
               .join("");
-            var itemStartSplittedTime = items[i].start
+            var itemStartSplittedTime = items[i].end
               .toString()
               .split(" ")[4]
               .split(":")
@@ -803,19 +820,58 @@ export default class Timeline extends Component {
               itemsIndex.push(i + 1);
             }
           }
-          // checking zero index item overlapping issue
-          if (item.start < items[0].start) {
-            item.start = items[0].end;
-            item.end = items[1].start;
-            callback(item);
-          } else if (itemsIndex.length > 1) {
-            item.start = items[itemsIndex[itemsIndex.length - 2]].end;
-            item.end = items[itemsIndex[itemsIndex.length - 1]].start;
-            item.clip.right = timeManager.subDuration(
-              this.dateToString(item.end),
-              this.dateToString(item.start)
+          const differenceOfOverlappingItemStartAndEndTime =
+            parseInt(
+              items[itemsIndex[itemsIndex.length - 2]].end
+                .toString()
+                .split(" ")[4]
+                .split(":")
+                .join("")
+            ) -
+            parseInt(
+              items[itemsIndex[itemsIndex.length - 1]].start
+                .toString()
+                .split(" ")[4]
+                .split(":")
+                .join("")
             );
-            callback(item);
+          const differenceOfComingItemStartAndEndTime =
+            parseInt(
+              item.end
+                .toString()
+                .split(" ")[4]
+                .split(":")
+                .join("")
+            ) -
+            parseInt(
+              item.start
+                .toString()
+                .split(" ")[4]
+                .split(":")
+                .join("")
+            );
+          if (
+            differenceOfOverlappingItemStartAndEndTime <
+            differenceOfComingItemStartAndEndTime
+          ) {
+            if (
+              item.group[item.group.length - 1] ===
+              items[itemsIndex[0]].group[items[itemsIndex[0]].group.length - 1]
+            ) {
+              if (item.start < items[0].start) {
+                item.start = items[0].end;
+                item.end = items[1].start;
+                callback(item);
+              } else if (itemsIndex.length > 1) {
+                item.start = items[itemsIndex[itemsIndex.length - 2]].end;
+                item.end = items[itemsIndex[itemsIndex.length - 1]].start;
+                item.clip.right = timeManager.subDuration(
+                  this.dateToString(item.end),
+                  this.dateToString(item.start)
+                );
+                callback(item);
+              }
+            }
           }
         } else if (overlapping.length == 0) {
           let transition = this.timeline?.itemsData.get({
