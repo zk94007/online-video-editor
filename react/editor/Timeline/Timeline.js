@@ -758,12 +758,18 @@ export default class Timeline extends Component {
         const itemsMain = this.timeline.itemsData.get();
         const items = [];
         const itemGroup = item.group;
+        let pivotItemIndex;
         // filtering specific group items
         for (let i = 0; i < itemsMain.length; i++) {
+          
           if (
             itemsMain[i].group[itemsMain[i].group.length - 1] !==
             itemGroup[itemGroup.length - 1]
           ) {
+            delete itemsMain[i];
+          }
+          else if(itemsMain[i].id === item.id){
+            pivotItemIndex = i;
             delete itemsMain[i];
           }
         }
@@ -777,12 +783,11 @@ export default class Timeline extends Component {
           if (testItem.id == item.id) {
             return false;
           }
-          return item.start < testItem.end && item.end > testItem.start;
+          return item.start <= testItem.end && item.end >= testItem.start;
         });
 
         if (overlapping.length > 0) {
           const itemsIndex = [];
-
           // sorting items
           for (let i = 0; i < items.length - 1; i++) {
             for (let j = 0; j < items.length - 1; j++) {
@@ -793,14 +798,15 @@ export default class Timeline extends Component {
               }
             }
           }
+
           // checking overlapping issue
           for (let i = 0; i < items.length - 1; i++) {
-            var nextItemEndSplittedTime = items[i + 1].start
+            var nextItemEndSplittedTime = items[i + 1].end
               .toString()
               .split(" ")[4]
               .split(":")
               .join("");
-            var itemStartSplittedTime = items[i].end
+            var itemStartSplittedTime = items[i].start
               .toString()
               .split(" ")[4]
               .split(":")
@@ -810,6 +816,21 @@ export default class Timeline extends Component {
               .split(" ")[4]
               .split(":")
               .join("");
+            var comingItemEndSplittedTime = item.end
+              .toString()
+              .split(" ")[4]
+              .split(":")
+              .join("");
+            if (
+              parseInt(comingItemEndSplittedTime) <=
+                parseInt(nextItemEndSplittedTime) &&
+              parseInt(itemStartSplittedTime) <=
+                parseInt(comingItemEndSplittedTime)
+            ) {
+              itemsIndex.push(i);
+              itemsIndex.push(i + 1);
+              continue;
+            }
             if (
               parseInt(comingItemStartSplittedTime) <=
                 parseInt(nextItemEndSplittedTime) &&
@@ -818,40 +839,34 @@ export default class Timeline extends Component {
             ) {
               itemsIndex.push(i);
               itemsIndex.push(i + 1);
+              break;
             }
           }
           const differenceOfOverlappingItemStartAndEndTime =
-            parseInt(
-              items[itemsIndex[itemsIndex.length - 2]].end
-                .toString()
-                .split(" ")[4]
-                .split(":")
-                .join("")
-            ) -
             parseInt(
               items[itemsIndex[itemsIndex.length - 1]].start
                 .toString()
                 .split(" ")[4]
                 .split(":")
                 .join("")
-            );
-          const differenceOfComingItemStartAndEndTime =
-            parseInt(
-              item.end
-                .toString()
-                .split(" ")[4]
-                .split(":")
-                .join("")
             ) -
             parseInt(
-              item.start
+              items[itemsIndex[itemsIndex.length - 2]].end
                 .toString()
                 .split(" ")[4]
                 .split(":")
                 .join("")
             );
+          const differenceOfComingItemStartAndEndTime = parseInt(
+            item.clip.right
+              .split(":")
+              .join("")
+              .split(",")
+              .join(".")
+          ) + 1;
+
           if (
-            differenceOfOverlappingItemStartAndEndTime <
+            differenceOfOverlappingItemStartAndEndTime <=
             differenceOfComingItemStartAndEndTime
           ) {
             if (
@@ -872,6 +887,29 @@ export default class Timeline extends Component {
                 callback(item);
               }
             }
+          } else {
+            const time = formattedDateFromString(item.clip.right);
+            const differenceTime = differenceOfOverlappingItemStartAndEndTime - differenceOfComingItemStartAndEndTime;
+            if (
+              item.group[item.group.length - 1] ===
+              items[itemsIndex[0]].group[items[itemsIndex[0]].group.length - 1]
+            ) {
+              if (item.start < items[0].start) {
+                item.start = items[0].end;
+                item.end = items[1].start;
+                callback(item);
+              } else if (itemsIndex.length > 1) {
+                item.start = items[itemsIndex[itemsIndex.length - 2]].end;
+                item.end = items[itemsIndex[itemsIndex.length - 1]].start;
+                item.clip.right = timeManager.subDuration(
+                  this.dateToString(item.end),
+                  this.dateToString(item.start)
+                );
+                callback(item);
+              }
+            }
+
+            // item.start = items[itemsIndex[itemsIndex.length - 2]].end;
           }
         } else if (overlapping.length == 0) {
           let transition = this.timeline?.itemsData.get({
