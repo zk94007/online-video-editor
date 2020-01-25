@@ -758,18 +758,18 @@ export default class Timeline extends Component {
         const itemsMain = this.timeline.itemsData.get();
         const items = [];
         const itemGroup = item.group;
+        const pivotItem = [];
         let pivotItemIndex;
         // filtering specific group items
         for (let i = 0; i < itemsMain.length; i++) {
-          
           if (
             itemsMain[i].group[itemsMain[i].group.length - 1] !==
             itemGroup[itemGroup.length - 1]
           ) {
             delete itemsMain[i];
-          }
-          else if(itemsMain[i].id === item.id){
+          } else if (itemsMain[i].id === item.id) {
             pivotItemIndex = i;
+            pivotItem.push(itemsMain[i]);
             delete itemsMain[i];
           }
         }
@@ -844,34 +844,86 @@ export default class Timeline extends Component {
           }
           const differenceOfOverlappingItemStartAndEndTime =
             parseInt(
-              items[itemsIndex[itemsIndex.length - 1]].start
+              items[itemsIndex[itemsIndex.length - 1]]?.start
                 .toString()
                 .split(" ")[4]
                 .split(":")
                 .join("")
             ) -
             parseInt(
-              items[itemsIndex[itemsIndex.length - 2]].end
+              items[itemsIndex[itemsIndex.length - 2]]?.end
                 .toString()
                 .split(" ")[4]
                 .split(":")
                 .join("")
             );
-          const differenceOfComingItemStartAndEndTime = parseInt(
-            item.clip.right
-              .split(":")
-              .join("")
-              .split(",")
-              .join(".")
-          ) + 1;
+          const differenceOfComingItemStartAndEndTime =
+            parseInt(
+              item.clip.right
+                .split(":")
+                .join("")
+                .split(",")
+                .join(".")
+            ) + 1;
+          if (items.length < 2) {
+            if (items[0].start > item.start) {
+              const pivotItemTime = pivotItem[0].clip.right
+                .split(":")
+                .concat(pivotItem[0].clip.right.split(":")[2].split(","));
+              const nextItemStartTime = items[0].start
+                .toString()
+                .split(" ")[4]
+                .split(":");
+              pivotItemTime.splice(2, 1);
+              let timeInSeconds =
+                parseInt(pivotItemTime[0]) * 60 * 60 +
+                parseInt(pivotItemTime[1]) * 60 +
+                parseInt(pivotItemTime[2]) +
+                parseFloat(`0.${pivotItemTime[3]}`);
+              let starttimeInSecondsOfNextItem =
+                parseInt(nextItemStartTime[0]) * 60 * 60 +
+                parseInt(nextItemStartTime[1]) * 60 +
+                parseInt(nextItemStartTime[2]);
+              const startTime =
+                starttimeInSecondsOfNextItem - timeInSeconds;
+              const newDate = new Date(1970, 0, 1, 0, 0, startTime);
+              item.end = items[0].start;
+              item.start = newDate;
+              return callback(item);
+            } else {
+              const pivotItemTime = pivotItem[0].clip.right
+                .split(":")
+                .concat(pivotItem[0].clip.right.split(":")[2].split(","));
+              const nextItemEndTime = items[0].end
+                .toString()
+                .split(" ")[4]
+                .split(":");
+              let timeInSeconds =
+                parseInt(pivotItemTime[0]) * 60 * 60 +
+                parseInt(pivotItemTime[1]) * 60 +
+                parseInt(pivotItemTime[2]) +
+                parseFloat(`0.${pivotItemTime[3]}`);
+              let endtimeInSecondsOfNextItem =
+                parseInt(nextItemEndTime[0]) * 60 * 60 +
+                parseInt(nextItemEndTime[1]) * 60 +
+                parseInt(nextItemEndTime[2]);
+              const endTime = endtimeInSecondsOfNextItem + timeInSeconds + 2;
+              const newDate = new Date(1970, 0, 1, 0, 0, endTime);
+              item.start = items[0].end;
+              item.end = newDate;
+              return callback(item);
+            }
+          }
 
           if (
             differenceOfOverlappingItemStartAndEndTime <=
             differenceOfComingItemStartAndEndTime
           ) {
             if (
-              item.group[item.group.length - 1] ===
-              items[itemsIndex[0]].group[items[itemsIndex[0]].group.length - 1]
+              item?.group[item?.group.length - 1] ===
+              items[itemsIndex[0]]?.group[
+                items[itemsIndex[0]]?.group.length - 1
+              ]
             ) {
               if (item.start < items[0].start) {
                 item.start = items[0].end;
@@ -880,36 +932,34 @@ export default class Timeline extends Component {
               } else if (itemsIndex.length > 1) {
                 item.start = items[itemsIndex[itemsIndex.length - 2]].end;
                 item.end = items[itemsIndex[itemsIndex.length - 1]].start;
-                item.clip.right = timeManager.subDuration(
-                  this.dateToString(item.end),
-                  this.dateToString(item.start)
-                );
+              
                 callback(item);
               }
             }
           } else {
-            const time = formattedDateFromString(item.clip.right);
-            const differenceTime = differenceOfOverlappingItemStartAndEndTime - differenceOfComingItemStartAndEndTime;
-            if (
-              item.group[item.group.length - 1] ===
-              items[itemsIndex[0]].group[items[itemsIndex[0]].group.length - 1]
-            ) {
-              if (item.start < items[0].start) {
-                item.start = items[0].end;
-                item.end = items[1].start;
-                callback(item);
-              } else if (itemsIndex.length > 1) {
-                item.start = items[itemsIndex[itemsIndex.length - 2]].end;
-                item.end = items[itemsIndex[itemsIndex.length - 1]].start;
-                item.clip.right = timeManager.subDuration(
-                  this.dateToString(item.end),
-                  this.dateToString(item.start)
-                );
-                callback(item);
-              }
-            }
-
-            // item.start = items[itemsIndex[itemsIndex.length - 2]].end;
+            const pivotItemTime = pivotItem[0].clip.right
+                .split(":")
+                .concat(pivotItem[0].clip.right.split(":")[2].split(","));
+              const nextItemStartTime = items[itemsIndex[itemsIndex.length - 2]].end
+                .toString()
+                .split(" ")[4]
+                .split(":");
+              pivotItemTime.splice(2, 1);
+              let timeInSeconds =
+                parseInt(pivotItemTime[0]) * 60 * 60 +
+                parseInt(pivotItemTime[1]) * 60 +
+                parseInt(pivotItemTime[2]) +
+                parseFloat(`0.${pivotItemTime[3]}`);
+              let starttimeInSecondsOfNextItem =
+                parseInt(nextItemStartTime[0]) * 60 * 60 +
+                parseInt(nextItemStartTime[1]) * 60 +
+                parseInt(nextItemStartTime[2]);
+              const startTime =
+                starttimeInSecondsOfNextItem + timeInSeconds;
+              const newDate = new Date(1970, 0, 1, 0, 0, startTime);
+              item.start = items[itemsIndex[itemsIndex.length - 2]].end;
+              item.end = newDate;
+              return callback(item);
           }
         } else if (overlapping.length == 0) {
           let transition = this.timeline?.itemsData.get({
