@@ -755,19 +755,17 @@ export default class Timeline extends Component {
           callback(item);
         }
       } else if (length == oriLength) {
-        const itemsMain = this.timeline.itemsData.get();
+        const itemsMain = this.timeline.itemsData.get({
+          filter: (value) => {
+            return value?.group === item?.group
+          }
+        });
         const items = [];
-        const itemGroup = item.group;
         const pivotItem = [];
         let pivotItemIndex;
         // filtering specific group items
         for (let i = 0; i < itemsMain.length; i++) {
-          if (
-            itemsMain[i].group[itemsMain[i].group.length - 1] !==
-            itemGroup[itemGroup.length - 1]
-          ) {
-            delete itemsMain[i];
-          } else if (itemsMain[i].id === item.id) {
+          if (itemsMain[i].id === item.id) {
             pivotItemIndex = i;
             pivotItem.push(itemsMain[i]);
             delete itemsMain[i];
@@ -919,12 +917,6 @@ export default class Timeline extends Component {
             differenceOfOverlappingItemStartAndEndTime <=
             differenceOfComingItemStartAndEndTime
           ) {
-            if (
-              item?.group[item?.group.length - 1] ===
-              items[itemsIndex[0]]?.group[
-                items[itemsIndex[0]]?.group.length - 1
-              ]
-            ) {
               if (item.start < items[0].start) {
                 item.start = items[0].end;
                 item.end = items[1].start;
@@ -935,7 +927,6 @@ export default class Timeline extends Component {
               
                 callback(item);
               }
-            }
           } else {
             const pivotItemTime = pivotItem[0].clip.right
                 .split(":")
