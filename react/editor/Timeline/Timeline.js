@@ -124,16 +124,6 @@ export default class Timeline extends Component {
               this.dateToString(length),
               this.dateToString(startDate)
             );
-            console.log("trackLength", trackLength);
-            console.log(
-              "aaaaaa",
-              formattedDateFromString(
-                timeManager.subDuration(
-                  DateToString(length),
-                  DateToString(item?.start)
-                )
-              )
-            );
             this.timeline.itemsData.add({
               ...item,
               type: "range",
@@ -717,70 +707,36 @@ export default class Timeline extends Component {
 
           // checking overlapping issue
           for (let i = 0; i < items.length - 1; i++) {
-            var nextItemEndSplittedTime = items[i + 1].end
-              .toString()
-              .split(" ")[4]
-              .split(":")
-              .join("");
-            var itemStartSplittedTime = items[i].start
-              .toString()
-              .split(" ")[4]
-              .split(":")
-              .join("");
-            var comingItemStartSplittedTime = item.start
-              .toString()
-              .split(" ")[4]
-              .split(":")
-              .join("");
-            var comingItemEndSplittedTime = item.end
-              .toString()
-              .split(" ")[4]
-              .split(":")
-              .join("");
+            var nextItemEndSplittedTime = items[i + 1].end;
+            var itemStartSplittedTime = items[i].start;
+            var comingItemStartSplittedTime = item.start;
+            var comingItemEndSplittedTime = item.end;
             if (
-              parseInt(comingItemEndSplittedTime) <=
-                parseInt(nextItemEndSplittedTime) &&
-              parseInt(itemStartSplittedTime) <=
-                parseInt(comingItemEndSplittedTime)
+              comingItemEndSplittedTime <= nextItemEndSplittedTime &&
+              itemStartSplittedTime <= comingItemEndSplittedTime
             ) {
               itemsIndex.push(i);
               itemsIndex.push(i + 1);
               continue;
             }
             if (
-              parseInt(comingItemStartSplittedTime) <=
-                parseInt(nextItemEndSplittedTime) &&
-              parseInt(itemStartSplittedTime) <=
-                parseInt(comingItemStartSplittedTime)
+              comingItemStartSplittedTime <= nextItemEndSplittedTime &&
+              itemStartSplittedTime <= comingItemStartSplittedTime
             ) {
               itemsIndex.push(i);
               itemsIndex.push(i + 1);
               break;
             }
           }
-          const differenceOfOverlappingItemStartAndEndTime =
-            parseInt(
-              items[itemsIndex[itemsIndex.length - 1]]?.start
-                .toString()
-                .split(" ")[4]
-                .split(":")
-                .join("")
-            ) -
-            parseInt(
-              items[itemsIndex[itemsIndex.length - 2]]?.end
-                .toString()
-                .split(" ")[4]
-                .split(":")
-                .join("")
-            );
-          const differenceOfComingItemStartAndEndTime =
-            parseInt(
-              item.clip.right
-                .split(":")
-                .join("")
-                .split(",")
-                .join(".")
-            ) + 1;
+          const differenceOfOverlappingItemStartAndEndTime = formattedDateFromString(
+            timeManager.subDuration(
+              DateToString(items[itemsIndex[itemsIndex.length - 1]]?.start),
+              DateToString(items[itemsIndex[itemsIndex.length - 2]]?.end)
+            )
+          );
+          const differenceOfComingItemStartAndEndTime = formattedDateFromString(
+            timeManager.addDuration(item.clip.right, "00:00:01,000")
+          );
           // when items length is 2 resolving overlapping issue
           if (items.length < 2) {
             if (item.end >= items[0].end) {
