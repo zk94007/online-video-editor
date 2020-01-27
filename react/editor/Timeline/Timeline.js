@@ -161,27 +161,33 @@ export default class Timeline extends Component {
           item?.group.includes("videotrack1")
         ) {
           const itemsIndex = [];
-          const items = this.timeline.itemsData.get({
+          const itemsValue = this.timeline.itemsData.get({
             filter: data => {
               return (
                 data.group === "videotrack0" || data.group === "videotrack1"
               );
             }
           });
-          for (let i = 0; i < items.length - 1; i++) {
-            if (item.start < items[i + 1].end && items[i].end < item.start) {
+          for (let i = 0; i < itemsValue?.length - 1; i++) {
+            if (
+              item.start <= itemsValue[i + 1].end &&
+              itemsValue[i].end <= item.start
+            ) {
               itemsIndex.push(i);
               itemsIndex.push(i + 1);
             }
           }
-          const length1 = items?.[itemsIndex?.[0]];
-          const length2 = items?.[itemsIndex?.[1]];
+          const length1 = itemsValue?.[itemsIndex?.[0]];
+          const length2 = itemsValue?.[itemsIndex?.[1]];
           if (length1 && length2) {
             let duration = timeManager.subDuration(
               DateToString(length2.start),
               DateToString(length1.end)
             );
-            if (duration === "00:00:00,000") {
+            if (
+              formattedDateFromString(duration) <=
+              formattedDateFromString("00:00:01,000")
+            ) {
               this.timeline.itemsData.update({
                 ...length2,
                 start: formattedDateFromString(
@@ -341,7 +347,21 @@ export default class Timeline extends Component {
       });
       this.timeline.itemsData.remove(itemPath);
     } else {
-      this.timeline.itemsData.remove(itemPath);
+      const isTransition = this.timeline.itemsData.get({
+        filter: unique => {
+          return (
+            (unique?.transition && unique?.itemA === itemPath) ||
+            unique?.itemB === itemPath
+          );
+        }
+      });
+
+      if (!!isTransition?.length) {
+        this.timeline.itemsData.remove(itemPath);
+        this.timeline.itemsData.remove(isTransition?.[0]?.id);
+      } else {
+        this.timeline.itemsData.remove(itemPath);
+      }
     }
   };
 
