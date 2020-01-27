@@ -48,6 +48,9 @@ export default class Timeline extends Component {
                   .add(3, "s")
                   .format("HH:mm:ss,SSS")
               );
+          let trackLength = resource?.length
+            ? formattedDateFromString(resource?.length)
+            : formattedDateFromString("00:00:03,000");
           const right = timeManager.subDuration(
             this.dateToString(length),
             this.dateToString(startDate)
@@ -86,8 +89,8 @@ export default class Timeline extends Component {
             });
           } else {
             const items = this.timeline.itemsData.get({
-              filter: (testItem) => {
-                return testItem?.group === item?.group
+              filter: testItem => {
+                return testItem?.group === item?.group;
               }
             });
             const itemsIndex = [];
@@ -121,13 +124,36 @@ export default class Timeline extends Component {
               this.dateToString(length),
               this.dateToString(startDate)
             );
+            console.log("trackLength", trackLength);
+            console.log(
+              "aaaaaa",
+              formattedDateFromString(
+                timeManager.subDuration(
+                  DateToString(length),
+                  DateToString(item?.start)
+                )
+              )
+            );
             this.timeline.itemsData.add({
               ...item,
               type: "range",
               ...(resource?.id
                 ? { resource_id: resource?.id }
                 : { textAnimation: item?.content }),
-              end: length,
+              end:
+                formattedDateFromString(
+                  timeManager.subDuration(
+                    DateToString(length),
+                    DateToString(item?.start)
+                  )
+                ) < trackLength
+                  ? length
+                  : formattedDateFromString(
+                      timeManager.addDuration(
+                        DateToString(item?.start),
+                        DateToString(trackLength)
+                      )
+                    ),
               clip: {
                 left: "00:00:00,000",
                 right: rightModified
