@@ -169,7 +169,7 @@ export default class Timeline extends Component {
             }
           });
           for (let i = 0; i < items.length - 1; i++) {
-            if (item.start <= items[i + 1].end && items[i].end <= item.start) {
+            if (item.start < items[i + 1].end && items[i].end < item.start) {
               itemsIndex.push(i);
               itemsIndex.push(i + 1);
             }
@@ -728,15 +728,7 @@ export default class Timeline extends Component {
               break;
             }
           }
-          const differenceOfOverlappingItemStartAndEndTime = formattedDateFromString(
-            timeManager.subDuration(
-              DateToString(items[itemsIndex[itemsIndex.length - 1]]?.start),
-              DateToString(items[itemsIndex[itemsIndex.length - 2]]?.end)
-            )
-          );
-          const differenceOfComingItemStartAndEndTime = formattedDateFromString(
-            timeManager.addDuration(item.clip.right, "00:00:01,000")
-          );
+
           // when items length is 2 resolving overlapping issue
           if (items.length < 2) {
             if (item.end >= items[0].end) {
@@ -786,6 +778,15 @@ export default class Timeline extends Component {
               return callback(item);
             }
           }
+          const differenceOfComingItemStartAndEndTime = formattedDateFromString(
+            timeManager.addDuration(item.clip.right, "00:00:01,000")
+          );
+          const differenceOfOverlappingItemStartAndEndTime = formattedDateFromString(
+            timeManager.subDuration(
+              DateToString(items[itemsIndex[itemsIndex.length - 1]]?.start),
+              DateToString(items[itemsIndex[itemsIndex.length - 2]]?.end)
+            )
+          );
           // checking  if length between overlapping items and active length is less than or greater
           if (
             differenceOfOverlappingItemStartAndEndTime <=
