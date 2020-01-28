@@ -19,16 +19,19 @@ const AudioCollection = props => {
     {
       name: "Softly Inspiring",
       url:
-        "https://s3.amazonaws.com/virginia-testing.webrand.com/public/stryb_a92948.mp3"
+        "https://s3.amazonaws.com/virginia-testing.webrand.com/public/stryb_a92948.mp3",
+      keywords: ["commercial", "optimistic", "Industry", "coorporate"]
     },
     {
       name: "Such A Great Day ",
       url:
-        "https://s3.amazonaws.com/virginia-testing.webrand.com/public/SoundHelix-Song-1.mp3"
+        "https://s3.amazonaws.com/virginia-testing.webrand.com/public/SoundHelix-Song-1.mp3",
+      keywords: ["hopeful", "emotional", "dynamic", "aggressive", "commericial"]
     }
   ];
   const [isModal, setModal] = useState(false);
   const [data, setData] = useState(null);
+  const [value, setValue] = useState(null);
   const keyword = props.searchBar ? props.search : search;
 
   return (
@@ -45,13 +48,13 @@ const AudioCollection = props => {
       )}
       <VideoDetailsDialog
         data={data}
+        value={value}
         open={isModal}
         closeModal={() => setModal(false)}
         resources={props.resources}
         setError={props.setError}
         setLoading={props.setLoading}
         getNetworkRequest={props.getNetworkRequest}
-
       />
       {!props.searchBar && (
         <VideosHeader>
@@ -80,29 +83,37 @@ const AudioCollection = props => {
         <PerfectScroller>
           <VideoResult>
             {asset
-              .filter(
-                val =>
-                  val.name.toLowerCase().indexOf(keyword.toLowerCase()) !== -1
-              )
+              .filter(val => {
+                return (
+                  val.keywords.filter(eachkeyword => {
+                    return (
+                      eachkeyword
+                        .toLowerCase()
+                        .indexOf(keyword.toLowerCase()) !== -1
+                    );
+                  }).length > 0
+                );
+              })
               .map((val, key) => {
-              const isAdded = Object.keys(props.resources).filter(data =>
-                val?.url?.includes(props.resources?.[data]?.name)
-              );
-              return (
-                <StockCard
-                  setModal={data => {
-                    setData(data);
-                    setModal(true);
-                  }}
-                  setLoading={props.setLoading}
-                  getNetworkRequest={props.getNetworkRequest}
-                  url={val.url}
-                  isAdded={!!isAdded.length}
-                  key={key}
-                  audio={true}
-                />
-              );
-            })}
+                const isAdded = Object.keys(props.resources).filter(data =>
+                  val?.url?.includes(props.resources?.[data]?.name)
+                );
+                return (
+                  <StockCard
+                    setModal={data => {
+                      setValue(val);
+                      setData(data);
+                      setModal(true);
+                    }}
+                    setLoading={props.setLoading}
+                    getNetworkRequest={props.getNetworkRequest}
+                    url={val.url}
+                    isAdded={!!isAdded.length}
+                    key={key}
+                    audio={true}
+                  />
+                );
+              })}
           </VideoResult>
         </PerfectScroller>
       </MainContainer>
