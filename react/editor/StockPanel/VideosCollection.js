@@ -20,16 +20,20 @@ const VideosCollection = props => {
     {
       name: "Attractive young blonde woman",
       url:
-        "https://s3.amazonaws.com/virginia-testing.webrand.com/public/stryb_v3913895.mp4"
+        "https://s3.amazonaws.com/virginia-testing.webrand.com/public/stryb_v3913895.mp4",
+      keywords: ["business", "background", "credit", "cheerful"]
     },
     {
       name: "Performance - speaker female teaching at internati..",
       url:
-        "https://s3.amazonaws.com/virginia-testing.webrand.com/public/stryb_v4020131.mp4"
+        "https://s3.amazonaws.com/virginia-testing.webrand.com/public/stryb_v4020131.mp4",
+      keywords: ["attractive", "achievement", "cheerful"]
     }
   ];
+
   const [isModal, setModal] = useState(false);
   const [data, setData] = useState(null);
+  const [value, setValue] = useState(null);
   const keyword = props.searchBar ? props.search : search;
   return (
     <VideosContainer>
@@ -44,6 +48,7 @@ const VideosCollection = props => {
         </SearchBar>
       )}
       <VideoDetailsDialog
+        value={value}
         data={data}
         setError={props.setError}
         getNetworkRequest={props.getNetworkRequest}
@@ -80,10 +85,17 @@ const VideosCollection = props => {
         <PerfectScroller component="div">
           <VideoResult>
             {asset
-              .filter(
-                val =>
-                  val.name.toLowerCase().indexOf(keyword.toLowerCase()) !== -1
-              )
+              .filter(val => {
+                return (
+                  val.keywords.filter(eachkeyword => {
+                    return (
+                      eachkeyword
+                        .toLowerCase()
+                        .indexOf(keyword.toLowerCase()) !== -1
+                    );
+                  }).length > 0
+                );
+              })
               .map((val, key) => {
                 const isAdded = Object.keys(props.resources).filter(data =>
                   val?.url?.includes(props.resources?.[data]?.name)
@@ -93,7 +105,11 @@ const VideosCollection = props => {
                     setError={props.setError}
                     setLoading={props.setLoading}
                     getNetworkRequest={props.getNetworkRequest}
+                    onClick={() => {
+                      setValue(val);
+                    }}
                     setModal={data => {
+                      setValue(val);
                       setData(data);
                       setModal(true);
                     }}
