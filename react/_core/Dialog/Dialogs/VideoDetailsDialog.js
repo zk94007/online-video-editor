@@ -66,7 +66,7 @@ class VideoDetailsDialog extends React.Component {
             </VideoDetailModalButton>
             <VideoDetailModalLeft>
               <VideoDetailModalTitle>
-                {this.props.value?.name}
+                {this.props?.value?.name}
               </VideoDetailModalTitle>
               <Scroller component="div">
                 <VideoDetailModalContent>
@@ -113,7 +113,7 @@ class VideoDetailsDialog extends React.Component {
               </VideoDetailModalCategory>
               <VideoDetailModalKeyword>
                 <h4>Keyword:</h4>
-                {this.props.value?.keywords.map((eachKeyword, key) => {
+                {this.props?.value?.keywords?.map((eachKeyword, key) => {
                   return (
                     <VideoDetailModalTags key={key}>
                       {eachKeyword}

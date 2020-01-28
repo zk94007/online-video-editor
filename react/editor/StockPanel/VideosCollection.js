@@ -106,7 +106,6 @@ const VideosCollection = props => {
                     setLoading={props.setLoading}
                     getNetworkRequest={props.getNetworkRequest}
                     onClick={() => {
-                      console.log("val", val);
                       setValue(val);
                     }}
                     setModal={data => {
