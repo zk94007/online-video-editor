@@ -36,7 +36,7 @@ export default class Timeline extends Component {
         if (item?.group?.includes(item?.support)) {
           const resource = this.props?.resources?.[item?.content];
           let startDate = item?.start;
-          let length = resource?.length
+          let endDate = resource?.length
             ? formattedDateFromString(
                 timeManager.addDuration(
                   this.dateToString(item?.start),
@@ -51,20 +51,21 @@ export default class Timeline extends Component {
           let trackLength = resource?.length
             ? formattedDateFromString(resource?.length)
             : formattedDateFromString("00:00:03,000");
+
           const right = timeManager.subDuration(
-            this.dateToString(length),
+            this.dateToString(endDate),
             this.dateToString(startDate)
           );
 
           var overlapping = this.timeline.itemsData.get({
-            filter: function(testItem) {
-              if (testItem.id == item.id) {
+            filter: function(obj) {
+              if (obj.id == item.id) {
                 return false;
               }
               return (
-                testItem?.group === item?.group &&
-                item.start <= testItem.end &&
-                length >= testItem.start
+                obj?.group === item?.group &&
+                startDate <= obj.end &&
+                endDate >= obj.start
               );
             }
           });
@@ -76,11 +77,12 @@ export default class Timeline extends Component {
               ...(resource?.id
                 ? { resource_id: resource?.id }
                 : { textAnimation: item?.content }),
-              end: length,
+              end: endDate,
               clip: {
                 left: "00:00:00,000",
                 right
               },
+              trackLength,
               className: item?.group?.includes("video")
                 ? "video"
                 : item?.group?.includes("text")
@@ -89,39 +91,43 @@ export default class Timeline extends Component {
             });
           } else {
             const items = this.timeline.itemsData.get({
-              filter: testItem => {
-                return testItem?.group === item?.group;
+              filter: obj => {
+                return obj?.group === item?.group;
               }
             });
-            const itemsIndex = [];
+            let itemsIndex = -1;
             for (let i = 0; i < items.length; i++) {
-              if (item.start < items[0].start) {
-                itemsIndex.push(0);
+              // if (item.start < items[0].start) { // unnecessary
+              //   itemsIndex.push(0);
+              //   break;
+              // }
+              // if (item.start < items) { // is this right condition comparison? date <> array
+              //   break;
+              // }
+              if (startDate >= items[i].start && startDate <= items[i].end) { //dropped on an item => do nothing
                 break;
               }
-              if (item.start < items) {
-                break;
-              }
-              if (
-                item.start <= items[i + 1].end &&
-                items[i].start <= item.start
-              ) {
-                itemsIndex.push(i);
-                itemsIndex.push(i + 1);
+              if (startDate <= items[i].start && endDate >= items[i].start) { //not enough space => crop
+                itemsIndex = i;
                 break;
               }
             }
-            if (itemsIndex.length > 1) {
-              item.start = items[itemsIndex[itemsIndex.length - 2]].end;
-              startDate = items[itemsIndex[itemsIndex.length - 2]].end;
-              length = items[itemsIndex[itemsIndex.length - 1]].start;
-            } else if (itemsIndex.length === 1) {
-              const newDate = new Date(1970, 0, 1);
-              item.start = newDate;
-              length = items[0].start;
+            // if (itemsIndex.length > 1) {
+            //   item.start = items[itemsIndex[itemsIndex.length - 2]].end;
+            //   startDate = items[itemsIndex[itemsIndex.length - 2]].end;
+            //   length = items[itemsIndex[itemsIndex.length - 1]].start;
+            // } else if (itemsIndex.length === 1) {
+            //   const newDate = new Date(1970, 0, 1);
+            //   item.start = newDate;
+            //   length = items[0].start;
+            // }
+            if (itemsIndex != -1) {
+              endDate = items[itemsIndex].start;
+            } else {
+              return;
             }
             const rightModified = timeManager.subDuration(
-              this.dateToString(length),
+              this.dateToString(endDate),
               this.dateToString(startDate)
             );
             this.timeline.itemsData.add({
@@ -130,24 +136,12 @@ export default class Timeline extends Component {
               ...(resource?.id
                 ? { resource_id: resource?.id }
                 : { textAnimation: item?.content }),
-              end:
-                formattedDateFromString(
-                  timeManager.subDuration(
-                    DateToString(length),
-                    DateToString(item?.start)
-                  )
-                ) < trackLength
-                  ? length
-                  : formattedDateFromString(
-                      timeManager.addDuration(
-                        DateToString(item?.start),
-                        DateToString(trackLength)
-                      )
-                    ),
+              end: endDate,
               clip: {
                 left: "00:00:00,000",
                 right: rightModified
               },
+              trackLength,
               className: item?.group?.includes("video")
                 ? "video"
                 : item?.group?.includes("text")
@@ -161,24 +155,54 @@ export default class Timeline extends Component {
           item?.group.includes("videotrack1")
         ) {
           const itemsIndex = [];
-          const itemsValue = this.timeline.itemsData.get({
+
+          const itemsValue0 = this.timeline.itemsData.get({
             filter: data => {
               return (
-                data.group === "videotrack0" || data.group === "videotrack1"
+                data.group === "videotrack0"
               );
             }
           });
-          for (let i = 0; i < itemsValue?.length - 1; i++) {
+
+          const itemsValue1 = this.timeline.itemsData.get({
+            filter: data => {
+              return (
+                data.group === "videotrack1"
+              );
+            }
+          });
+
+          let length1 = '';
+          let length2 = '';
+
+          for (let i = 0; i < itemsValue0?.length - 1; i++) {
             if (
-              item.start <= itemsValue[i + 1].end &&
-              itemsValue[i].end <= item.start
+              item.start <= itemsValue0[i + 1].end &&
+              itemsValue0[i].end <= item.start
             ) {
               itemsIndex.push(i);
               itemsIndex.push(i + 1);
             }
           }
-          const length1 = itemsValue?.[itemsIndex?.[0]];
-          const length2 = itemsValue?.[itemsIndex?.[1]];
+
+          if (itemsIndex.length) {
+            length1 = itemsValue0?.[itemsIndex?.[0]];
+            length2 = itemsValue0?.[itemsIndex?.[1]];
+          } else {
+            for (let i = 0; i < itemsValue1?.length - 1; i++) {
+              if (
+                item.start <= itemsValue1[i + 1].end &&
+                itemsValue1[i].end <= item.start
+              ) {
+                itemsIndex.push(i);
+                itemsIndex.push(i + 1);
+              }
+            }
+
+            length1 = itemsValue1?.[itemsIndex?.[0]];
+            length2 = itemsValue1?.[itemsIndex?.[1]];
+          }
+
           if (length1 && length2) {
             let duration = timeManager.subDuration(
               DateToString(length2.start),
@@ -653,24 +677,24 @@ export default class Timeline extends Component {
   onMoving = (item, callback) => {
     let itemData = this.timeline?.itemsData.get(item?.id);
 
-    const oriLength = timeManager.subDuration(
-      DateToString(itemData?.start),
-      DateToString(itemData?.end)
-    );
+    const oriLength = itemData.trackLength;
+    
     const length = timeManager.subDuration(
-      DateToString(item?.start),
-      DateToString(item?.end)
+      DateToString(item?.end),
+      DateToString(item?.start)
     );
+    console.log(oriLength, length);
+
     if (
       item?.group?.includes(item?.support) &&
       item.start > new Date(1970, 0, 1)
     ) {
       if (
-        formattedDateFromString(length) > formattedDateFromString(oriLength)
+        formattedDateFromString(length) <= oriLength
       ) {
-        if (item?.start > itemData?.start || item?.end < itemData?.end) {
-          callback(item);
-        }
+        // if (item?.start > itemData?.start || item?.end < itemData?.end) {
+        callback(item);
+        // }
       } else if (length == oriLength) {
         const itemsMain = this.timeline.itemsData.get({
           filter: value => {
@@ -705,11 +729,11 @@ export default class Timeline extends Component {
           }
         }
         // checking overlapping of same group items
-        const overlapping = itemsMain.filter(testItem => {
-          if (testItem.id == item.id) {
+        const overlapping = itemsMain.filter(obj => {
+          if (obj.id == item.id) {
             return false;
           }
-          return item.start <= testItem.end && item.end >= testItem.start;
+          return item.start <= obj.end && item.end >= obj.start;
         });
 
         if (overlapping.length > 0) {
