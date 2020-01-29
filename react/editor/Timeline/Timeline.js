@@ -2,7 +2,7 @@
  * @file Timeline.js
  * @author Ervis Semanaj
  */
-
+import { server } from "../../../config";
 import React, { Component } from "react";
 import config from "./options";
 import PropTypes from "prop-types";
@@ -15,6 +15,9 @@ import { formattedDateFromString, DateToString } from "../../utils";
 import AlertErrorDialog from "../../_core/Dialog/Dialogs/AlertErroDialog";
 import { TimelineHeader } from "../style";
 const generate = require("nanoid/generate");
+import axios from "axios";
+import { LoadingDialog, FetchErrorDialog } from "../../_core/Dialog";
+import {isEqual} from "lodash";
 
 export default class Timeline extends Component {
   timeline = null;
@@ -378,76 +381,49 @@ export default class Timeline extends Component {
     }
   };
 
+  componentWillUnmount() {
+    this.timeline.itemsData.off("*", null);
+  }
+
   componentDidUpdate(prevProps) {
-    if (prevProps.items === this.props.items) return;
-
-    const groups = new vis.DataSet([]);
-    const items = new vis.DataSet([]);
-
-    let duration = "00:00:00,000";
-    const tracks = [...this.props.items];
-    const videoMatch = new RegExp(/^videotrack\d+/);
-    const textMatch = new RegExp(/^texttrack\d+/);
-    for (let track of tracks) {
-      let isVideo = videoMatch.test(track.id);
-      groups.add({
-        id: track.id,
-        content: `<div style="height: ${
-          isVideo ? "60px" : "40px"
-        }; align-items: center;display: flex; justify-content: center; border-bottom: none; text-transform: capitalize">
-        <i class="material-icons" aria-hidden="true">${this.getIcons(
-          track.id
-        )}</i></div>`,
-        className: "timeline-group"
-      });
-
-      let actualTime = "00:00:00,000";
-      let index = 0;
-
-      for (let item of track.items) {
-        if (item?.resource === "blank") {
-          actualTime = timeManager.addDuration(item.length, actualTime);
-        } else {
-          const timeIn = actualTime.match(/^(\d{2,}):(\d{2}):(\d{2}),(\d{3})$/);
-          actualTime = timeManager.addDuration(actualTime, item.out);
-          actualTime = timeManager.subDuration(actualTime, item.in);
-          const timeOut = actualTime.match(
-            /^(\d{2,}):(\d{2}):(\d{2}),(\d{3})$/
-          );
-          let content =
-            this.props.resources?.[item?.resource_id]?.name ||
-            item?.textAnimation;
-          if (item?.filters?.length > 0)
-            content =
-              '<div class="filter"></div><i class="filter material-icons">flare</i>' +
-              content;
-          items.update({
-            id: track.id + ":" + index,
-            content: content,
-            align: "center",
-            start: formattedDateFromString(item?.in),
-            end: formattedDateFromString(item?.out),
-            group: track.id,
-            className: videoMatch.test(track.id)
-              ? "video"
-              : !!textMatch.test(track.id)
-              ? "text"
-              : "audio"
-          });
-          index++;
-        }
-      }
-      if (actualTime > duration) {
-        duration = actualTime;
-      }
-    }
-
-    if (this.state.duration !== duration) this.setState({ duration: duration });
-
-    this.timeline.setData({
-      items: items,
-      groups: groups
+    this.timeline.itemsData.on("*", (event, properties, senderId) => {
+      this.onTimelineChange(this.timeline.itemsData.get());
     });
+    // if (prevProps.items === this.props.items) return;
+    if(isEqual(this.props.projectTimeline,this.timeline.itemsData.get())){
+
+    }
+    else{
+      // this.timeline.setData(this.props.items)
+      const groups = new vis.DataSet([]);
+      const items = new vis.DataSet([]);
+  
+      let duration = "00:00:00,000";
+      const tracks = [...this.props.items];
+      const videoMatch = new RegExp(/^videotrack\d+/);
+      const textMatch = new RegExp(/^texttrack\d+/);
+      for (let track of tracks) {
+        let isVideo = videoMatch.test(track.id);
+        groups.add({
+          id: track.id,
+          content: `<div style="height: ${
+            isVideo ? "60px" : "40px"
+          }; align-items: center;display: flex; justify-content: center; border-bottom: none; text-transform: capitalize">
+          <i class="material-icons" aria-hidden="true">${this.getIcons(
+            track.id
+          )}</i></div>`,
+          className: "timeline-group"
+        });
+      }
+  
+      if (this.state.duration !== duration) this.setState({ duration: duration });
+  
+      this.timeline.setData({
+        items: this.props.projectTimeline,
+        groups: groups
+      });
+    }
+    // console.log(isEqual(this.props.items,this.timeline.itemsData.get()));
 
     // this.timeline.fit();
   }
@@ -553,7 +529,29 @@ export default class Timeline extends Component {
   closeAddFilterDialog = () => {
     this.setState({ showAddFilterDialog: false });
   };
-
+  onTimelineChange = timeLine => {
+    axios
+      .post(
+        `${server.apiUrl}/project/${this.props.project}/projectTimeline`,
+        JSON.stringify({
+          projectID: this.props.project,
+          projectTimeline: timeLine
+        }),
+        {
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      )
+      .then(data => {
+        if (typeof data.err === "undefined") {
+          // this.props.loadData();
+        } else {
+          alert(`${data.err}\n\n${data.msg}`);
+        }
+      })
+      .catch(error => this.openFetchErrorDialog(error.message));
+  };
   buttonSplit = () => {
     if (this.state.selectedItems.length !== 1) return;
 

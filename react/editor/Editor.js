@@ -276,6 +276,7 @@ export default class Editor extends Component {
                 resources={this.state.resources}
                 onPutResource={this.putResource}
                 items={this.state.timeline}
+                projectTimeline={this.state.projectTimeline}
                 project={this.state.project}
                 onAddFilter={this.addFilter}
                 onDelFilter={this.delFilter}
@@ -303,7 +304,8 @@ export default class Editor extends Component {
             timeline: data.timeline,
             logos: data.logos,
             projectName: data.projectName,
-            prevProject: data.projectName
+            prevProject: data.projectName,
+            projectTimeline: data?.projectTimeline
           });
           this.setState({ loading: false });
         } else {
@@ -312,7 +314,6 @@ export default class Editor extends Component {
       })
       .catch(error => this.openFetchErrorDialog(error.message));
   }
-
   addResource(resource) {
     const resources = Object.assign({}, this.state.resources);
     resources[resource.id] = resource;
