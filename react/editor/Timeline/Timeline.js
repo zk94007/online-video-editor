@@ -651,254 +651,432 @@ export default class Timeline extends Component {
   };
 
   onMoving = (item, callback) => {
-    let itemData = this.timeline?.itemsData.get(item?.id);
-
-    const oriLength = timeManager.subDuration(
-      DateToString(itemData?.start),
-      DateToString(itemData?.end)
-    );
-    const length = timeManager.subDuration(
-      DateToString(item?.start),
-      DateToString(item?.end)
-    );
-    if (
-      item?.group?.includes(item?.support) &&
-      item.start > new Date(1970, 0, 1)
-    ) {
-      if (
-        formattedDateFromString(length) > formattedDateFromString(oriLength)
-      ) {
-        if (item?.start > itemData?.start || item?.end < itemData?.end) {
-          callback(item);
-        }
-      } else if (length == oriLength) {
-        const itemsMain = this.timeline.itemsData.get({
-          filter: value => {
-            return value?.group === item?.group;
-          }
-        });
-        for (let i = 0; i < itemsMain.length - 1; i++) {
-          for (let j = 0; j < itemsMain.length - 1; j++) {
-            if (itemsMain[j].end > itemsMain[j + 1].end) {
-              let check = itemsMain[j];
-              itemsMain[j] = itemsMain[j + 1];
-              itemsMain[j + 1] = check;
-            }
-          }
-        }
-        const items = [];
-        const pivotItem = [];
-        let pivotItemIndex;
-        // filtering specific group items
-        for (let i = 0; i < itemsMain.length; i++) {
-          // removing active item
-          if (itemsMain[i].id === item.id) {
-            pivotItemIndex = i;
-            pivotItem.push(itemsMain[i]);
-            delete itemsMain[i];
-          }
-        }
-        for (let i = 0; i < itemsMain.length; i++) {
-          // removing empty indexes in itemsMain
-          if (!!itemsMain[i]) {
-            items.push(itemsMain[i]);
-          }
-        }
-        // checking overlapping of same group items
-        const overlapping = itemsMain.filter(testItem => {
-          if (testItem.id == item.id) {
-            return false;
-          }
-          return item.start <= testItem.end && item.end >= testItem.start;
-        });
-
-        if (overlapping.length > 0) {
-          const itemsIndex = [];
-          // sorting items
-          for (let i = 0; i < items.length - 1; i++) {
-            for (let j = 0; j < items.length - 1; j++) {
-              if (items[j].end > items[j + 1].end) {
-                let check = items[j];
-                items[j] = items[j + 1];
-                items[j + 1] = check;
-              }
-            }
-          }
-
-          // checking overlapping issue
-          for (let i = 0; i < items.length - 1; i++) {
-            var nextItemEndSplittedTime = items[i + 1].end;
-            var itemStartSplittedTime = items[i].start;
-            var comingItemStartSplittedTime = item.start;
-            var comingItemEndSplittedTime = item.end;
-            if (
-              comingItemEndSplittedTime <= nextItemEndSplittedTime &&
-              itemStartSplittedTime <= comingItemEndSplittedTime
-            ) {
-              itemsIndex.push(i);
-              itemsIndex.push(i + 1);
-              continue;
-            }
-            if (
-              comingItemStartSplittedTime <= nextItemEndSplittedTime &&
-              itemStartSplittedTime <= comingItemStartSplittedTime
-            ) {
-              itemsIndex.push(i);
-              itemsIndex.push(i + 1);
-              break;
-            }
-          }
-
-          // when items length is 2 resolving overlapping issue
-          if (items.length < 2) {
-            if (item.end >= items[0].end) {
-              const pivotItemTime = pivotItem[0].clip.right
-                .split(":")
-                .concat(pivotItem[0].clip.right.split(":")[2].split(","));
-              const nextItemStartTime = items[0].start
-                .toString()
-                .split(" ")[4]
-                .split(":");
-              pivotItemTime.splice(2, 1);
-              let timeInSeconds =
-                parseInt(pivotItemTime[0]) * 60 * 60 +
-                parseInt(pivotItemTime[1]) * 60 +
-                parseInt(pivotItemTime[2]) +
-                parseFloat(`0.${pivotItemTime[3]}`);
-              let starttimeInSecondsOfNextItem =
-                parseInt(nextItemStartTime[0]) * 60 * 60 +
-                parseInt(nextItemStartTime[1]) * 60 +
-                parseInt(nextItemStartTime[2]);
-              const startTime = starttimeInSecondsOfNextItem - timeInSeconds;
-              const newDate = new Date(1970, 0, 1, 0, 0, startTime);
-              item.end = items[0].start;
-              item.start = newDate;
-              return callback(item);
-            } else {
-              const pivotItemTime = pivotItem[0].clip.right
-                .split(":")
-                .concat(pivotItem[0].clip.right.split(":")[2].split(","));
-              const nextItemEndTime = items[0].end
-                .toString()
-                .split(" ")[4]
-                .split(":");
-              let timeInSeconds =
-                parseInt(pivotItemTime[0]) * 60 * 60 +
-                parseInt(pivotItemTime[1]) * 60 +
-                parseInt(pivotItemTime[2]) +
-                parseFloat(`0.${pivotItemTime[3]}`);
-              let endtimeInSecondsOfNextItem =
-                parseInt(nextItemEndTime[0]) * 60 * 60 +
-                parseInt(nextItemEndTime[1]) * 60 +
-                parseInt(nextItemEndTime[2]);
-              const endTime = endtimeInSecondsOfNextItem + timeInSeconds + 2;
-              const newDate = new Date(1970, 0, 1, 0, 0, endTime);
-              item.start = items[0].end;
-              item.end = newDate;
-              return callback(item);
-            }
-          }
-          const differenceOfComingItemStartAndEndTime = formattedDateFromString(
-            timeManager.addDuration(item.clip.right, "00:00:01,000")
-          );
-          const differenceOfOverlappingItemStartAndEndTime = formattedDateFromString(
-            timeManager.subDuration(
-              DateToString(items[itemsIndex[itemsIndex.length - 1]]?.start),
-              DateToString(items[itemsIndex[itemsIndex.length - 2]]?.end)
-            )
-          );
-          // checking  if length between overlapping items and active length is less than or greater
-          if (
-            differenceOfOverlappingItemStartAndEndTime <=
-            differenceOfComingItemStartAndEndTime
-          ) {
-            if (item.start < items[0].start) {
-              item.start = items[0].end;
-              item.end = items[1].start;
-              callback(item);
-            } else if (itemsIndex.length > 1) {
-              item.start = items[itemsIndex[itemsIndex.length - 2]].end;
-              item.end = items[itemsIndex[itemsIndex.length - 1]].start;
-
-              callback(item);
-            }
-          } else {
-            // left right adjustment issue fixed
-            if (
-              itemsIndex[itemsIndex.length - 2] <= pivotItemIndex &&
-              item.start <= items[itemsIndex[itemsIndex.length - 2]].end
-            ) {
-              const pivotItemTime = pivotItem[0].clip.right
-                .split(":")
-                .concat(pivotItem[0].clip.right.split(":")[2].split(","));
-              const nextItemStartTime = items[
-                itemsIndex[itemsIndex.length - 2]
-              ].end
-                .toString()
-                .split(" ")[4]
-                .split(":");
-              pivotItemTime.splice(2, 1);
-              let timeInSeconds =
-                parseInt(pivotItemTime[0]) * 60 * 60 +
-                parseInt(pivotItemTime[1]) * 60 +
-                parseInt(pivotItemTime[2]) +
-                parseFloat(`0.${pivotItemTime[3]}`);
-              let starttimeInSecondsOfNextItem =
-                parseInt(nextItemStartTime[0]) * 60 * 60 +
-                parseInt(nextItemStartTime[1]) * 60 +
-                parseInt(nextItemStartTime[2]);
-              const startTime = starttimeInSecondsOfNextItem + timeInSeconds;
-              const newDate = new Date(1970, 0, 1, 0, 0, startTime);
-              item.start = items[itemsIndex[itemsIndex.length - 2]].end;
-              item.end = newDate;
-              return callback(item);
-            } else {
-              const pivotItemTime = pivotItem[0].clip.right
-                .split(":")
-                .concat(pivotItem[0].clip.right.split(":")[2].split(","));
-              const nextItemStartTime = items[
-                itemsIndex[itemsIndex.length - 1]
-              ].start
-                .toString()
-                .split(" ")[4]
-                .split(":");
-              pivotItemTime.splice(2, 1);
-              let timeInSeconds =
-                parseInt(pivotItemTime[0]) * 60 * 60 +
-                parseInt(pivotItemTime[1]) * 60 +
-                parseInt(pivotItemTime[2]) +
-                parseFloat(`0.${pivotItemTime[3]}`);
-              let starttimeInSecondsOfNextItem =
-                parseInt(nextItemStartTime[0]) * 60 * 60 +
-                parseInt(nextItemStartTime[1]) * 60 +
-                parseInt(nextItemStartTime[2]);
-              const startTime = starttimeInSecondsOfNextItem - timeInSeconds;
-              const newDate = new Date(1970, 0, 1, 0, 0, startTime);
-              item.end = items[itemsIndex[itemsIndex.length - 1]].start;
-              item.start = newDate;
-              return callback(item);
-            }
-          }
-        } else if (overlapping.length == 0) {
-          let transition = this.timeline?.itemsData.get({
-            filter: val => {
-              return (
-                (val?.transition && val?.itemA === item.id) ||
-                val?.itemB === item.id
-              );
-            }
-          });
-          if (!!transition?.length) {
-            this.timeline?.itemsData?.remove(transition?.[0].id);
-          }
-        }
-
-        callback(item);
-      }
+    if (item?.group?.includes(item?.support)) {
+      // let overlapping = this.timeline?.itemsData.get({
+      //   filter: testItem => {
+      //     if (testItem.id == item.id) {
+      //       return false;
+      //     }
+      //     return item.start < testItem.end && item.end > testItem.start;
+      //   }
+      // });
+      callback(this.itemMove(item));
+      // if (!overlapping?.length) {
+      //   callback(item);
+      // } else {
+      //   console.log(overlapping);
+      //   callback(this.itemMove(item, overlapping));
+      // }
     } else {
       return false;
     }
   };
+
+  itemMove = (item, collision) => {
+    if (item.start.getFullYear() < 1970) return null;
+    // Deny move before zero time
+    else {
+      const start = DateToString(item?.start);
+      const end = DateToString(item?.end);
+      const collision = this.getItemInRange(item.group, item?.id, start, end);
+      // if (
+      //   timeManager.middleOfDuration(start, end) <
+      //   timeManager.middleOfDuration(collision[0].start, collision[0].end)
+      // ) {
+      //   console.log("sdasdasdasdasdadsadsadsadsadsadsadsasdasdasdasdasdasda")
+      // }
+      return item;
+      // const collision = this.getItemInRange(
+      //   item.group,
+      //   item?.id,
+      //   item?.start,
+      //   item?.end
+      // );
+      // if (collision.length === 0) {
+      //   // Free
+      //   return item;
+      // } else if (collision.length > 1) {
+      //   // Not enough space
+      //   return null;
+      // }
+      // return item;
+      // console.log(collision);
+      // if (collision.length === 0) {
+      //   // Free
+      //   return item;
+      // } else if (collision.length > 1) {
+      //   // Not enough space
+      //   return null;
+      // }
+      // } else {
+      //   // Space maybe available before/after item
+      //   let itemStart = "";
+      //   let itemEnd = "";
+      //   const duration = timeManager.subDuration(end, start);
+      //   if (
+      //     timeManager.middleOfDuration(start, end) <
+      //     timeManager.middleOfDuration(collision[0].start, collision[0].end)
+      //   ) {
+      //     // Put before
+      //     item.className =
+      //       item.className === "video"
+      //         ? "video stick-right"
+      //         : "audio stick-right";
+      //     itemEnd = collision[0].start;
+      //     const itemEndParsed = itemEnd.match(
+      //       /^(\d{2,}):(\d{2}):(\d{2}),(\d{3})$/
+      //     );
+      //     item.end = new Date(
+      //       1970,
+      //       0,
+      //       1,
+      //       itemEndParsed[1],
+      //       itemEndParsed[2],
+      //       itemEndParsed[3],
+      //       itemEndParsed[4]
+      //     );
+
+      //     itemStart = timeManager.subDuration(collision[0].start, duration);
+      //     const itemStartParsed = itemStart.match(
+      //       /^(\d{2,}):(\d{2}):(\d{2}),(\d{3})$/
+      //     );
+      //     if (itemStartParsed === null) return null; // Not enough space at begining of timeline
+      //     item.start = new Date(
+      //       1970,
+      //       0,
+      //       1,
+      //       itemStartParsed[1],
+      //       itemStartParsed[2],
+      //       itemStartParsed[3],
+      //       itemStartParsed[4]
+      //     );
+      //   } else {
+      //     // Put after
+      //     item.className =
+      //       item.className === "video"
+      //         ? "video stick-left"
+      //         : "audio stick-left";
+      //     itemStart = collision[0].end;
+      //     const itemStartParsed = collision[0].end.match(
+      //       /^(\d{2,}):(\d{2}):(\d{2}),(\d{3})$/
+      //     );
+      //     item.start = new Date(
+      //       1970,
+      //       0,
+      //       1,
+      //       itemStartParsed[1],
+      //       itemStartParsed[2],
+      //       itemStartParsed[3],
+      //       itemStartParsed[4]
+      //     );
+
+      //     itemEnd = timeManager.addDuration(collision[0].end, duration);
+      //     const itemEndParsed = itemEnd.match(
+      //       /^(\d{2,}):(\d{2}):(\d{2}),(\d{3})$/
+      //     );
+      //     item.end = new Date(
+      //       1970,
+      //       0,
+      //       1,
+      //       itemEndParsed[1],
+      //       itemEndParsed[2],
+      //       itemEndParsed[3],
+      //       itemEndParsed[4]
+      //     );
+      //   }
+      //   // Check if there is enough space
+      //   if (
+      //     this.getItemInRange(item.group, itemIndex, itemStart, itemEnd)
+      //       .length === 0
+      //   ) {
+      //     return item;
+      //   }
+      //   return null;
+      // }
+    }
+  };
+
+  getItemInRange = (group, itemID, start, end) => {
+    const track = this.timeline?.itemsData.get({
+      filter: itemTest => {
+        return itemTest?.group === group;
+      },
+    });
+    const items = [];
+    let time = "00:00:00,000";
+    time = timeManager.addDuration(
+      DateToString(track?.sort((a, b) => a.start - b.start)?.[0]?.start),
+      time
+    );
+    let index = 0;
+    console.log("track", track);
+    for (let item of track) {
+      if (end <= time) break;
+      const timeStart = time;
+      time = timeManager.addDuration(time, DateToString(item?.end));
+      time = timeManager.subDuration(time, DateToString(item?.start));
+      // todo Subtract transition duration
+      if (item?.id === itemID) continue; // Same item
+      if (start >= time) continue;
+      items.push({
+        start: timeStart,
+        end: time
+      });
+    }
+    console.log("itemdsdsdfs", time);
+    console.log("items", items);
+    return items;
+  };
+
+  // onMoving = (item, callback) => {
+  //   let itemData = this.timeline?.itemsData.get(item?.id);
+
+  //   const oriLength = timeManager.subDuration(
+  //     DateToString(itemData?.start),
+  //     DateToString(itemData?.end)
+  //   );
+  //   const length = timeManager.subDuration(
+  //     DateToString(item?.start),
+  //     DateToString(item?.end)
+  //   );
+  //   if (
+  //     item?.group?.includes(item?.support) &&
+  //     item.start > new Date(1970, 0, 1)
+  //   ) {
+  //     if (
+  //       formattedDateFromString(length) > formattedDateFromString(oriLength)
+  //     ) {
+  //       if (item?.start > itemData?.start || item?.end < itemData?.end) {
+  //         callback(item);
+  //       }
+  //     } else if (length == oriLength) {
+  //       const itemsMain = this.timeline.itemsData.get({
+  //         filter: value => {
+  //           return value?.group === item?.group;
+  //         }
+  //       });
+  //       for (let i = 0; i < itemsMain.length - 1; i++) {
+  //         for (let j = 0; j < itemsMain.length - 1; j++) {
+  //           if (itemsMain[j].end > itemsMain[j + 1].end) {
+  //             let check = itemsMain[j];
+  //             itemsMain[j] = itemsMain[j + 1];
+  //             itemsMain[j + 1] = check;
+  //           }
+  //         }
+  //       }
+  //       const items = [];
+  //       const pivotItem = [];
+  //       let pivotItemIndex;
+  //       // filtering specific group items
+  //       for (let i = 0; i < itemsMain.length; i++) {
+  //         // removing active item
+  //         if (itemsMain[i].id === item.id) {
+  //           pivotItemIndex = i;
+  //           pivotItem.push(itemsMain[i]);
+  //           delete itemsMain[i];
+  //         }
+  //       }
+  //       for (let i = 0; i < itemsMain.length; i++) {
+  //         // removing empty indexes in itemsMain
+  //         if (!!itemsMain[i]) {
+  //           items.push(itemsMain[i]);
+  //         }
+  //       }
+  //       // checking overlapping of same group items
+  //       const overlapping = itemsMain.filter(testItem => {
+  //         if (testItem.id == item.id) {
+  //           return false;
+  //         }
+  //         return item.start <= testItem.end && item.end >= testItem.start;
+  //       });
+
+  //       if (overlapping.length > 0) {
+  //         const itemsIndex = [];
+  //         // sorting items
+  //         for (let i = 0; i < items.length - 1; i++) {
+  //           for (let j = 0; j < items.length - 1; j++) {
+  //             if (items[j].end > items[j + 1].end) {
+  //               let check = items[j];
+  //               items[j] = items[j + 1];
+  //               items[j + 1] = check;
+  //             }
+  //           }
+  //         }
+
+  //         // checking overlapping issue
+  //         for (let i = 0; i < items.length - 1; i++) {
+  //           var nextItemEndSplittedTime = items[i + 1].end;
+  //           var itemStartSplittedTime = items[i].start;
+  //           var comingItemStartSplittedTime = item.start;
+  //           var comingItemEndSplittedTime = item.end;
+  //           if (
+  //             comingItemEndSplittedTime <= nextItemEndSplittedTime &&
+  //             itemStartSplittedTime <= comingItemEndSplittedTime
+  //           ) {
+  //             itemsIndex.push(i);
+  //             itemsIndex.push(i + 1);
+  //             continue;
+  //           }
+  //           if (
+  //             comingItemStartSplittedTime <= nextItemEndSplittedTime &&
+  //             itemStartSplittedTime <= comingItemStartSplittedTime
+  //           ) {
+  //             itemsIndex.push(i);
+  //             itemsIndex.push(i + 1);
+  //             break;
+  //           }
+  //         }
+
+  //         // when items length is 2 resolving overlapping issue
+  //         if (items.length < 2) {
+  //           if (item.end >= items[0].end) {
+  //             const pivotItemTime = pivotItem[0].clip.right
+  //               .split(":")
+  //               .concat(pivotItem[0].clip.right.split(":")[2].split(","));
+  //             const nextItemStartTime = items[0].start
+  //               .toString()
+  //               .split(" ")[4]
+  //               .split(":");
+  //             pivotItemTime.splice(2, 1);
+  //             let timeInSeconds =
+  //               parseInt(pivotItemTime[0]) * 60 * 60 +
+  //               parseInt(pivotItemTime[1]) * 60 +
+  //               parseInt(pivotItemTime[2]) +
+  //               parseFloat(`0.${pivotItemTime[3]}`);
+  //             let starttimeInSecondsOfNextItem =
+  //               parseInt(nextItemStartTime[0]) * 60 * 60 +
+  //               parseInt(nextItemStartTime[1]) * 60 +
+  //               parseInt(nextItemStartTime[2]);
+  //             const startTime = starttimeInSecondsOfNextItem - timeInSeconds;
+  //             const newDate = new Date(1970, 0, 1, 0, 0, startTime);
+  //             item.end = items[0].start;
+  //             item.start = newDate;
+  //             return callback(item);
+  //           } else {
+  //             const pivotItemTime = pivotItem[0].clip.right
+  //               .split(":")
+  //               .concat(pivotItem[0].clip.right.split(":")[2].split(","));
+  //             const nextItemEndTime = items[0].end
+  //               .toString()
+  //               .split(" ")[4]
+  //               .split(":");
+  //             let timeInSeconds =
+  //               parseInt(pivotItemTime[0]) * 60 * 60 +
+  //               parseInt(pivotItemTime[1]) * 60 +
+  //               parseInt(pivotItemTime[2]) +
+  //               parseFloat(`0.${pivotItemTime[3]}`);
+  //             let endtimeInSecondsOfNextItem =
+  //               parseInt(nextItemEndTime[0]) * 60 * 60 +
+  //               parseInt(nextItemEndTime[1]) * 60 +
+  //               parseInt(nextItemEndTime[2]);
+  //             const endTime = endtimeInSecondsOfNextItem + timeInSeconds + 2;
+  //             const newDate = new Date(1970, 0, 1, 0, 0, endTime);
+  //             item.start = items[0].end;
+  //             item.end = newDate;
+  //             return callback(item);
+  //           }
+  //         }
+  //         const differenceOfComingItemStartAndEndTime = formattedDateFromString(
+  //           timeManager.addDuration(item.clip.right, "00:00:01,000")
+  //         );
+  //         const differenceOfOverlappingItemStartAndEndTime = formattedDateFromString(
+  //           timeManager.subDuration(
+  //             DateToString(items[itemsIndex[itemsIndex.length - 1]]?.start),
+  //             DateToString(items[itemsIndex[itemsIndex.length - 2]]?.end)
+  //           )
+  //         );
+  //         // checking  if length between overlapping items and active length is less than or greater
+  //         if (
+  //           differenceOfOverlappingItemStartAndEndTime <=
+  //           differenceOfComingItemStartAndEndTime
+  //         ) {
+  //           if (item.start < items[0].start) {
+  //             item.start = items[0].end;
+  //             item.end = items[1].start;
+  //             callback(item);
+  //           } else if (itemsIndex.length > 1) {
+  //             item.start = items[itemsIndex[itemsIndex.length - 2]].end;
+  //             item.end = items[itemsIndex[itemsIndex.length - 1]].start;
+
+  //             callback(item);
+  //           }
+  //         } else {
+  //           // left right adjustment issue fixed
+  //           if (
+  //             itemsIndex[itemsIndex.length - 2] <= pivotItemIndex &&
+  //             item.start <= items[itemsIndex[itemsIndex.length - 2]].end
+  //           ) {
+  //             const pivotItemTime = pivotItem[0].clip.right
+  //               .split(":")
+  //               .concat(pivotItem[0].clip.right.split(":")[2].split(","));
+  //             const nextItemStartTime = items[
+  //               itemsIndex[itemsIndex.length - 2]
+  //             ].end
+  //               .toString()
+  //               .split(" ")[4]
+  //               .split(":");
+  //             pivotItemTime.splice(2, 1);
+  //             let timeInSeconds =
+  //               parseInt(pivotItemTime[0]) * 60 * 60 +
+  //               parseInt(pivotItemTime[1]) * 60 +
+  //               parseInt(pivotItemTime[2]) +
+  //               parseFloat(`0.${pivotItemTime[3]}`);
+  //             let starttimeInSecondsOfNextItem =
+  //               parseInt(nextItemStartTime[0]) * 60 * 60 +
+  //               parseInt(nextItemStartTime[1]) * 60 +
+  //               parseInt(nextItemStartTime[2]);
+  //             const startTime = starttimeInSecondsOfNextItem + timeInSeconds;
+  //             const newDate = new Date(1970, 0, 1, 0, 0, startTime);
+  //             item.start = items[itemsIndex[itemsIndex.length - 2]].end;
+  //             item.end = newDate;
+  //             return callback(item);
+  //           } else {
+  //             const pivotItemTime = pivotItem[0].clip.right
+  //               .split(":")
+  //               .concat(pivotItem[0].clip.right.split(":")[2].split(","));
+  //             const nextItemStartTime = items[
+  //               itemsIndex[itemsIndex.length - 1]
+  //             ].start
+  //               .toString()
+  //               .split(" ")[4]
+  //               .split(":");
+  //             pivotItemTime.splice(2, 1);
+  //             let timeInSeconds =
+  //               parseInt(pivotItemTime[0]) * 60 * 60 +
+  //               parseInt(pivotItemTime[1]) * 60 +
+  //               parseInt(pivotItemTime[2]) +
+  //               parseFloat(`0.${pivotItemTime[3]}`);
+  //             let starttimeInSecondsOfNextItem =
+  //               parseInt(nextItemStartTime[0]) * 60 * 60 +
+  //               parseInt(nextItemStartTime[1]) * 60 +
+  //               parseInt(nextItemStartTime[2]);
+  //             const startTime = starttimeInSecondsOfNextItem - timeInSeconds;
+  //             const newDate = new Date(1970, 0, 1, 0, 0, startTime);
+  //             item.end = items[itemsIndex[itemsIndex.length - 1]].start;
+  //             item.start = newDate;
+  //             return callback(item);
+  //           }
+  //         }
+  //       } else if (overlapping.length == 0) {
+  //         let transition = this.timeline?.itemsData.get({
+  //           filter: val => {
+  //             return (
+  //               (val?.transition && val?.itemA === item.id) ||
+  //               val?.itemB === item.id
+  //             );
+  //           }
+  //         });
+  //         if (!!transition?.length) {
+  //           this.timeline?.itemsData?.remove(transition?.[0].id);
+  //         }
+  //       }
+
+  //       callback(item);
+  //     }
+  //   } else {
+  //     return false;
+  //   }
+  // };
   /**
    * Get duration format from Date object
    *
