@@ -32,6 +32,7 @@ export default class Timeline extends Component {
     const options = {
       ...config,
       onMoving: this.onMoving,
+      onMove: this.onMove,
       onAdd: item => {
         if (item?.group?.includes(item?.support)) {
           const resource = this.props?.resources?.[item?.content];
@@ -186,7 +187,7 @@ export default class Timeline extends Component {
             );
             if (
               formattedDateFromString(duration) <=
-              formattedDateFromString("00:00:01,000")
+              formattedDateFromString("00:00:02,000")
             ) {
               this.timeline.itemsData.update({
                 ...length2,
@@ -287,6 +288,7 @@ export default class Timeline extends Component {
     });
     this.timeline.fit();
   }
+
   updateTimePointer = time => {
     let date = new Date(
       1970,
@@ -299,6 +301,16 @@ export default class Timeline extends Component {
     );
     this.timeline.setCustomTime(date);
     this.setState({ timePointer: this.dateToString(date) });
+  };
+
+  onMove = (item, callback) => {
+    item.className =
+      item?.support === "video"
+        ? "video"
+        : item?.support === "text"
+        ? "text"
+        : "audio";
+    callback(this.itemMove(item));
   };
 
   onRemove = () => {
@@ -651,148 +663,136 @@ export default class Timeline extends Component {
   };
 
   onMoving = (item, callback) => {
-    if (item?.group?.includes(item?.support)) {
-      // let overlapping = this.timeline?.itemsData.get({
-      //   filter: testItem => {
-      //     if (testItem.id == item.id) {
-      //       return false;
-      //     }
-      //     return item.start < testItem.end && item.end > testItem.start;
-      //   }
-      // });
-      callback(this.itemMove(item));
-      // if (!overlapping?.length) {
-      //   callback(item);
-      // } else {
-      //   console.log(overlapping);
-      //   callback(this.itemMove(item, overlapping));
-      // }
+    let itemData = this.timeline?.itemsData.get(item?.id);
+    const oriLength = timeManager.subDuration(
+      DateToString(itemData?.start),
+      DateToString(itemData?.end)
+    );
+    const length = timeManager.subDuration(
+      DateToString(item?.start),
+      DateToString(item?.end)
+    );
+
+    if (!item?.transition && item?.group?.includes(item?.support)) {
+      if (
+        formattedDateFromString(length) > formattedDateFromString(oriLength)
+      ) {
+        if (item?.start > itemData?.start || item?.end < itemData?.end) {
+          callback(item);
+        }
+      }
+      else if(length == oriLength){
+        callback(this.itemMove(item));
+      }
     } else {
       return false;
     }
   };
 
-  itemMove = (item, collision) => {
+  itemMove = item => {
     if (item.start.getFullYear() < 1970) return null;
     // Deny move before zero time
     else {
       const start = DateToString(item?.start);
       const end = DateToString(item?.end);
       const collision = this.getItemInRange(item.group, item?.id, start, end);
-      // if (
-      //   timeManager.middleOfDuration(start, end) <
-      //   timeManager.middleOfDuration(collision[0].start, collision[0].end)
-      // ) {
-      //   console.log("sdasdasdasdasdadsadsadsadsadsadsadsasdasdasdasdasdasda")
-      // }
-      return item;
-      // const collision = this.getItemInRange(
-      //   item.group,
-      //   item?.id,
-      //   item?.start,
-      //   item?.end
-      // );
-      // if (collision.length === 0) {
-      //   // Free
-      //   return item;
-      // } else if (collision.length > 1) {
-      //   // Not enough space
-      //   return null;
-      // }
-      // return item;
-      // console.log(collision);
-      // if (collision.length === 0) {
-      //   // Free
-      //   return item;
-      // } else if (collision.length > 1) {
-      //   // Not enough space
-      //   return null;
-      // }
-      // } else {
-      //   // Space maybe available before/after item
-      //   let itemStart = "";
-      //   let itemEnd = "";
-      //   const duration = timeManager.subDuration(end, start);
-      //   if (
-      //     timeManager.middleOfDuration(start, end) <
-      //     timeManager.middleOfDuration(collision[0].start, collision[0].end)
-      //   ) {
-      //     // Put before
-      //     item.className =
-      //       item.className === "video"
-      //         ? "video stick-right"
-      //         : "audio stick-right";
-      //     itemEnd = collision[0].start;
-      //     const itemEndParsed = itemEnd.match(
-      //       /^(\d{2,}):(\d{2}):(\d{2}),(\d{3})$/
-      //     );
-      //     item.end = new Date(
-      //       1970,
-      //       0,
-      //       1,
-      //       itemEndParsed[1],
-      //       itemEndParsed[2],
-      //       itemEndParsed[3],
-      //       itemEndParsed[4]
-      //     );
-
-      //     itemStart = timeManager.subDuration(collision[0].start, duration);
-      //     const itemStartParsed = itemStart.match(
-      //       /^(\d{2,}):(\d{2}):(\d{2}),(\d{3})$/
-      //     );
-      //     if (itemStartParsed === null) return null; // Not enough space at begining of timeline
-      //     item.start = new Date(
-      //       1970,
-      //       0,
-      //       1,
-      //       itemStartParsed[1],
-      //       itemStartParsed[2],
-      //       itemStartParsed[3],
-      //       itemStartParsed[4]
-      //     );
-      //   } else {
-      //     // Put after
-      //     item.className =
-      //       item.className === "video"
-      //         ? "video stick-left"
-      //         : "audio stick-left";
-      //     itemStart = collision[0].end;
-      //     const itemStartParsed = collision[0].end.match(
-      //       /^(\d{2,}):(\d{2}):(\d{2}),(\d{3})$/
-      //     );
-      //     item.start = new Date(
-      //       1970,
-      //       0,
-      //       1,
-      //       itemStartParsed[1],
-      //       itemStartParsed[2],
-      //       itemStartParsed[3],
-      //       itemStartParsed[4]
-      //     );
-
-      //     itemEnd = timeManager.addDuration(collision[0].end, duration);
-      //     const itemEndParsed = itemEnd.match(
-      //       /^(\d{2,}):(\d{2}):(\d{2}),(\d{3})$/
-      //     );
-      //     item.end = new Date(
-      //       1970,
-      //       0,
-      //       1,
-      //       itemEndParsed[1],
-      //       itemEndParsed[2],
-      //       itemEndParsed[3],
-      //       itemEndParsed[4]
-      //     );
-      //   }
-      //   // Check if there is enough space
-      //   if (
-      //     this.getItemInRange(item.group, itemIndex, itemStart, itemEnd)
-      //       .length === 0
-      //   ) {
-      //     return item;
-      //   }
-      //   return null;
-      // }
+      if (collision.length === 0) {
+        // Free
+        return item;
+      } else if (collision.length > 1) {
+        return null;
+      } else {
+        let itemStart = "";
+        let itemEnd = "";
+        const duration = timeManager.subDuration(end, start);
+        if (
+          timeManager.middleOfDuration(start, end) <=
+          timeManager.middleOfDuration(
+            DateToString(collision[0].start),
+            DateToString(collision[0].end)
+          )
+        ) {
+          item.className =
+            item.support === "video"
+              ? "video stick-right"
+              : item.support === "text"
+              ? "text stick-right"
+              : "audio stick-right";
+          itemEnd = DateToString(collision[0].start);
+          const itemEndParsed = itemEnd.match(
+            /^(\d{2,}):(\d{2}):(\d{2}),(\d{3})$/
+          );
+          item.end = new Date(
+            1970,
+            0,
+            1,
+            itemEndParsed[1],
+            itemEndParsed[2],
+            itemEndParsed[3],
+            itemEndParsed[4]
+          );
+          itemStart = timeManager.subDuration(
+            DateToString(collision[0].start),
+            duration
+          );
+          const itemStartParsed = itemStart.match(
+            /^(\d{2,}):(\d{2}):(\d{2}),(\d{3})$/
+          );
+          if (itemStartParsed === null) return null; // Not enough space at begining of timeline
+          item.start = new Date(
+            1970,
+            0,
+            1,
+            itemStartParsed[1],
+            itemStartParsed[2],
+            itemStartParsed[3],
+            itemStartParsed[4]
+          );
+        } else {
+          item.className =
+            item.support === "video"
+              ? "video stick-left"
+              : item.support === "text"
+              ? "text stick-left"
+              : "audio stick-left";
+          itemStart = DateToString(collision[0].end);
+          const itemStartParsed = DateToString(collision[0].end).match(
+            /^(\d{2,}):(\d{2}):(\d{2}),(\d{3})$/
+          );
+          item.start = new Date(
+            1970,
+            0,
+            1,
+            itemStartParsed[1],
+            itemStartParsed[2],
+            itemStartParsed[3],
+            itemStartParsed[4]
+          );
+          itemEnd = timeManager.addDuration(
+            DateToString(collision[0].end),
+            duration
+          );
+          const itemEndParsed = itemEnd.match(
+            /^(\d{2,}):(\d{2}):(\d{2}),(\d{3})$/
+          );
+          item.end = new Date(
+            1970,
+            0,
+            1,
+            itemEndParsed[1],
+            itemEndParsed[2],
+            itemEndParsed[3],
+            itemEndParsed[4]
+          );
+        }
+        if (
+          this.getItemInRange(item.group, item?.id, itemStart, itemEnd)
+            .length === 0
+        ) {
+          return item;
+        }
+        return null;
+      }
     }
   };
 
@@ -801,30 +801,20 @@ export default class Timeline extends Component {
       filter: itemTest => {
         return itemTest?.group === group;
       },
+      order: (a, b) => {
+        return a.start - b.start;
+      }
     });
     const items = [];
-    let time = "00:00:00,000";
-    time = timeManager.addDuration(
-      DateToString(track?.sort((a, b) => a.start - b.start)?.[0]?.start),
-      time
-    );
-    let index = 0;
-    console.log("track", track);
     for (let item of track) {
-      if (end <= time) break;
-      const timeStart = time;
-      time = timeManager.addDuration(time, DateToString(item?.end));
-      time = timeManager.subDuration(time, DateToString(item?.start));
-      // todo Subtract transition duration
-      if (item?.id === itemID) continue; // Same item
-      if (start >= time) continue;
-      items.push({
-        start: timeStart,
-        end: time
-      });
+      if (item?.id === itemID) continue;
+      if (
+        item?.start < formattedDateFromString(end) &&
+        item?.end > formattedDateFromString(start)
+      ) {
+        items.push(item);
+      }
     }
-    console.log("itemdsdsdfs", time);
-    console.log("items", items);
     return items;
   };
 
