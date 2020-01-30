@@ -34,150 +34,180 @@ export default class Timeline extends Component {
       onMoving: this.onMoving,
       onAdd: item => {
         if (item?.group?.includes(item?.support)) {
-            const resource = this.props?.resources?.[item?.content];
-            let startDate = item?.start;
-            let length = resource?.length
-              ? formattedDateFromString(
-                  timeManager.addDuration(
-                    this.dateToString(item?.start),
-                    resource?.length
-                  )
+          const resource = this.props?.resources?.[item?.content];
+          let startDate = item?.start;
+          let length = resource?.length
+            ? formattedDateFromString(
+                timeManager.addDuration(
+                  this.dateToString(item?.start),
+                  resource?.length
                 )
-              : formattedDateFromString(
-                  moment(startDate)
-                    .add(3, "s")
-                    .format("HH:mm:ss,SSS")
-                );
-            let trackLength = resource?.length
-              ? formattedDateFromString(resource?.length)
-              : formattedDateFromString("00:00:03,000");
-            const right = timeManager.subDuration(
-              this.dateToString(length),
-              this.dateToString(startDate)
-            );
-  
-            var overlapping = this.timeline.itemsData.get({
-              filter: function(testItem) {
-                if (testItem.id == item.id) {
-                  return false;
-                }
-                return (
-                  testItem?.group === item?.group &&
-                  item.start <= testItem.end &&
-                  length >= testItem.start
-                );
+              )
+            : formattedDateFromString(
+                moment(startDate)
+                  .add(3, "s")
+                  .format("HH:mm:ss,SSS")
+              );
+          let trackLength = resource?.length
+            ? formattedDateFromString(resource?.length)
+            : formattedDateFromString("00:00:03,000");
+          const right = timeManager.subDuration(
+            this.dateToString(length),
+            this.dateToString(startDate)
+          );
+
+          var overlapping = this.timeline.itemsData.get({
+            filter: function(testItem) {
+              if (testItem.id == item.id) {
+                return false;
+              }
+              return (
+                testItem?.group === item?.group &&
+                item.start <= testItem.end &&
+                length >= testItem.start
+              );
+            }
+          });
+
+          if (overlapping.length == 0) {
+            this.timeline.itemsData.add({
+              ...item,
+              type: "range",
+              ...(resource?.id
+                ? { resource_id: resource?.id }
+                : { textAnimation: item?.content }),
+              end: length,
+              clip: {
+                left: "00:00:00,000",
+                right
+              },
+              className: item?.group?.includes("video")
+                ? "video"
+                : item?.group?.includes("text")
+                ? "text"
+                : "audio"
+            });
+          } else {
+            const items = this.timeline.itemsData.get({
+              filter: testItem => {
+                return testItem?.group === item?.group;
               }
             });
-  
-            if (overlapping.length == 0) {
-              this.timeline.itemsData.add({
-                ...item,
-                type: "range",
-                ...(resource?.id
-                  ? { resource_id: resource?.id }
-                  : { textAnimation: item?.content }),
-                end: length,
-                clip: {
-                  left: "00:00:00,000",
-                  right
-                },
-                className: item?.group?.includes("video")
-                  ? "video"
-                  : item?.group?.includes("text")
-                  ? "text"
-                  : "audio"
-              });
-            } else {
-              const items = this.timeline.itemsData.get({
-                filter: testItem => {
-                  return testItem?.group === item?.group;
-                }
-              });
-              const itemsIndex = [];
-  
-              // sorting items
-              for (let i = 0; i < items.length - 1; i++) {
-                for (let j = 0; j < items.length - 1; j++) {
-                  if (items[j].end > items[j + 1].end) {
-                    let check = items[j];
-                    items[j] = items[j + 1];
-                    items[j + 1] = check;
-                  }
+            const itemsIndex = [];
+
+            // sorting items
+            for (let i = 0; i < items.length - 1; i++) {
+              for (let j = 0; j < items.length - 1; j++) {
+                if (items[j].end > items[j + 1].end) {
+                  let check = items[j];
+                  items[j] = items[j + 1];
+                  items[j + 1] = check;
                 }
               }
-              // checking overlapping issue
-              for (let i = 0; i < items.length - 1; i++) {
-                if (item.start < items[0].start) {
-                  itemsIndex.push(0);
-                  break;
-                }
-                if (item.start < items) {
-                  break;
-                }
-                var nextItemEndSplittedTime = items[i + 1].end;
-                var itemStartSplittedTime = items[i].start;
-                var comingItemStartSplittedTime = item.start;
-                var comingItemEndSplittedTime = item.end;
-                if (
-                  comingItemEndSplittedTime < nextItemEndSplittedTime &&
-                  itemStartSplittedTime < comingItemEndSplittedTime
-                ) {
-                  itemsIndex.push(i);
-                  itemsIndex.push(i + 1);
-                } else if (
-                  comingItemStartSplittedTime < nextItemEndSplittedTime &&
-                  itemStartSplittedTime < comingItemStartSplittedTime
-                ) {
-                  itemsIndex.push(i);
-                  itemsIndex.push(i + 1);
-                }
+            }
+            // checking overlapping issue
+            for (let i = 0; i < items.length - 1; i++) {
+              if (item.start < items[0].start) {
+                itemsIndex.push(0);
+                break;
               }
+              if (item.start < items) {
+                break;
+              }
+              var nextItemEndSplittedTime = items[i + 1].end;
+              var itemStartSplittedTime = items[i].start;
+              var comingItemStartSplittedTime = item.start;
+              var comingItemEndSplittedTime = item.end;
+              if (
+                comingItemEndSplittedTime < nextItemEndSplittedTime &&
+                itemStartSplittedTime < comingItemEndSplittedTime
+              ) {
+                itemsIndex.push(i);
+                itemsIndex.push(i + 1);
+              } else if (
+                comingItemStartSplittedTime < nextItemEndSplittedTime &&
+                itemStartSplittedTime < comingItemStartSplittedTime
+              ) {
+                itemsIndex.push(i);
+                itemsIndex.push(i + 1);
+              }
+            }
+
+            const differenceOfOverlappingItemStartAndEndTime = formattedDateFromString(
+              timeManager.subDuration(
+                DateToString(items[itemsIndex[itemsIndex.length - 1]]?.start),
+                DateToString(items[itemsIndex[itemsIndex.length - 2]]?.end)
+              )
+            );
+            const overLappingTimeArray = differenceOfOverlappingItemStartAndEndTime
+              .toString()
+              .split(" ")[4]
+              .split(":");
+            const overlappingTime =
+              parseInt(overLappingTimeArray[0]) * 60 * 60 +
+              parseInt(overLappingTimeArray[1]) * 60 +
+              parseInt(overLappingTimeArray[2]);
+            if (overlappingTime !== 0) {
               if (itemsIndex.length > 1) {
                 item.start = items[itemsIndex[itemsIndex.length - 2]].end;
                 startDate = items[itemsIndex[itemsIndex.length - 2]].end;
                 length = items[itemsIndex[itemsIndex.length - 1]].start;
-              } else if (itemsIndex.length === 1) {
-                const newDate = new Date(1970, 0, 1);
-                item.start = newDate;
-                length = items[0].start;
               }
-              const rightModified = timeManager.subDuration(
-                this.dateToString(length),
-                this.dateToString(startDate)
-              );
-  
-              this.timeline.itemsData.add({
-                ...item,
-                type: "range",
-                ...(resource?.id
-                  ? { resource_id: resource?.id }
-                  : { textAnimation: item?.content }),
-                end:
-                  formattedDateFromString(
-                    timeManager.subDuration(
-                      DateToString(length),
-                      DateToString(item?.start)
+            } else if (itemsIndex.length === 1) {
+              const newDate = new Date(1970, 0, 1);
+              item.start = newDate;
+              length = items[0].start;
+            } else {
+              length = resource?.length
+                ? formattedDateFromString(
+                    timeManager.addDuration(
+                      this.dateToString(items[items.length - 1]?.end),
+                      resource?.length
                     )
-                  ) < trackLength
-                    ? length
-                    : formattedDateFromString(
-                        timeManager.addDuration(
-                          DateToString(item?.start),
-                          DateToString(trackLength)
-                        )
-                      ),
-                clip: {
-                  left: "00:00:00,000",
-                  right: rightModified
-                },
-                className: item?.group?.includes("video")
-                  ? "video"
-                  : item?.group?.includes("text")
-                  ? "text"
-                  : "audio"
-              });
+                  )
+                : formattedDateFromString(
+                    moment(startDate)
+                      .add(3, "s")
+                      .format("HH:mm:ss,SSS")
+                  );
+              item.start = items[items.length - 1].end;
             }
-            
+            const rightModified = timeManager.subDuration(
+              this.dateToString(length),
+              this.dateToString(startDate)
+            );
+
+            this.timeline.itemsData.add({
+              ...item,
+              type: "range",
+              ...(resource?.id
+                ? { resource_id: resource?.id }
+                : { textAnimation: item?.content }),
+              end:
+                formattedDateFromString(
+                  timeManager.subDuration(
+                    DateToString(length),
+                    DateToString(item?.start)
+                  )
+                ) < trackLength
+                  ? length
+                  : formattedDateFromString(
+                      timeManager.addDuration(
+                        DateToString(item?.start),
+                        DateToString(trackLength)
+                      )
+                    ),
+              clip: {
+                left: "00:00:00,000",
+                right: rightModified
+              },
+              className: item?.group?.includes("video")
+                ? "video"
+                : item?.group?.includes("text")
+                ? "text"
+                : "audio"
+            });
+          }
         } else if (
           (item?.support === "transition" &&
             item?.group.includes("videotrack0")) ||
