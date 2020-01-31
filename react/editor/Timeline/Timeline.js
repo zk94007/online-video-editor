@@ -498,11 +498,12 @@ export default class Timeline extends Component {
   };
 
   componentWillUnmount() {
-    this.timeline.itemsData.off("*", null);
+    this?.timeline?.itemsData?.off("*", null);
   }
 
   componentDidUpdate(prevProps) {
-    this.timeline.itemsData.on("*", (event, properties, senderId) => {
+    if (isEqual(prevProps, this.props.items)) return;
+    this.timeline?.itemsData?.on("*", (event, properties, senderId) => {
       this.servicesValue();
     });
     if (prevProps.items === this.props.items) return;
