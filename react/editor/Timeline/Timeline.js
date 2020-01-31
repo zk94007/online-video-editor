@@ -91,20 +91,13 @@ export default class Timeline extends Component {
             const items = this.timeline.itemsData.get({
               filter: testItem => {
                 return testItem?.group === item?.group;
+              },
+              order: (a, b) => {
+                return a.start - b.start
               }
             });
             const itemsIndex = [];
 
-            // sorting items
-            for (let i = 0; i < items.length - 1; i++) {
-              for (let j = 0; j < items.length - 1; j++) {
-                if (items[j].end > items[j + 1].end) {
-                  let check = items[j];
-                  items[j] = items[j + 1];
-                  items[j + 1] = check;
-                }
-              }
-            }
             // checking overlapping issue
             for (let i = 0; i < items.length - 1; i++) {
               if (item.start < items[0].start) {
@@ -139,14 +132,9 @@ export default class Timeline extends Component {
                 DateToString(items[itemsIndex[itemsIndex.length - 2]]?.end)
               )
             );
-            const overLappingTimeArray = differenceOfOverlappingItemStartAndEndTime
-              .toString()
-              .split(" ")[4]
-              .split(":");
-            const overlappingTime =
-              parseInt(overLappingTimeArray[0]) * 60 * 60 +
-              parseInt(overLappingTimeArray[1]) * 60 +
-              parseInt(overLappingTimeArray[2]);
+            const overlappingTime =  differenceOfOverlappingItemStartAndEndTime.getHours() * 60 * 60 +
+            differenceOfOverlappingItemStartAndEndTime.getMinutes() * 60 + 
+            differenceOfOverlappingItemStartAndEndTime.getSeconds(); 
             if (overlappingTime !== 0) {
               if (itemsIndex.length > 1) {
                 item.start = items[itemsIndex[itemsIndex.length - 2]].end;
