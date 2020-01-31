@@ -167,6 +167,9 @@ export default class Timeline extends Component {
               return (
                 data.group === "videotrack0" || data.group === "videotrack1"
               );
+            },
+            order: (a, b) => {
+              return a.start - b.start
             }
           });
           for (let i = 0; i < itemsValue?.length - 1; i++) {
