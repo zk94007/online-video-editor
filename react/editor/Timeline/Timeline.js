@@ -226,7 +226,9 @@ export default class Timeline extends Component {
           const itemsValue = this.timeline.itemsData.get({
             filter: data => {
               return (
-                (!data?.transition && data.group === item?.group && data.group === "videotrack0") ||
+                (!data?.transition &&
+                  data.group === item?.group &&
+                  data.group === "videotrack0") ||
                 data.group === "videotrack1"
               );
             },
@@ -735,23 +737,24 @@ export default class Timeline extends Component {
 
   onMoving = (item, callback) => {
     let itemData = this.timeline?.itemsData.get(item?.id);
+    let getLength = this.props.resources[item?.content]?.length || false;
     const oriLength = timeManager.subDuration(
-      DateToString(itemData?.start),
-      DateToString(itemData?.end)
+      DateToString(itemData?.end),
+      DateToString(itemData?.start)
     );
     const length = timeManager.subDuration(
-      DateToString(item?.start),
-      DateToString(item?.end)
+      DateToString(item?.end),
+      DateToString(item?.start)
     );
-
     if (!item?.transition && item?.group?.includes(item?.support)) {
       if (
-        formattedDateFromString(length) > formattedDateFromString(oriLength)
+        getLength &&
+        formattedDateFromString(getLength) > formattedDateFromString(length)
       ) {
-        if (item?.start > itemData?.start || item?.end < itemData?.end) {
-          callback(item);
-        }
-      } else if (length == oriLength) {
+        callback(this.itemMove(item));
+      } else if (oriLength === length) {
+        callback(this.itemMove(item));
+      } else if(!getLength && oriLength !== length) {
         callback(this.itemMove(item));
       }
     } else {
