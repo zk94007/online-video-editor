@@ -226,7 +226,7 @@ export default class Timeline extends Component {
           const itemsValue = this.timeline.itemsData.get({
             filter: data => {
               return (
-                (!data?.transition && data.group === "videotrack0") ||
+                (!data?.transition && data.group === item?.group && data.group === "videotrack0") ||
                 data.group === "videotrack1"
               );
             },
