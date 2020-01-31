@@ -226,11 +226,12 @@ export default class Timeline extends Component {
           const itemsValue = this.timeline.itemsData.get({
             filter: data => {
               return (
-                data.group === "videotrack0" || data.group === "videotrack1"
+                (!data?.transition && data.group === "videotrack0") ||
+                data.group === "videotrack1"
               );
             },
             order: (a, b) => {
-              return a.start - b.start
+              return a.start - b.start;
             }
           });
           for (let i = 0; i < itemsValue?.length - 1; i++) {
@@ -250,7 +251,7 @@ export default class Timeline extends Component {
               DateToString(length1.end)
             );
             if (
-              formattedDateFromString(duration) <=
+              formattedDateFromString(duration) <
               formattedDateFromString("00:00:02,000")
             ) {
               this.timeline.itemsData.update({
@@ -369,14 +370,35 @@ export default class Timeline extends Component {
   };
 
   onMove = (item, callback) => {
-    item.className =
-      item?.support === "video"
-        ? "video"
-        : item?.support === "text"
-        ? "text"
-        : "audio";
-    callback(this.itemMove(item));
+    if (!item?.transition) {
+      item.className =
+        item?.support === "video"
+          ? "video"
+          : item?.support === "text"
+          ? "text"
+          : "audio";
+      callback(this.itemMove(item));
+      let transition = this.timeline?.itemsData.get({
+        filter: val => {
+          return (
+            (val?.transition && val?.itemA === item.id) ||
+            val?.itemB === item.id
+          );
+        }
+      });
+      if (!!transition?.length) {
+        this.setState(
+          {
+            selectedItems: [transition?.[0].id]
+          },
+          () => {
+            this.onRemove();
+          }
+        );
+      }
+    }
   };
+
   createGroups = () => {
     var names = ["texttrack0", "audiotrack0", "videotrack0", "videotrack1"];
     const groups = new vis.DataSet([]);
@@ -479,7 +501,7 @@ export default class Timeline extends Component {
 
   componentDidUpdate(prevProps) {
     this.timeline.itemsData.on("*", (event, properties, senderId) => {
-      this.servicesValue()
+      this.servicesValue();
     });
     if (prevProps.items === this.props.items) return;
     if (isEqual(this.props.projectTimeline, this.timeline.itemsData.get())) {
