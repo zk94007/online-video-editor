@@ -92,10 +92,15 @@ export default class Timeline extends Component {
             const items = this.timeline.itemsData.get({
               filter: testItem => {
                 return testItem?.group === item?.group;
+              },
+              order: (a, b) => {
+                return a.start - b.start
               }
             });
             const itemsIndex = [];
-            for (let i = 0; i < items.length; i++) {
+
+            // checking overlapping issue
+            for (let i = 0; i < items.length - 1; i++) {
               if (item.start < items[0].start) {
                 itemsIndex.push(0);
                 break;
@@ -103,28 +108,64 @@ export default class Timeline extends Component {
               if (item.start < items) {
                 break;
               }
+              var nextItemEndSplittedTime = items[i + 1].end;
+              var itemStartSplittedTime = items[i].start;
+              var comingItemStartSplittedTime = item.start;
+              var comingItemEndSplittedTime = item.end;
               if (
-                item.start <= items[i + 1].end &&
-                items[i].start <= item.start
+                comingItemEndSplittedTime < nextItemEndSplittedTime &&
+                itemStartSplittedTime < comingItemEndSplittedTime
               ) {
                 itemsIndex.push(i);
                 itemsIndex.push(i + 1);
-                break;
+              } else if (
+                comingItemStartSplittedTime < nextItemEndSplittedTime &&
+                itemStartSplittedTime < comingItemStartSplittedTime
+              ) {
+                itemsIndex.push(i);
+                itemsIndex.push(i + 1);
               }
             }
-            if (itemsIndex.length > 1) {
-              item.start = items[itemsIndex[itemsIndex.length - 2]].end;
-              startDate = items[itemsIndex[itemsIndex.length - 2]].end;
-              length = items[itemsIndex[itemsIndex.length - 1]].start;
+
+            const differenceOfOverlappingItemStartAndEndTime = formattedDateFromString(
+              timeManager.subDuration(
+                DateToString(items[itemsIndex[itemsIndex.length - 1]]?.start),
+                DateToString(items[itemsIndex[itemsIndex.length - 2]]?.end)
+              )
+            );
+            const overlappingTime =  differenceOfOverlappingItemStartAndEndTime.getHours() * 60 * 60 +
+            differenceOfOverlappingItemStartAndEndTime.getMinutes() * 60 + 
+            differenceOfOverlappingItemStartAndEndTime.getSeconds(); 
+            if (overlappingTime !== 0) {
+              if (itemsIndex.length > 1) {
+                item.start = items[itemsIndex[itemsIndex.length - 2]].end;
+                startDate = items[itemsIndex[itemsIndex.length - 2]].end;
+                length = items[itemsIndex[itemsIndex.length - 1]].start;
+              }
             } else if (itemsIndex.length === 1) {
               const newDate = new Date(1970, 0, 1);
               item.start = newDate;
               length = items[0].start;
+            } else {
+              length = resource?.length
+                ? formattedDateFromString(
+                    timeManager.addDuration(
+                      this.dateToString(items[items.length - 1]?.end),
+                      resource?.length
+                    )
+                  )
+                : formattedDateFromString(
+                    moment(startDate)
+                      .add(3, "s")
+                      .format("HH:mm:ss,SSS")
+                  );
+              item.start = items[items.length - 1].end;
             }
             const rightModified = timeManager.subDuration(
               this.dateToString(length),
               this.dateToString(startDate)
             );
+
             this.timeline.itemsData.add({
               ...item,
               type: "range",
