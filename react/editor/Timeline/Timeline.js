@@ -17,8 +17,7 @@ import { TimelineHeader } from "../style";
 const generate = require("nanoid/generate");
 import axios from "axios";
 import { LoadingDialog, FetchErrorDialog } from "../../_core/Dialog";
-import {isEqual} from "lodash";
-
+import { isEqual, debounce } from "lodash";
 export default class Timeline extends Component {
   timeline = null;
   state = {
@@ -27,7 +26,24 @@ export default class Timeline extends Component {
     duration: "00:00:00,000",
     timePointer: "00:00:00,000",
     error: false,
+    fetchError: "",
+    showFetchError: false,
     movingTimePointer: false
+  };
+  servicesValue = debounce(() => this.onTimelineChange(), 2000);
+
+  openFetchErrorDialog = msg => {
+    this.setState({
+      showFetchError: true,
+      fetchError: msg
+    });
+  };
+
+  closeFetchErrorDialog = () => {
+    this.setState({
+      showFetchError: false,
+      fetchError: ""
+    });
   };
 
   componentDidMount() {
@@ -97,7 +113,7 @@ export default class Timeline extends Component {
                 return testItem?.group === item?.group;
               },
               order: (a, b) => {
-                return a.start - b.start
+                return a.start - b.start;
               }
             });
             const itemsIndex = [];
@@ -136,9 +152,10 @@ export default class Timeline extends Component {
                 DateToString(items[itemsIndex[itemsIndex.length - 2]]?.end)
               )
             );
-            const overlappingTime =  differenceOfOverlappingItemStartAndEndTime.getHours() * 60 * 60 +
-            differenceOfOverlappingItemStartAndEndTime.getMinutes() * 60 + 
-            differenceOfOverlappingItemStartAndEndTime.getSeconds(); 
+            const overlappingTime =
+              differenceOfOverlappingItemStartAndEndTime.getHours() * 60 * 60 +
+              differenceOfOverlappingItemStartAndEndTime.getMinutes() * 60 +
+              differenceOfOverlappingItemStartAndEndTime.getSeconds();
             if (overlappingTime !== 0) {
               if (itemsIndex.length > 1) {
                 item.start = items[itemsIndex[itemsIndex.length - 2]].end;
@@ -330,6 +347,7 @@ export default class Timeline extends Component {
         document.querySelector(".vis-custom-time ").appendChild(element);
       }
     });
+    this.createGroups();
     this.timeline.fit();
   }
 
@@ -356,7 +374,25 @@ export default class Timeline extends Component {
         : "audio";
     callback(this.itemMove(item));
   };
-
+  createGroups = () => {
+    var names = ["texttrack0", "audiotrack0", "videotrack0", "videotrack1"];
+    const groups = new vis.DataSet([]);
+    for (let group of names) {
+      const videoMatch = new RegExp(/^videotrack\d+/);
+      let isVideo = videoMatch.test(group);
+      groups.add({
+        id: group,
+        content: `<div style="height: ${
+          isVideo ? "60px" : "40px"
+        }; align-items: center;display: flex; justify-content: center; border-bottom: none; text-transform: capitalize">
+        <i class="material-icons" aria-hidden="true">${this.getIcons(
+          group
+        )}</i></div>`,
+        className: "timeline-group"
+      });
+    }
+    this.timeline.setGroups(groups);
+  };
   onRemove = () => {
     const itemPath = this.state.selectedItems?.[0];
     const item = this.timeline.itemsData.get(itemPath, {
@@ -440,45 +476,18 @@ export default class Timeline extends Component {
 
   componentDidUpdate(prevProps) {
     this.timeline.itemsData.on("*", (event, properties, senderId) => {
-      this.onTimelineChange(this.timeline.itemsData.get());
+      this.servicesValue()
     });
-    // if (prevProps.items === this.props.items) return;
-    if(isEqual(this.props.projectTimeline,this.timeline.itemsData.get())){
-
-    }
-    else{
-      // this.timeline.setData(this.props.items)
-      const groups = new vis.DataSet([]);
-      const items = new vis.DataSet([]);
-  
+    if (prevProps.items === this.props.items) return;
+    if (isEqual(this.props.projectTimeline, this.timeline.itemsData.get())) {
+    } else {
       let duration = "00:00:00,000";
-      const tracks = [...this.props.items];
-      const videoMatch = new RegExp(/^videotrack\d+/);
-      const textMatch = new RegExp(/^texttrack\d+/);
-      for (let track of tracks) {
-        let isVideo = videoMatch.test(track.id);
-        groups.add({
-          id: track.id,
-          content: `<div style="height: ${
-            isVideo ? "60px" : "40px"
-          }; align-items: center;display: flex; justify-content: center; border-bottom: none; text-transform: capitalize">
-          <i class="material-icons" aria-hidden="true">${this.getIcons(
-            track.id
-          )}</i></div>`,
-          className: "timeline-group"
-        });
-      }
-  
-      if (this.state.duration !== duration) this.setState({ duration: duration });
-  
-      this.timeline.setData({
-        items: this.props.projectTimeline,
-        groups: groups
-      });
-    }
-    // console.log(isEqual(this.props.items,this.timeline.itemsData.get()));
 
-    // this.timeline.fit();
+      if (this.state.duration !== duration)
+        this.setState({ duration: duration });
+
+      this.timeline.setItems(this.props.projectTimeline);
+    }
   }
 
   onFitScreen = () => {
@@ -520,7 +529,6 @@ export default class Timeline extends Component {
               </i>
               Split in point
             </button>
-            {/*<button><i className="material-icons" aria-hidden="true">menu</i>Vlastnosti</button>*/}
             <button onClick={this.onRemove}>
               <i className="material-icons" aria-hidden="true">
                 remove
@@ -552,7 +560,6 @@ export default class Timeline extends Component {
             </button>
           </div>
         </TimelineHeader>
-        {/*<button><i className="material-icons" aria-hidden="true">photo_filter</i>Přidat přechod</button>*/}
         <div id="vis-timeline" />
         {this.state.showAddFilterDialog && (
           <AddFilterDialog
@@ -588,7 +595,7 @@ export default class Timeline extends Component {
         `${server.apiUrl}/project/${this.props.project}/projectTimeline`,
         JSON.stringify({
           projectID: this.props.project,
-          projectTimeline: timeLine
+          projectTimeline: this.timeline.itemsData.get()
         }),
         {
           headers: {
@@ -719,8 +726,7 @@ export default class Timeline extends Component {
         if (item?.start > itemData?.start || item?.end < itemData?.end) {
           callback(item);
         }
-      }
-      else if(length == oriLength){
+      } else if (length == oriLength) {
         callback(this.itemMove(item));
       }
     } else {
@@ -857,255 +863,6 @@ export default class Timeline extends Component {
     return items;
   };
 
-  // onMoving = (item, callback) => {
-  //   let itemData = this.timeline?.itemsData.get(item?.id);
-
-  //   const oriLength = timeManager.subDuration(
-  //     DateToString(itemData?.start),
-  //     DateToString(itemData?.end)
-  //   );
-  //   const length = timeManager.subDuration(
-  //     DateToString(item?.start),
-  //     DateToString(item?.end)
-  //   );
-  //   if (
-  //     item?.group?.includes(item?.support) &&
-  //     item.start > new Date(1970, 0, 1)
-  //   ) {
-  //     if (
-  //       formattedDateFromString(length) > formattedDateFromString(oriLength)
-  //     ) {
-  //       if (item?.start > itemData?.start || item?.end < itemData?.end) {
-  //         callback(item);
-  //       }
-  //     } else if (length == oriLength) {
-  //       const itemsMain = this.timeline.itemsData.get({
-  //         filter: value => {
-  //           return value?.group === item?.group;
-  //         }
-  //       });
-  //       for (let i = 0; i < itemsMain.length - 1; i++) {
-  //         for (let j = 0; j < itemsMain.length - 1; j++) {
-  //           if (itemsMain[j].end > itemsMain[j + 1].end) {
-  //             let check = itemsMain[j];
-  //             itemsMain[j] = itemsMain[j + 1];
-  //             itemsMain[j + 1] = check;
-  //           }
-  //         }
-  //       }
-  //       const items = [];
-  //       const pivotItem = [];
-  //       let pivotItemIndex;
-  //       // filtering specific group items
-  //       for (let i = 0; i < itemsMain.length; i++) {
-  //         // removing active item
-  //         if (itemsMain[i].id === item.id) {
-  //           pivotItemIndex = i;
-  //           pivotItem.push(itemsMain[i]);
-  //           delete itemsMain[i];
-  //         }
-  //       }
-  //       for (let i = 0; i < itemsMain.length; i++) {
-  //         // removing empty indexes in itemsMain
-  //         if (!!itemsMain[i]) {
-  //           items.push(itemsMain[i]);
-  //         }
-  //       }
-  //       // checking overlapping of same group items
-  //       const overlapping = itemsMain.filter(testItem => {
-  //         if (testItem.id == item.id) {
-  //           return false;
-  //         }
-  //         return item.start <= testItem.end && item.end >= testItem.start;
-  //       });
-
-  //       if (overlapping.length > 0) {
-  //         const itemsIndex = [];
-  //         // sorting items
-  //         for (let i = 0; i < items.length - 1; i++) {
-  //           for (let j = 0; j < items.length - 1; j++) {
-  //             if (items[j].end > items[j + 1].end) {
-  //               let check = items[j];
-  //               items[j] = items[j + 1];
-  //               items[j + 1] = check;
-  //             }
-  //           }
-  //         }
-
-  //         // checking overlapping issue
-  //         for (let i = 0; i < items.length - 1; i++) {
-  //           var nextItemEndSplittedTime = items[i + 1].end;
-  //           var itemStartSplittedTime = items[i].start;
-  //           var comingItemStartSplittedTime = item.start;
-  //           var comingItemEndSplittedTime = item.end;
-  //           if (
-  //             comingItemEndSplittedTime <= nextItemEndSplittedTime &&
-  //             itemStartSplittedTime <= comingItemEndSplittedTime
-  //           ) {
-  //             itemsIndex.push(i);
-  //             itemsIndex.push(i + 1);
-  //             continue;
-  //           }
-  //           if (
-  //             comingItemStartSplittedTime <= nextItemEndSplittedTime &&
-  //             itemStartSplittedTime <= comingItemStartSplittedTime
-  //           ) {
-  //             itemsIndex.push(i);
-  //             itemsIndex.push(i + 1);
-  //             break;
-  //           }
-  //         }
-
-  //         // when items length is 2 resolving overlapping issue
-  //         if (items.length < 2) {
-  //           if (item.end >= items[0].end) {
-  //             const pivotItemTime = pivotItem[0].clip.right
-  //               .split(":")
-  //               .concat(pivotItem[0].clip.right.split(":")[2].split(","));
-  //             const nextItemStartTime = items[0].start
-  //               .toString()
-  //               .split(" ")[4]
-  //               .split(":");
-  //             pivotItemTime.splice(2, 1);
-  //             let timeInSeconds =
-  //               parseInt(pivotItemTime[0]) * 60 * 60 +
-  //               parseInt(pivotItemTime[1]) * 60 +
-  //               parseInt(pivotItemTime[2]) +
-  //               parseFloat(`0.${pivotItemTime[3]}`);
-  //             let starttimeInSecondsOfNextItem =
-  //               parseInt(nextItemStartTime[0]) * 60 * 60 +
-  //               parseInt(nextItemStartTime[1]) * 60 +
-  //               parseInt(nextItemStartTime[2]);
-  //             const startTime = starttimeInSecondsOfNextItem - timeInSeconds;
-  //             const newDate = new Date(1970, 0, 1, 0, 0, startTime);
-  //             item.end = items[0].start;
-  //             item.start = newDate;
-  //             return callback(item);
-  //           } else {
-  //             const pivotItemTime = pivotItem[0].clip.right
-  //               .split(":")
-  //               .concat(pivotItem[0].clip.right.split(":")[2].split(","));
-  //             const nextItemEndTime = items[0].end
-  //               .toString()
-  //               .split(" ")[4]
-  //               .split(":");
-  //             let timeInSeconds =
-  //               parseInt(pivotItemTime[0]) * 60 * 60 +
-  //               parseInt(pivotItemTime[1]) * 60 +
-  //               parseInt(pivotItemTime[2]) +
-  //               parseFloat(`0.${pivotItemTime[3]}`);
-  //             let endtimeInSecondsOfNextItem =
-  //               parseInt(nextItemEndTime[0]) * 60 * 60 +
-  //               parseInt(nextItemEndTime[1]) * 60 +
-  //               parseInt(nextItemEndTime[2]);
-  //             const endTime = endtimeInSecondsOfNextItem + timeInSeconds + 2;
-  //             const newDate = new Date(1970, 0, 1, 0, 0, endTime);
-  //             item.start = items[0].end;
-  //             item.end = newDate;
-  //             return callback(item);
-  //           }
-  //         }
-  //         const differenceOfComingItemStartAndEndTime = formattedDateFromString(
-  //           timeManager.addDuration(item.clip.right, "00:00:01,000")
-  //         );
-  //         const differenceOfOverlappingItemStartAndEndTime = formattedDateFromString(
-  //           timeManager.subDuration(
-  //             DateToString(items[itemsIndex[itemsIndex.length - 1]]?.start),
-  //             DateToString(items[itemsIndex[itemsIndex.length - 2]]?.end)
-  //           )
-  //         );
-  //         // checking  if length between overlapping items and active length is less than or greater
-  //         if (
-  //           differenceOfOverlappingItemStartAndEndTime <=
-  //           differenceOfComingItemStartAndEndTime
-  //         ) {
-  //           if (item.start < items[0].start) {
-  //             item.start = items[0].end;
-  //             item.end = items[1].start;
-  //             callback(item);
-  //           } else if (itemsIndex.length > 1) {
-  //             item.start = items[itemsIndex[itemsIndex.length - 2]].end;
-  //             item.end = items[itemsIndex[itemsIndex.length - 1]].start;
-
-  //             callback(item);
-  //           }
-  //         } else {
-  //           // left right adjustment issue fixed
-  //           if (
-  //             itemsIndex[itemsIndex.length - 2] <= pivotItemIndex &&
-  //             item.start <= items[itemsIndex[itemsIndex.length - 2]].end
-  //           ) {
-  //             const pivotItemTime = pivotItem[0].clip.right
-  //               .split(":")
-  //               .concat(pivotItem[0].clip.right.split(":")[2].split(","));
-  //             const nextItemStartTime = items[
-  //               itemsIndex[itemsIndex.length - 2]
-  //             ].end
-  //               .toString()
-  //               .split(" ")[4]
-  //               .split(":");
-  //             pivotItemTime.splice(2, 1);
-  //             let timeInSeconds =
-  //               parseInt(pivotItemTime[0]) * 60 * 60 +
-  //               parseInt(pivotItemTime[1]) * 60 +
-  //               parseInt(pivotItemTime[2]) +
-  //               parseFloat(`0.${pivotItemTime[3]}`);
-  //             let starttimeInSecondsOfNextItem =
-  //               parseInt(nextItemStartTime[0]) * 60 * 60 +
-  //               parseInt(nextItemStartTime[1]) * 60 +
-  //               parseInt(nextItemStartTime[2]);
-  //             const startTime = starttimeInSecondsOfNextItem + timeInSeconds;
-  //             const newDate = new Date(1970, 0, 1, 0, 0, startTime);
-  //             item.start = items[itemsIndex[itemsIndex.length - 2]].end;
-  //             item.end = newDate;
-  //             return callback(item);
-  //           } else {
-  //             const pivotItemTime = pivotItem[0].clip.right
-  //               .split(":")
-  //               .concat(pivotItem[0].clip.right.split(":")[2].split(","));
-  //             const nextItemStartTime = items[
-  //               itemsIndex[itemsIndex.length - 1]
-  //             ].start
-  //               .toString()
-  //               .split(" ")[4]
-  //               .split(":");
-  //             pivotItemTime.splice(2, 1);
-  //             let timeInSeconds =
-  //               parseInt(pivotItemTime[0]) * 60 * 60 +
-  //               parseInt(pivotItemTime[1]) * 60 +
-  //               parseInt(pivotItemTime[2]) +
-  //               parseFloat(`0.${pivotItemTime[3]}`);
-  //             let starttimeInSecondsOfNextItem =
-  //               parseInt(nextItemStartTime[0]) * 60 * 60 +
-  //               parseInt(nextItemStartTime[1]) * 60 +
-  //               parseInt(nextItemStartTime[2]);
-  //             const startTime = starttimeInSecondsOfNextItem - timeInSeconds;
-  //             const newDate = new Date(1970, 0, 1, 0, 0, startTime);
-  //             item.end = items[itemsIndex[itemsIndex.length - 1]].start;
-  //             item.start = newDate;
-  //             return callback(item);
-  //           }
-  //         }
-  //       } else if (overlapping.length == 0) {
-  //         let transition = this.timeline?.itemsData.get({
-  //           filter: val => {
-  //             return (
-  //               (val?.transition && val?.itemA === item.id) ||
-  //               val?.itemB === item.id
-  //             );
-  //           }
-  //         });
-  //         if (!!transition?.length) {
-  //           this.timeline?.itemsData?.remove(transition?.[0].id);
-  //         }
-  //       }
-
-  //       callback(item);
-  //     }
-  //   } else {
-  //     return false;
-  //   }
-  // };
   /**
    * Get duration format from Date object
    *
