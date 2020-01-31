@@ -502,6 +502,13 @@ tr:nth-child(even) {
 
   &.text {
     background-color: #766af6;
+    &.stick-right {
+      border-right: 5px solid #4caf50;
+    }
+
+    &.stick-left {
+      border-left: 5px solid #4caf50;
+    }
     &.vis-selected {
       background-color: #5c52cc;
     }
