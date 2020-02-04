@@ -56,6 +56,16 @@ export default class Timeline extends Component {
         if (item?.group?.includes(item?.support)) {
           const resource = this.props?.resources?.[item?.content];
           let startDate = item?.start;
+          console.log("add", item.support);
+          const content =
+            item.support == "text"
+              ? `<i class="material-icons text-icon" aria-hidden="true">title_icon</i>  Your Headline your example.com`
+              : item.support === "video"
+              ? item.content
+              : item.support === "audio"
+              ? item.content
+              : null;
+
           let length = resource?.length
             ? formattedDateFromString(
                 timeManager.addDuration(
@@ -93,7 +103,7 @@ export default class Timeline extends Component {
             this.timeline.itemsData.add({
               ...item,
               type: "range",
-              content: `<i class="material-icons text-icon" aria-hidden="true">title_icon</i>  Your Headline your example.com`,
+              content,
               ...(resource?.id
                 ? { resource_id: resource?.id }
                 : { textAnimation: item?.content }),
@@ -190,6 +200,7 @@ export default class Timeline extends Component {
             this.timeline.itemsData.add({
               ...item,
               type: "range",
+              content,
               ...(resource?.id
                 ? { resource_id: resource?.id }
                 : { textAnimation: item?.content }),
@@ -756,7 +767,7 @@ export default class Timeline extends Component {
         callback(this.itemMove(item));
       } else if (oriLength === length) {
         callback(this.itemMove(item));
-      } else if(!getLength && oriLength !== length) {
+      } else if (!getLength && oriLength !== length) {
         callback(this.itemMove(item));
       }
     } else {
