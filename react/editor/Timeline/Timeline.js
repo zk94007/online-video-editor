@@ -16,7 +16,6 @@ import AlertErrorDialog from "../../_core/Dialog/Dialogs/AlertErroDialog";
 import { TimelineHeader } from "../style";
 const generate = require("nanoid/generate");
 import axios from "axios";
-import { LoadingDialog, FetchErrorDialog } from "../../_core/Dialog";
 import { isEqual, debounce } from "lodash";
 export default class Timeline extends Component {
   timeline = null;
@@ -44,6 +43,30 @@ export default class Timeline extends Component {
       showFetchError: false,
       fetchError: ""
     });
+  };
+  
+  movingBar = null;
+
+  playSeekBar = () => {
+    this.movingBar = setInterval(() => {
+      let date = this.timeline?.getCustomTime();
+      const max = this.timeline?.getItemRange()?.max;
+      date = moment(date)
+        .add(100, "milliseconds")
+        .format("HH:mm:ss,SSS");
+      this.timeline.setCustomTime(formattedDateFromString(date));
+      this.timeline.setCustomTimeTitle(date);
+      this.setState({ timePointer: date });
+      if (formattedDateFromString(date) >= max) {
+       this.pauseSeekBar()
+      }
+    }, 100);
+  };
+
+  pauseSeekBar = () => {
+    if (this.movingBar) {
+      clearInterval(this.movingBar);
+    }
   };
 
   componentDidMount() {
@@ -329,6 +352,16 @@ export default class Timeline extends Component {
       if (!event?.item && event.time) {
         this.setState({ movingTimePointer: true });
         this.updateTimePointer(event.time);
+        this.props.onSelectVideo(
+          event.time,
+          this.timeline.itemsData.get({
+            filter: itemsData => {
+              return (
+                itemsData?.start <= event.time && itemsData?.end >= event.time
+              );
+            }
+          })
+        );
       }
     });
     this.timeline.on("mouseMove", event => {
@@ -336,10 +369,21 @@ export default class Timeline extends Component {
         this.updateTimePointer(event.time);
       }
     });
+
     this.timeline.on("mouseUp", event => {
       if (this.state.movingTimePointer && event.time) {
         this.setState({ movingTimePointer: false });
         this.updateTimePointer(event.time);
+        this.props.onSelectVideo(
+          event.time,
+          this.timeline.itemsData.get({
+            filter: itemsData => {
+              return (
+                itemsData?.start <= event.time && itemsData?.end >= event.time
+              );
+            }
+          })
+        );
       }
     });
     container.addEventListener("DOMNodeInserted", () => {
@@ -420,6 +464,7 @@ export default class Timeline extends Component {
     }
     this.timeline.setGroups(groups);
   };
+
   onRemove = () => {
     const itemPath = this.state.selectedItems?.[0];
     const item = this.timeline.itemsData.get(itemPath, {
@@ -499,6 +544,7 @@ export default class Timeline extends Component {
 
   componentWillUnmount() {
     this?.timeline?.itemsData?.off("*", null);
+    this.pauseSeekBar();
   }
 
   componentDidUpdate(prevProps) {
@@ -617,6 +663,7 @@ export default class Timeline extends Component {
   closeAddFilterDialog = () => {
     this.setState({ showAddFilterDialog: false });
   };
+
   onTimelineChange = timeLine => {
     axios
       .post(
@@ -729,7 +776,16 @@ export default class Timeline extends Component {
       );
       this.timeline.setCustomTime(date);
       this.timeline.setCustomTimeTitle(DateToString(date));
-      this.setState({ timePointer: DateToString(date) });
+      this.setState({ timePointer: DateToString(date) }, () =>
+        this.props.onSelectVideo(
+          date,
+          this.timeline.itemsData.get({
+            filter: itemsData => {
+              return itemsData?.start <= date && itemsData?.end >= date;
+            }
+          })
+        )
+      );
     } else {
       this.setState({ timePointer: timePointer });
       this.timeline.setCustomTimeTitle(timePointer);
@@ -755,7 +811,7 @@ export default class Timeline extends Component {
         callback(this.itemMove(item));
       } else if (oriLength === length) {
         callback(this.itemMove(item));
-      } else if(!getLength && oriLength !== length) {
+      } else if (!getLength && oriLength !== length) {
         callback(this.itemMove(item));
       }
     } else {

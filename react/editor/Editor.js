@@ -17,6 +17,7 @@ import SideMenu from "./SideMenu/SideMenu";
 
 import { Container, EditSection, ProjectTitle, ProjectInput } from "./style";
 import axios from "axios";
+import Canvas from "./Canvas";
 
 export default class Editor extends Component {
   constructor(props) {
@@ -45,7 +46,8 @@ export default class Editor extends Component {
       activeState: "Media",
       logos: {},
       titleClicked: false,
-      projectName: ""
+      projectName: "",
+      videoSrc: []
     };
 
     this.loadData();
@@ -116,6 +118,33 @@ export default class Editor extends Component {
       .catch(error => this.openFetchErrorDialog(error.message));
   };
 
+  onSelectVideo = (value, data) => {
+    const item = this.state.resources[data?.[0]?.content];
+    this.setState({
+      videoSrc: [item]
+    });
+  };
+
+  onPauseBtnClick = e => {
+    const { video, timeline } = this.refs;
+    if (video && typeof video.pause == "function") {
+      video.pause();
+      if (timeline && typeof timeline.pauseSeekBar == "function") {
+        timeline.pauseSeekBar();
+      }
+    }
+  };
+
+  onPlayBtnClick = e => {
+    const { video, timeline } = this.refs;
+    if (video && typeof video.play == "function") {
+      video.play();
+      if (timeline && typeof timeline.playSeekBar == "function") {
+        timeline.playSeekBar();
+      }
+    }
+  };
+
   render() {
     const items = [
       {
@@ -147,6 +176,17 @@ export default class Editor extends Component {
         icon: "sheild"
       }
     ];
+    // const videoSrc = [
+    //   {
+    //     src: "https://s3.amazonaws.com/virginia-testing.webrand.com/upload/UCOh7FkGs0S3YDK2ojYLQfC4DGjmtInt/hmmPuiLNkjZ5NrW9.mp4",
+    //     type: "video/mp4"
+    //   },
+    //   {
+    //     src: "https://www.w3schools.com/html/mov_bbb.ogg",
+    //     type: "video/ogg"
+    //   }
+    // ];
+    console.log(this.state);
     return (
       <>
         <header>
@@ -197,8 +237,6 @@ export default class Editor extends Component {
               <h3>{this.state.projectName}</h3>
             </ProjectTitle>
           )}
-          {/*<button><i className="material-icons" aria-hidden="true">language</i>Jazyk</button>*/}
-          {/*<button><i className="material-icons" aria-hidden="true">save_alt</i>Exportovat</button>*/}
           <button
             onClick={this.openSubmitDialog}
             className="success"
@@ -239,7 +277,15 @@ export default class Editor extends Component {
                     </i>
                     Preview
                   </h3>
-                  <video />
+                  <Canvas
+                    id="video"
+                    width={380}
+                    height={200}
+                    muted={true}
+                    ref="video"
+                    src={this.state.videoSrc}
+                    autoPlay={false}
+                  />
                   <br />
                   <div className="prev-toolbar">
                     <button className="no-border" title="Zastavit přehrávání">
@@ -247,12 +293,18 @@ export default class Editor extends Component {
                         stop
                       </i>
                     </button>
-                    <button title="Pokračovat v přehrávání">
+                    <button
+                      onClick={this.onPlayBtnClick}
+                      title="Pokračovat v přehrávání"
+                    >
                       <i className="material-icons" aria-hidden="true">
                         play_arrow
                       </i>
                     </button>
-                    <button title="Pozastavit přehrávání">
+                    <button
+                      onClick={this.onPauseBtnClick}
+                      title="Pozastavit přehrávání"
+                    >
                       <i className="material-icons" aria-hidden="true">
                         pause
                       </i>
@@ -273,6 +325,7 @@ export default class Editor extends Component {
             </main>
             <footer>
               <Timeline
+                ref="timeline"
                 resources={this.state.resources}
                 onPutResource={this.putResource}
                 items={this.state.timeline}
@@ -281,6 +334,7 @@ export default class Editor extends Component {
                 onAddFilter={this.addFilter}
                 onDelFilter={this.delFilter}
                 loadData={this.loadData}
+                onSelectVideo={this.onSelectVideo}
                 fetchError={this.openFetchErrorDialog}
               />
             </footer>
