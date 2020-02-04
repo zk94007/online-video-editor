@@ -238,6 +238,14 @@ a {
   position: relative;
   top: 3px;
 }
+.text-icon {
+  color: #fff;
+  top: 0px;
+  font-size: 25px;
+  font-weight: bold;
+  opacity: 0.7;
+  width: 30px;
+}
 
 .icon-huge {
   font-size: 4em;
@@ -492,6 +500,11 @@ tr:nth-child(even) {
 .vis-item {
   height: 1.7em;
 
+  .vis-item-overflow {
+    display: flex;
+    align-items: center;
+      }
+
   &.video,
   &.audio,
   &.text {
@@ -502,6 +515,11 @@ tr:nth-child(even) {
 
   &.text {
     background-color: #766af6;
+    font-size: 14px;
+    top: 4px;
+    height: 80%;
+    min-width: 100px;
+    font-weight: 600;
     &.stick-right {
       border-right: 5px solid #4caf50;
     }
@@ -513,16 +531,17 @@ tr:nth-child(even) {
       background-color: #5c52cc;
     }
     .vis-item-content {
-      padding: 0 2px;
+      display: flex;
+      padding: 0;
+      align-items: center;
     }
   }
   &.transition {
     top: 18px !important;
     background-color: transparent;
     .vis-item-overflow {
-      display: flex;
-      justify-content: center;
-      align-items: center;
+  display: flex !important;
+  align-items: center !important;
     }
     i {
       color: #45d3ae;
@@ -553,7 +572,9 @@ tr:nth-child(even) {
       background-color: #144221;
     }
     .vis-item-content {
-      padding: 0 2px;
+      display: flex !important;
+      padding: 0 !important;
+      align-items: center !important;
     }
     &.stick-right {
       border-right: 5px solid #30acff;
@@ -587,6 +608,12 @@ tr:nth-child(even) {
     left: 4px;
     z-index: 2;
   }
+
+
+
+
+
+
 }
 
 .vis-time-axis .vis-text {

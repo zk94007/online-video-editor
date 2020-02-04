@@ -93,6 +93,7 @@ export default class Timeline extends Component {
             this.timeline.itemsData.add({
               ...item,
               type: "range",
+              content: `<i class="material-icons text-icon" aria-hidden="true">title_icon</i>  Your Headline your example.com`,
               ...(resource?.id
                 ? { resource_id: resource?.id }
                 : { textAnimation: item?.content }),
