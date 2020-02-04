@@ -30,6 +30,28 @@ export default {
 	},
 
 	/**
+	 * Get the thumbnail of video. Return 00:00:00 snapshot for given video
+	 * 
+	 * @param {*} filepath 
+	 * @param {*} mimeType 
+	 * @param {*} destpath 
+	 * @return {Promise<any>}
+	 */
+	generateThumbnail(filepath, mimeType, destpath) {
+		return new Promise((resolve) => {
+			if (new RegExp(/^video\//).test(mimeType)) {
+				exec(`ffmpeg -ss 00:00:00 -i ${filepath} -vframes 1 -q:v 2 ${destpath}`, (err, stdout) => {
+					if (err) log.error(err);
+					else resolve(destpath);
+				});
+			}
+			else {
+				resolve(null);
+			} 
+		});
+	},
+
+	/**
 	 * 
 	 * @param {*} filepath 
 	 * @param {*} destpath 

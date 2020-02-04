@@ -6,6 +6,8 @@
 import config from '../config';
 import timeManager from './timeManager';
 import log from './logger';
+import fileManager from './fileManager';
+import cloudManager from './cloudManager';
 
 const fs = require('fs');
 const path = require('path');
@@ -61,5 +63,34 @@ export default {
 	 */
 	getRendererpath(projectID) {
 		return path.join(config.projectPath, projectID, 'renderer.json');
-	},
+    },
+
+    /**
+     * Generate Thumbnail for video resource and upload to S3
+     * 
+     * @param {*} projectID 
+     * @param {*} resourceID 
+     */
+    generateThumbnail(projectID, resourceID) {
+        return this.loadRenderer(projectID).then(
+            renderer => {
+                if (!renderer.resources[resourceID]) return;
+
+                const resource = renderer.resources[resourceID];
+                fileManager.generateThumbnail(resource.filepath, resource.mimeType, path.join(config.projectPath, projectID, `${path.parse(resource.filepath).name}-thumb-0.jpg`)).then(
+                    thumbnail => {
+                        if (!thumbnail) return;
+
+                        cloudManager.upload(thumbnail, `upload/${projectID}`,  `${path.parse(resource.filepath).name}-thumb-0.jpg`).then(
+                            url => {
+                                resource.thumbpath = path.resolve(path.join(config.projectPath, projectID, `${path.parse(resource.filepath).name}-thumb-0.jpg`));
+                                resource.thumbnail = url;
+                                return this.saveRenderer(projectID, renderer).then(() => url);
+                            }
+                        )
+                    }
+                );
+            }
+        );
+    }
 }

@@ -149,13 +149,14 @@ exports.projectImportPOST = (req, res, next) => {
 		return;
 	}
 
+	log.info(`Download of "${req.body.url}" started`);
+
 	cloudManager.download(req.body.url, path.join(config.projectPath, req.params.projectID)).then(
 		(filename) => {
 			const fileID = generate('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890', 16);
 			let filepath = path.join(config.projectPath, req.params.projectID, filename);
 
 			const mimeType = mime.getType(filepath);
-
 			fileManager.getDuration(filepath, mimeType).then(
 				length => {
 					if (length !== null) length += '0';
@@ -172,13 +173,28 @@ exports.projectImportPOST = (req, res, next) => {
 
 							rendererManager.saveRenderer(req.params.projectID, renderer).then(
 								() => {
-									res.json({
-										msg: `Import of "${filename}" OK`,
-										resource_id: fileID,
-										resource_mime: mimeType,
-										length: length,
-										url: req.body.url
-									});
+									if (new RegExp(/^video\//).test(mimeType)) {
+										rendererManager.generateThumbnail(req.params.projectID, fileID).then(
+											thumbnail => {
+												res.json({
+													msg: `Import of "${filename}" OK`,
+													resource_id: fileID,
+													resource_mime: mimeType,
+													length: length,
+													url: req.body.url,
+													thumbnail
+												});
+											}
+										)
+									} else {
+										res.json({
+											msg: `Import of "${filename}" OK`,
+											resource_id: fileID,
+											resource_mime: mimeType,
+											length: length,
+											url: req.body.url
+										});
+									}
 								},
 								err => next(err)
 							);
@@ -187,6 +203,7 @@ exports.projectImportPOST = (req, res, next) => {
 					);
 				}
 			);
+				
 		}
 	);
 };
@@ -238,13 +255,28 @@ exports.projectFilePOST = (req, res, next) => {
 		
 									rendererManager.saveRenderer(req.params.projectID, renderer).then(
 										() => {
-											res.json({
-												msg: `Upload of "${filename}" OK`,
-												resource_id: fileID,
-												resource_mime: mimeType,
-												length: length,
-												url
-											});
+											if (new RegExp(/^video\//).test(mimeType)) {
+												rendererManager.generateThumbnail(req.params.projectID, fileID).then(
+													thumbnail => {
+														res.json({
+															msg: `Upload of "${filename}" OK`,
+															resource_id: fileID,
+															resource_mime: mimeType,
+															length,
+															url,
+															thumbnail
+														});
+													}
+												)
+											} else {
+												res.json({
+													msg: `Upload of "${filename}" OK`,
+													resource_id: fileID,
+													resource_mime: mimeType,
+													length,
+													url
+												});
+											}
 										},
 										err => next(err)
 									);
@@ -294,6 +326,13 @@ exports.projectFileDELETE = (req, res, next) => {
 			fs.unlink(filepath, (err) => {
 				if (err) log.error(err);
 			});
+
+			const thumbpath = resource.thumbpath;
+			if (thumbpath) {
+				fs.unlink(thumbpath, (err) => {
+					if (err) log.error(err);
+				});
+			}
 			
 			delete renderer.resources[req.params.fileID];
 
