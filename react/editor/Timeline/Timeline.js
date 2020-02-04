@@ -56,15 +56,6 @@ export default class Timeline extends Component {
         if (item?.group?.includes(item?.support)) {
           const resource = this.props?.resources?.[item?.content];
           let startDate = item?.start;
-          const content =
-            item.support == "text"
-              ? `<i class="material-icons text-icon" aria-hidden="true">title_icon</i>  ${item.content}`
-              : item.support === "video"
-              ? item.content
-              : item.support === "audio"
-              ? item.content
-              : null;
-
           let length = resource?.length
             ? formattedDateFromString(
                 timeManager.addDuration(
@@ -77,6 +68,7 @@ export default class Timeline extends Component {
                   .add(3, "s")
                   .format("HH:mm:ss,SSS")
               );
+
           let trackLength = resource?.length
             ? formattedDateFromString(resource?.length)
             : formattedDateFromString("00:00:03,000");
@@ -84,7 +76,33 @@ export default class Timeline extends Component {
             this.dateToString(length),
             this.dateToString(startDate)
           );
-
+            const indexes = [];
+          let videoLength = right.split(":").concat(right.split(":")[2].split(","));
+          videoLength.splice(2,1);
+          videoLength = parseInt(videoLength[0]) *60*60 + parseInt(videoLength[1]) * 60 + parseInt(videoLength[2]);
+          let videoThumbnails = ``;
+            if(item.support === "video"){
+              for(let i = 0, count = 1; i < videoLength; i = i + 4){
+                if(i > videoLength){
+                  indexes.push(count);
+                    count++
+                } else if(i%4 === 0){
+                    indexes.push(count);
+                    count++
+                }
+              }
+              for(let i in indexes){
+                videoThumbnails += `<img src = ${resource.thumbnail} height = "54">` 
+              }
+            }
+            const content =
+            item.support == "text"
+              ? `<i class="material-icons text-icon" aria-hidden="true">title_icon</i>  ${item.content}`
+              : item.support === "video"
+              ? videoThumbnails
+              : item.support === "audio"
+              ? item.content
+              : null;
           var overlapping = this.timeline.itemsData.get({
             filter: function(testItem) {
               if (testItem.id == item.id) {
