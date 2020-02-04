@@ -44,29 +44,39 @@ export default class Timeline extends Component {
       fetchError: ""
     });
   };
-  
+
   movingBar = null;
 
   playSeekBar = () => {
-    this.movingBar = setInterval(() => {
-      let date = this.timeline?.getCustomTime();
-      const max = this.timeline?.getItemRange()?.max;
-      date = moment(date)
-        .add(100, "milliseconds")
-        .format("HH:mm:ss,SSS");
-      this.timeline.setCustomTime(formattedDateFromString(date));
-      this.timeline.setCustomTimeTitle(date);
-      this.setState({ timePointer: date });
-      if (formattedDateFromString(date) >= max) {
-       this.pauseSeekBar()
-      }
-    }, 100);
+    if (!this.movingBar) {
+      this.movingBar = setInterval(() => {
+        let date = this.timeline?.getCustomTime();
+        const max = this.timeline?.getItemRange()?.max;
+        date = moment(date)
+          .add(100, "milliseconds")
+          .format("HH:mm:ss,SSS");
+        this.timeline.setCustomTime(formattedDateFromString(date));
+        this.timeline.setCustomTimeTitle(date);
+        this.setState({ timePointer: date });
+        if (formattedDateFromString(date) >= max) {
+          this.pauseSeekBar();
+        }
+      }, 100);
+    }
   };
 
   pauseSeekBar = () => {
     if (this.movingBar) {
       clearInterval(this.movingBar);
+      this.movingBar = null;
     }
+  };
+
+  stopSeekBar = () => {
+    this.pauseSeekBar();
+    this.timeline.setCustomTime(new Date(1970, 0, 1));
+    this.timeline.setCustomTimeTitle(DateToString(new Date(1970, 0, 1)));
+    this.setState({ timePointer: DateToString(new Date(1970, 0, 1)) });
   };
 
   componentDidMount() {

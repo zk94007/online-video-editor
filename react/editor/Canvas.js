@@ -1,5 +1,5 @@
 import React from "react";
-import {isEqual} from "lodash";
+import { isEqual } from "lodash";
 
 export default class CanvasVideo extends React.Component {
   constructor(props) {
@@ -58,7 +58,7 @@ export default class CanvasVideo extends React.Component {
       document.body.appendChild(video);
       // Get the 2D context of the canvas.
       this.context = this.refs.canvas.getContext("2d");
-      console.log(this.context,"sdssd");
+      console.log(this.context, "sdssd");
       this.setState({ video });
       // Wait for the next thread before calling to
       // setup the video event listeners.
@@ -67,9 +67,54 @@ export default class CanvasVideo extends React.Component {
       }, 0);
     }
   }
-  componentWillReceiveProps(prevProps,nextProps) {
 
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    // if (!isEqual(this?.props?.src, prevProps?.src)) {
+    //   var { src } = props;
+    //   if (src && src?.length) {
+    //     // Create the video element.
+    //     var video = document.createElement("video");
+    //     // Set the source for the video defined
+    //     // in the given props.
+    //     if (src.length) {
+    //       for (let i = 0; i < src.length; i++) {
+    //         let source = src[i];
+    //         let vidSrc = document.createElement("source");
+    //         vidSrc.src = source.url;
+    //         vidSrc.type = source.mimeType;
+    //         video.appendChild(vidSrc);
+    //       }
+    //     } else if (src.src && src.type) {
+    //       video.src = src.url;
+    //       video.type = src.mimeType;
+    //     }
+    //     if (props.loop) {
+    //       video.loop = "loop";
+    //     }
+    //     if (props.muted) {
+    //       video.muted = "muted";
+    //     }
+    //     // Set the size for the video, and position it off
+    //     // screen before adding it to the DOM.
+    //     video.height = props.height;
+    //     video.style.left = "-1000%";
+    //     video.style.position = "absolute";
+    //     video.style.top = "-1000%";
+    //     video.width = props.width;
+    //     document.body.appendChild(video);
+    //     // Get the 2D context of the canvas.
+    //     this.context = this.refs.canvas.getContext("2d");
+    //     console.log(this.context, "sdssd");
+    //     this.setState({ video });
+    //     // Wait for the next thread before calling to
+    //     // setup the video event listeners.
+    //     setTimeout(() => {
+    //       this.setupListeners();
+    //     }, 0);
+    //   }
+    // }
   }
+
   componentWillUnmount() {
     const { video } = this.state;
     this.unmounted = true;
@@ -92,7 +137,9 @@ export default class CanvasVideo extends React.Component {
     const { mobile, video } = this.state;
     const render = () => {
       // Draw the video to the canvas 2D context.
-      this.refs.canvas.getContext("2d").drawImage(video, 0, 0, this.props.width, this.props.height);
+      this.refs.canvas
+        .getContext("2d")
+        .drawImage(video, 0, 0, this.props.width, this.props.height);
     };
     if (video) {
       // If currently running in the mobile version, the video won't actually
@@ -125,7 +172,7 @@ export default class CanvasVideo extends React.Component {
         this.requestAnimationFrame();
       }
     }
-  }
+  };
   onEnded(e) {
     if (!this.props.loop) {
       this.setState({ playing: false });

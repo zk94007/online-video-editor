@@ -121,7 +121,7 @@ export default class Editor extends Component {
   onSelectVideo = (value, data) => {
     const item = this.state.resources[data?.[0]?.content];
     this.setState({
-      videoSrc: [item]
+      videoSrc: item? [item] : []
     });
   };
 
@@ -139,9 +139,17 @@ export default class Editor extends Component {
     const { video, timeline } = this.refs;
     if (video && typeof video.play == "function") {
       video.play();
-      if (timeline && typeof timeline.playSeekBar == "function") {
+      const data = timeline?.timeline?.itemsData?.get()
+      if (timeline && typeof timeline.playSeekBar == "function" && !!data?.length) {
         timeline.playSeekBar();
       }
+    }
+  };
+
+  onStopBtnClick = e => {
+    const { timeline } = this.refs;
+    if (timeline && typeof timeline.stopSeekBar == "function") {
+        timeline.stopSeekBar();
     }
   };
 
@@ -176,17 +184,7 @@ export default class Editor extends Component {
         icon: "sheild"
       }
     ];
-    // const videoSrc = [
-    //   {
-    //     src: "https://s3.amazonaws.com/virginia-testing.webrand.com/upload/UCOh7FkGs0S3YDK2ojYLQfC4DGjmtInt/hmmPuiLNkjZ5NrW9.mp4",
-    //     type: "video/mp4"
-    //   },
-    //   {
-    //     src: "https://www.w3schools.com/html/mov_bbb.ogg",
-    //     type: "video/ogg"
-    //   }
-    // ];
-    console.log(this.state);
+
     return (
       <>
         <header>
@@ -277,7 +275,7 @@ export default class Editor extends Component {
                     </i>
                     Preview
                   </h3>
-                  <Canvas
+                  {!!this.state.videoSrc?.length ?  <Canvas
                     id="video"
                     width={380}
                     height={200}
@@ -285,10 +283,12 @@ export default class Editor extends Component {
                     ref="video"
                     src={this.state.videoSrc}
                     autoPlay={false}
-                  />
+                  />: <canvas id="video"  width={380}
+                  height={200}/>}
+                  
                   <br />
                   <div className="prev-toolbar">
-                    <button className="no-border" title="Zastavit přehrávání">
+                    <button onClick={this.onStopBtnClick} className="no-border" title="Zastavit přehrávání">
                       <i className="material-icons" aria-hidden="true">
                         stop
                       </i>
