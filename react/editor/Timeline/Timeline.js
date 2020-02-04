@@ -56,10 +56,9 @@ export default class Timeline extends Component {
         if (item?.group?.includes(item?.support)) {
           const resource = this.props?.resources?.[item?.content];
           let startDate = item?.start;
-          console.log("add", item.support);
           const content =
             item.support == "text"
-              ? `<i class="material-icons text-icon" aria-hidden="true">title_icon</i>  Your Headline your example.com`
+              ? `<i class="material-icons text-icon" aria-hidden="true">title_icon</i>  ${item.content}`
               : item.support === "video"
               ? item.content
               : item.support === "audio"
