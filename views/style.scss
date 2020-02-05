@@ -238,6 +238,7 @@ a {
   position: relative;
   top: 3px;
 }
+
 .text-icon {
   color: #fff;
   top: 0px;
@@ -499,22 +500,8 @@ tr:nth-child(even) {
 
 .vis-item {
   height: 1.7em;
-  border-radius: 0px;
-  background-color: transparent;
-  .vis-range{
-    border-style: none !important;
-  }
-  .vis-item-overflow {
-    display: flex;
-    align-items: center;
-    .vis-item-content{
-      padding: 0;
-    }
-      }
 
-  &.video{
-    border-radius: 0px;
-  }
+  &.video,
   &.audio,
   &.text {
     border-radius: 5px;
@@ -524,10 +511,12 @@ tr:nth-child(even) {
 
   &.text {
     background-color: #766af6;
+
     font-size: 14px;
     top: 4px;
     min-width: 100px;
     font-weight: 600;
+
     &.stick-right {
       border-right: 5px solid #4caf50;
     }
@@ -539,17 +528,16 @@ tr:nth-child(even) {
       background-color: #5c52cc;
     }
     .vis-item-content {
-      display: flex;
-      padding: 0;
-      align-items: center;
+      padding: 0 2px;
     }
   }
   &.transition {
     top: 18px !important;
     background-color: transparent;
     .vis-item-overflow {
-  display: flex !important;
-  align-items: center !important;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
     i {
       color: #45d3ae;
@@ -557,14 +545,11 @@ tr:nth-child(even) {
     }
   }
   &.video {
-    height: 54px;
-    border: 2px solid gray;
-    border-radius: 5px;
+    background-color: #27438b;
+    border-color: #1d346e;
+    height: 50px;
     &.vis-selected {
-
-      background-color: transparent !important;
-      border: 2px solid #45d3ae;
-      border-radius: 5px;
+      background-color: #0e2254;
     }
 
     &.stick-right {
@@ -583,9 +568,7 @@ tr:nth-child(even) {
       background-color: #144221;
     }
     .vis-item-content {
-      display: flex !important;
-      padding: 0 !important;
-      align-items: center !important;
+      padding: 0 2px;
     }
     &.stick-right {
       border-right: 5px solid #30acff;
@@ -596,9 +579,9 @@ tr:nth-child(even) {
     }
   }
 
-  // &.vis-selected {
-  //   border-color: #ffc200;
-  // }
+  &.vis-selected {
+    border-color: #ffc200;
+  }
 
   div.filter {
     position: relative;
@@ -619,12 +602,6 @@ tr:nth-child(even) {
     left: 4px;
     z-index: 2;
   }
-
-
-
-
-
-
 }
 
 .vis-time-axis .vis-text {
