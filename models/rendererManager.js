@@ -72,25 +72,35 @@ export default {
      * @param {*} resourceID 
      */
     generateThumbnail(projectID, resourceID) {
-        return this.loadRenderer(projectID).then(
-            renderer => {
-                if (!renderer.resources[resourceID]) return;
-
-                const resource = renderer.resources[resourceID];
-                fileManager.generateThumbnail(resource.filepath, resource.mimeType, path.join(config.projectPath, projectID, `${path.parse(resource.filepath).name}-thumb-0.jpg`)).then(
-                    thumbnail => {
-                        if (!thumbnail) return;
-
-                        cloudManager.upload(thumbnail, `upload/${projectID}`,  `${path.parse(resource.filepath).name}-thumb-0.jpg`).then(
-                            url => {
-                                resource.thumbpath = path.resolve(path.join(config.projectPath, projectID, `${path.parse(resource.filepath).name}-thumb-0.jpg`));
-                                resource.thumbnail = url;
-                                return this.saveRenderer(projectID, renderer).then(() => url);
+        return new Promise((resolve, reject) => {
+            this.loadRenderer(projectID).then(
+                renderer => {
+                    if (!renderer.resources[resourceID]) {
+                        log.error(`Unable to find resource ${projectID} ${resourceID}`); 
+                        reject(`Unable to find resource ${projectID} ${resourceID}`);
+                    };
+    
+                    const resource = renderer.resources[resourceID];
+                    fileManager.generateThumbnail(resource.filepath, resource.mimeType, path.join(config.projectPath, projectID, `${path.parse(resource.filepath).name}-thumb-0.jpg`)).then(
+                        thumbnail => {
+                            if (!thumbnail) {
+                                log.error(`Thumbnail is not generated`); 
+                                reject(`Thumbnail is not generated`);
                             }
-                        )
-                    }
-                );
-            }
-        );
+    
+                            cloudManager.upload(thumbnail, `upload/${projectID}`,  `${path.parse(resource.filepath).name}-thumb-0.jpg`).then(
+                                url => {
+                                    resource.thumbpath = path.resolve(path.join(config.projectPath, projectID, `${path.parse(resource.filepath).name}-thumb-0.jpg`));
+                                    resource.thumbnail = url;
+                                    this.saveRenderer(projectID, renderer).then(() => {
+                                        resolve(resource.thumbnail);
+                                    });
+                                }
+                            )
+                        }
+                    );
+                }
+            )
+        });
     }
 }

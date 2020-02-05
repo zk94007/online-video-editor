@@ -184,7 +184,8 @@ exports.projectImportPOST = (req, res, next) => {
 													url: req.body.url,
 													thumbnail
 												});
-											}
+											},
+											err => next(err)
 										)
 									} else {
 										res.json({
@@ -266,7 +267,8 @@ exports.projectFilePOST = (req, res, next) => {
 															url,
 															thumbnail
 														});
-													}
+													},
+													err => next(err)
 												)
 											} else {
 												res.json({
