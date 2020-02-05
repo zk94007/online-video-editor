@@ -239,7 +239,7 @@ export default class Editor extends Component {
                     </i>
                     Preview
                   </h3>
-                  <video />
+                  <video/>
                   <br />
                   <div className="prev-toolbar">
                     <button className="no-border" title="Zastavit přehrávání">
