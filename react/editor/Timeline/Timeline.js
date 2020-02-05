@@ -11,7 +11,7 @@ import timeManager from "../../../models/timeManager";
 import Editor from "../Editor";
 import AddFilterDialog from "./AddFilterDialog";
 import moment from "moment";
-import { formattedDateFromString, DateToString } from "../../utils";
+import { formattedDateFromString, DateToString, getContent } from "../../utils";
 import AlertErrorDialog from "../../_core/Dialog/Dialogs/AlertErroDialog";
 import { TimelineHeader } from "../style";
 const generate = require("nanoid/generate");
@@ -93,6 +93,7 @@ export default class Timeline extends Component {
       onAdd: item => {
         if (item?.group?.includes(item?.support)) {
           const resource = this.props?.resources?.[item?.content];
+
           let startDate = item?.start;
           let length = resource?.length
             ? formattedDateFromString(
@@ -106,6 +107,7 @@ export default class Timeline extends Component {
                   .add(3, "s")
                   .format("HH:mm:ss,SSS")
               );
+
           let trackLength = resource?.length
             ? formattedDateFromString(resource?.length)
             : formattedDateFromString("00:00:03,000");
@@ -113,7 +115,7 @@ export default class Timeline extends Component {
             this.dateToString(length),
             this.dateToString(startDate)
           );
-
+            const content = getContent(item, resource);
           var overlapping = this.timeline.itemsData.get({
             filter: function(testItem) {
               if (testItem.id == item.id) {
@@ -131,6 +133,7 @@ export default class Timeline extends Component {
             this.timeline.itemsData.add({
               ...item,
               type: "range",
+              content,
               ...(resource?.id
                 ? { resource_id: resource?.id }
                 : { textAnimation: item?.content }),
@@ -227,6 +230,7 @@ export default class Timeline extends Component {
             this.timeline.itemsData.add({
               ...item,
               type: "range",
+              content,
               ...(resource?.id
                 ? { resource_id: resource?.id }
                 : { textAnimation: item?.content }),
@@ -810,7 +814,7 @@ export default class Timeline extends Component {
 
   onMoving = (item, callback) => {
     let itemData = this.timeline?.itemsData.get(item?.id);
-    let getLength = this.props.resources[item?.content]?.length || false;
+    let getLength = this.props.resources[item?.resource_id]?.length || false;
     const oriLength = timeManager.subDuration(
       DateToString(itemData?.end),
       DateToString(itemData?.start)

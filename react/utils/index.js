@@ -21,6 +21,26 @@ export const DateToString = date => {
   string += `${date.getMilliseconds()}000`.slice(0, 3);
   return string;
 };
+export const getContent = (item, resource) => {
+  const type = resource?.mimeType?.split("/")[0];
+  let content = item.support;
+  switch (content) {
+    case "video":
+        if (type === "video") {
+          return `<div style="background-repeat: repeat-x; background-position: left center; background-size: auto 100%; width: 100%; height: 100%; background-image: url(${resource.thumbnail});">
+          </div>`;
+        } else {
+         return `<div style="background-repeat: repeat-x; background-position: left center; background-size: auto 100%; width: 100%; height: 100%; background-image: url(${resource.url});">
+          </div>`;
+        }     
+    case "audio":
+    return item.content;
+    case "text":
+    return `<i class="material-icons text-icon" aria-hidden="true">title_icon</i>  ${item.content}`;
+    default:
+      return false
+  }
+};
 
 export const formattedDateFromString = date => {
   let splittedDate = date.split(/:|,/);
