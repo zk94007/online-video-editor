@@ -508,6 +508,8 @@ tr:nth-child(even) {
     display: flex;
     align-items: center;
     .vis-item-content{
+      height: 100%;
+      width: 100%;
       padding: 0;
     }
       }

@@ -77,7 +77,7 @@ export default class Timeline extends Component {
             this.dateToString(length),
             this.dateToString(startDate)
           );
-            const content = getContent(item, right, resource);
+            const content = getContent(item, resource);
           var overlapping = this.timeline.itemsData.get({
             filter: function(testItem) {
               if (testItem.id == item.id) {
