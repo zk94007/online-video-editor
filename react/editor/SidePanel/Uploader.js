@@ -44,7 +44,8 @@ export default class Uploader extends Component {
         name: meta.name,
         url: response.url,
         length: response.length,
-        mime: response.resource_mime
+        mimeType: response.resource_mime,
+        thumbnail: response?.thumbnail
       });
     } else if (status === "aborted") {
       this.setState({
