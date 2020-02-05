@@ -18,6 +18,8 @@ const generate = require("nanoid/generate");
 import axios from "axios";
 import { LoadingDialog, FetchErrorDialog } from "../../_core/Dialog";
 import { isEqual, debounce } from "lodash";
+import ReactDOM from "react-dom";
+
 export default class Timeline extends Component {
   timeline = null;
   state = {
@@ -52,10 +54,24 @@ export default class Timeline extends Component {
       ...config,
       onMoving: this.onMoving,
       onMove: this.onMove,
+      template: (item, element, data) => {
+        if (!item) {
+          return;
+        }
+        return ReactDOM.createPortal(
+          ReactDOM.render(
+            getContent(item, this.props?.resources?.[item?.content]),
+            element
+          ),
+          element,
+          () => {
+            window.timeline.redraw();
+          }
+        );
+      },
       onAdd: item => {
         if (item?.group?.includes(item?.support)) {
           const resource = this.props?.resources?.[item?.content];
-
           let startDate = item?.start;
           let length = resource?.length
             ? formattedDateFromString(
@@ -77,7 +93,7 @@ export default class Timeline extends Component {
             this.dateToString(length),
             this.dateToString(startDate)
           );
-            const content = getContent(item, resource);
+          const content = getContent(item, resource);
           var overlapping = this.timeline.itemsData.get({
             filter: function(testItem) {
               if (testItem.id == item.id) {
@@ -95,7 +111,6 @@ export default class Timeline extends Component {
             this.timeline.itemsData.add({
               ...item,
               type: "range",
-              content,
               ...(resource?.id
                 ? { resource_id: resource?.id }
                 : { textAnimation: item?.content }),
