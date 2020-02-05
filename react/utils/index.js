@@ -47,7 +47,7 @@ export const getContent = (item, endTime, resource) => {
           }
         }
         for (let i in indexes) {
-          videoThumbnails += `<img src = ${resource.thumbnail} height = "54">`;
+          videoThumbnails += `<img src = ${resource.thumbnail} height = "50">`;
         }
       }
       return videoThumbnails;
