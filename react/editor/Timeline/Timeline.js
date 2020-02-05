@@ -55,6 +55,7 @@ export default class Timeline extends Component {
       onAdd: item => {
         if (item?.group?.includes(item?.support)) {
           const resource = this.props?.resources?.[item?.content];
+
           let startDate = item?.start;
           let length = resource?.length
             ? formattedDateFromString(
@@ -767,7 +768,7 @@ export default class Timeline extends Component {
 
   onMoving = (item, callback) => {
     let itemData = this.timeline?.itemsData.get(item?.id);
-    let getLength = this.props.resources[item?.content]?.length || false;
+    let getLength = this.props.resources[item?.resource_id]?.length || false;
     const oriLength = timeManager.subDuration(
       DateToString(itemData?.end),
       DateToString(itemData?.start)
