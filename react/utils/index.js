@@ -1,5 +1,7 @@
 import axios from "axios";
 import { server } from "../../config";
+import React from "react";
+import ReactWaves from "@dschoon/react-waves";
 
 export const handleObjectItemDragStart = (event, id, text = false) => {
   var dragSrcEl = event.target;
@@ -26,19 +28,59 @@ export const getContent = (item, resource) => {
   let content = item.support;
   switch (content) {
     case "video":
-        if (type === "video") {
-          return `<div style="background-repeat: repeat-x; background-position: left center; background-size: auto 100%; width: 100%; height: 100%; background-image: url(${resource.thumbnail});">
-          </div>`;
-        } else {
-         return `<div style="background-repeat: repeat-x; background-position: left center; background-size: auto 100%; width: 100%; height: 100%; background-image: url(${resource.url});">
-          </div>`;
-        }     
+      const url = type === "video" ? resource.thumbnail : resource.url;
+      return (
+        <div
+          style={{
+            backgroundRepeat: "repeat-x",
+            backgroundPosition: "left",
+            backgroundSize: "auto 100%",
+            width: "100%",
+            height: "100%",
+            backgroundImage: `url(${url})`
+          }}
+        ></div>
+      );
     case "audio":
-    return item.content;
+      return (
+        <ReactWaves
+          onClick={() => console.log("aasasa")}
+          audioFile={resource?.url}
+          className={"react-waves audioTimeline"}
+          options={{
+            barHeight: 1,
+            cursorWidth: 0,
+            height: 20,
+            hideScrollbar: true,
+            progressColor: "#b0b5b3",
+            responsive: true,
+            waveColor: "#b0b5b3",
+            width: "100%"
+          }}
+          volume={1}
+          zoom={1}
+          children={
+            <div className="inner-wave">
+              <i className="material-icons text-icon" aria-hidden="true">
+              music_note
+              </i>{" "}
+              <span>{resource?.name}</span>
+            </div>
+          }
+          playing={false}
+        />
+      );
     case "text":
-    return `<i class="material-icons text-icon" aria-hidden="true">title_icon</i>  ${item.content}`;
+      return (
+        <>
+          <i className="material-icons text-icon" aria-hidden="true">
+            title_icon
+          </i>{" "}
+          {item.content}
+        </>
+      );
     default:
-      return false
+      return false;
   }
 };
 

@@ -9,7 +9,7 @@ import {
 import Icon from "../../_core/Icon";
 import ReactWaves from "@dschoon/react-waves";
 import { withRouter } from "react-router-dom";
-import { addToLibrary, getResources } from "../../utils";
+import { addToLibrary } from "../../utils";
 
 const StockCard = ({
   setModal,
