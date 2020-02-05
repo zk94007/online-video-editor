@@ -26,7 +26,31 @@ export const getContent = (item, endTime, resource) => {
   let content = item.support;
   switch (content) {
     case "video":
-      item.content
+      const indexes = [];
+      let videoLength = endTime
+        .split(":")
+        .concat(endTime.split(":")[2].split(","));
+      videoLength.splice(2, 1);
+      videoLength =
+        parseInt(videoLength[0]) * 60 * 60 +
+        parseInt(videoLength[1]) * 60 +
+        parseInt(videoLength[2]);
+      let videoThumbnails = ``;
+      if (item.support === "video") {
+        for (let i = 0, count = 1; i < videoLength; i = i + 4) {
+          if (i > videoLength) {
+            indexes.push(count);
+            count++;
+          } else if (i % 4 === 0) {
+            indexes.push(count);
+            count++;
+          }
+        }
+        for (let i in indexes) {
+          videoThumbnails += `<img src = ${resource.thumbnail} height = "54">`;
+        }
+      }
+      return videoThumbnails;
     case "audio":
       return item.content;
     case "text":
