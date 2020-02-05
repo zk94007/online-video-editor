@@ -21,42 +21,24 @@ export const DateToString = date => {
   string += `${date.getMilliseconds()}000`.slice(0, 3);
   return string;
 };
-
-export const getContent = (item, endTime, resource) => {
+export const getContent = (item, resource) => {
+  const type = resource?.mimeType?.split("/")[0];
   let content = item.support;
   switch (content) {
     case "video":
-      const indexes = [];
-      let videoLength = endTime
-        .split(":")
-        .concat(endTime.split(":")[2].split(","));
-      videoLength.splice(2, 1);
-      videoLength =
-        parseInt(videoLength[0]) * 60 * 60 +
-        parseInt(videoLength[1]) * 60 +
-        parseInt(videoLength[2]);
-      let videoThumbnails = ``;
-      if (item.support === "video") {
-        for (let i = 0, count = 1; i < videoLength; i = i + 4) {
-          if (i > videoLength) {
-            indexes.push(count);
-            count++;
-          } else if (i % 4 === 0) {
-            indexes.push(count);
-            count++;
-          }
-        }
-        for (let i in indexes) {
-          videoThumbnails += `<img src = ${resource.thumbnail} height = "50">`;
-        }
-      }
-      return videoThumbnails;
+        if (type === "video") {
+          return `<div style="background-repeat: repeat-x; background-position: left center; background-size: auto 100%; width: 100%; height: 100%; background-image: url(${resource.thumbnail});">
+          </div>`;
+        } else {
+         return `<div style="background-repeat: repeat-x; background-position: left center; background-size: auto 100%; width: 100%; height: 100%; background-image: url(${resource.url});">
+          </div>`;
+        }     
     case "audio":
-      return item.content;
+    return item.content;
     case "text":
-      return `<i class="material-icons text-icon" aria-hidden="true">title_icon</i>  ${item.content}`;
+    return `<i class="material-icons text-icon" aria-hidden="true">title_icon</i>  ${item.content}`;
     default:
-      return false;
+      return false
   }
 };
 
