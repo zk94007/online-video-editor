@@ -22,6 +22,44 @@ export const DateToString = date => {
   return string;
 };
 
+export const getContent = (item, endTime, resource) => {
+  let content = item.support;
+  switch (content) {
+    case "video":
+      const indexes = [];
+      let videoLength = endTime
+        .split(":")
+        .concat(endTime.split(":")[2].split(","));
+      videoLength.splice(2, 1);
+      videoLength =
+        parseInt(videoLength[0]) * 60 * 60 +
+        parseInt(videoLength[1]) * 60 +
+        parseInt(videoLength[2]);
+      let videoThumbnails = ``;
+      if (item.support === "video") {
+        for (let i = 0, count = 1; i < videoLength; i = i + 4) {
+          if (i > videoLength) {
+            indexes.push(count);
+            count++;
+          } else if (i % 4 === 0) {
+            indexes.push(count);
+            count++;
+          }
+        }
+        for (let i in indexes) {
+          videoThumbnails += `<img src = ${resource.thumbnail} height = "50">`;
+        }
+      }
+      return videoThumbnails;
+    case "audio":
+      return item.content;
+    case "text":
+      return `<i class="material-icons text-icon" aria-hidden="true">title_icon</i>  ${item.content}`;
+    default:
+      return false;
+  }
+};
+
 export const formattedDateFromString = date => {
   let splittedDate = date.split(/:|,/);
   return new Date(
