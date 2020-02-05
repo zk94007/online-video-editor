@@ -55,9 +55,16 @@ export default class Timeline extends Component {
         date = moment(date)
           .add(100, "milliseconds")
           .format("HH:mm:ss,SSS");
-        this.timeline.setCustomTime(formattedDateFromString(date));
-        this.timeline.setCustomTimeTitle(date);
-        this.setState({ timePointer: date });
+        const data = this.timeline.itemsData.get({
+          filter: itemsData => {
+            return itemsData?.start <= formattedDateFromString(date) && itemsData?.end >= formattedDateFromString(date);
+          }
+        });
+          this.props.onSelectVideo(
+            true,
+            data
+          );
+        this.updateTimePointer(formattedDateFromString(date));
         if (formattedDateFromString(date) >= max) {
           this.pauseSeekBar();
         }
@@ -74,9 +81,7 @@ export default class Timeline extends Component {
 
   stopSeekBar = () => {
     this.pauseSeekBar();
-    this.timeline.setCustomTime(new Date(1970, 0, 1));
-    this.timeline.setCustomTimeTitle(DateToString(new Date(1970, 0, 1)));
-    this.setState({ timePointer: DateToString(new Date(1970, 0, 1)) });
+    this.updateTimePointer(new Date(1970, 0, 1));
   };
 
   componentDidMount() {
@@ -356,6 +361,7 @@ export default class Timeline extends Component {
     this.timeline.addCustomTime(new Date(1970, 0, 1));
     this.timeline.setCustomTimeTitle("00:00:00,000");
     this.timeline.on("select", this.onSelect);
+    this.timeline.on("markerchanged", () => console.log("Sdfsadsadsa"));
     this.timeline.on("timechange", this.onTimeChange);
     this.timeline.on("moving", this.onMoving);
     this.timeline.on("mouseDown", event => {
@@ -363,7 +369,7 @@ export default class Timeline extends Component {
         this.setState({ movingTimePointer: true });
         this.updateTimePointer(event.time);
         this.props.onSelectVideo(
-          event.time,
+          false,
           this.timeline.itemsData.get({
             filter: itemsData => {
               return (
@@ -385,7 +391,7 @@ export default class Timeline extends Component {
         this.setState({ movingTimePointer: false });
         this.updateTimePointer(event.time);
         this.props.onSelectVideo(
-          event.time,
+          false,
           this.timeline.itemsData.get({
             filter: itemsData => {
               return (
@@ -788,7 +794,7 @@ export default class Timeline extends Component {
       this.timeline.setCustomTimeTitle(DateToString(date));
       this.setState({ timePointer: DateToString(date) }, () =>
         this.props.onSelectVideo(
-          date,
+          false,
           this.timeline.itemsData.get({
             filter: itemsData => {
               return itemsData?.start <= date && itemsData?.end >= date;

@@ -18,6 +18,7 @@ import SideMenu from "./SideMenu/SideMenu";
 import { Container, EditSection, ProjectTitle, ProjectInput } from "./style";
 import axios from "axios";
 import Canvas from "./Canvas";
+import { isEqual } from "lodash";
 
 export default class Editor extends Component {
   constructor(props) {
@@ -118,29 +119,40 @@ export default class Editor extends Component {
       .catch(error => this.openFetchErrorDialog(error.message));
   };
 
-  onSelectVideo = (value, data) => {
-    const item = this.state.resources[data?.[0]?.content];
-    this.setState({
-      videoSrc: item? [item] : []
-    });
+  onSelectVideo = (value = false, data) => {
+    const item = this.state.resources[data?.[0]?.resource_id];
+    if (!isEqual([item], this.state.item)) {
+      this.setState(
+        {
+          videoSrc: item ? [item] : []
+        },
+        () => {
+          if (value && item?.length) {
+            this.onPlayBtnClick();
+          }
+        }
+      );
+    }
   };
 
   onPauseBtnClick = e => {
     const { video, timeline } = this.refs;
-    if (video && typeof video.pause == "function") {
-      video.pause();
-      if (timeline && typeof timeline.pauseSeekBar == "function") {
-        timeline.pauseSeekBar();
+    if (timeline && typeof timeline.pauseSeekBar == "function") {
+      if (video && typeof video.play == "function") {
+        video.pause();
       }
+      timeline.pauseSeekBar();
     }
   };
 
   onPlayBtnClick = e => {
     const { video, timeline } = this.refs;
-    if (video && typeof video.play == "function") {
-      video.play();
-      const data = timeline?.timeline?.itemsData?.get()
-      if (timeline && typeof timeline.playSeekBar == "function" && !!data?.length) {
+    if (timeline && typeof timeline.playSeekBar == "function") {
+      const data = timeline?.timeline?.itemsData?.get();
+      if (!!data?.length) {
+        if (video && typeof video.play == "function") {
+          video.play();
+        }
         timeline.playSeekBar();
       }
     }
@@ -149,11 +161,19 @@ export default class Editor extends Component {
   onStopBtnClick = e => {
     const { timeline } = this.refs;
     if (timeline && typeof timeline.stopSeekBar == "function") {
-        timeline.stopSeekBar();
+      this.setState(
+        {
+          videoSrc: []
+        },
+        () => {
+          timeline.stopSeekBar();
+        }
+      );
     }
   };
 
   render() {
+    console.log("Dataaaaaa", this.state);
     const items = [
       {
         name: "Add Media",
@@ -275,20 +295,27 @@ export default class Editor extends Component {
                     </i>
                     Preview
                   </h3>
-                  {!!this.state.videoSrc?.length ?  <Canvas
-                    id="video"
-                    width={380}
-                    height={200}
-                    muted={true}
-                    ref="video"
-                    src={this.state.videoSrc}
-                    autoPlay={false}
-                  />: <canvas id="video"  width={380}
-                  height={200}/>}
-                  
+                  {!!this.state.videoSrc?.length ? (
+                    <Canvas
+                      id="video"
+                      width={380}
+                      height={200}
+                      muted={true}
+                      ref="video"
+                      src={this.state.videoSrc}
+                      autoPlay={false}
+                    />
+                  ) : (
+                    <canvas id="video" width={380} height={200} />
+                  )}
+
                   <br />
                   <div className="prev-toolbar">
-                    <button onClick={this.onStopBtnClick} className="no-border" title="Zastavit přehrávání">
+                    <button
+                      onClick={this.onStopBtnClick}
+                      className="no-border"
+                      title="Zastavit přehrávání"
+                    >
                       <i className="material-icons" aria-hidden="true">
                         stop
                       </i>

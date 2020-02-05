@@ -18,13 +18,18 @@ export default class CanvasVideo extends React.Component {
     this.state = {
       mobile: this.isMobile(),
       playing: false,
-      video: null
+      video: null,
+      paused: false
     };
     this.timestamp = null;
     this.unmounted = false;
   }
   componentDidMount() {
     var { src } = this.props;
+    this.onRender(src);
+  }
+
+  onRender = src => {
     if (src && src?.length) {
       // Create the video element.
       var video = document.createElement("video");
@@ -66,7 +71,7 @@ export default class CanvasVideo extends React.Component {
         this.setupListeners();
       }, 0);
     }
-  }
+  };
 
   componentDidUpdate(prevProps, prevState, snapshot) {
     // if (!isEqual(this?.props?.src, prevProps?.src)) {
@@ -204,7 +209,7 @@ export default class CanvasVideo extends React.Component {
     if (!mobile) {
       video.pause();
     }
-    this.setState({ playing: false });
+    this.setState({ playing: false, paused: true });
   }
   play() {
     const { mobile, video } = this.state;
@@ -213,7 +218,7 @@ export default class CanvasVideo extends React.Component {
     if (!mobile) {
       video.play();
     }
-    this.setState({ playing: true });
+    this.setState({ playing: true, paused: false });
     // Track the current timestamp, and begin requesting
     // animation frames.
     this.timestamp = Date.now();
