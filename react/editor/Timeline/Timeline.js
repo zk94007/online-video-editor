@@ -11,7 +11,7 @@ import timeManager from "../../../models/timeManager";
 import Editor from "../Editor";
 import AddFilterDialog from "./AddFilterDialog";
 import moment from "moment";
-import { formattedDateFromString, DateToString } from "../../utils";
+import { formattedDateFromString, DateToString, getContent } from "../../utils";
 import AlertErrorDialog from "../../_core/Dialog/Dialogs/AlertErroDialog";
 import { TimelineHeader } from "../style";
 const generate = require("nanoid/generate");
@@ -77,33 +77,7 @@ export default class Timeline extends Component {
             this.dateToString(length),
             this.dateToString(startDate)
           );
-            const indexes = [];
-          let videoLength = right.split(":").concat(right.split(":")[2].split(","));
-          videoLength.splice(2,1);
-          videoLength = parseInt(videoLength[0]) *60*60 + parseInt(videoLength[1]) * 60 + parseInt(videoLength[2]);
-          let videoThumbnails = ``;
-            if(item.support === "video"){
-              for(let i = 0, count = 1; i < videoLength; i = i + 4){
-                if(i > videoLength){
-                  indexes.push(count);
-                    count++
-                } else if(i%4 === 0){
-                    indexes.push(count);
-                    count++
-                }
-              }
-              for(let i in indexes){
-                videoThumbnails += `<img src = ${resource.thumbnail} height = "54">` 
-              }
-            }
-            const content =
-            item.support == "text"
-              ? `<i class="material-icons text-icon" aria-hidden="true">title_icon</i>  ${item.content}`
-              : item.support === "video"
-              ? videoThumbnails
-              : item.support === "audio"
-              ? item.content
-              : null;
+            const content = getContent(item, right, resource);
           var overlapping = this.timeline.itemsData.get({
             filter: function(testItem) {
               if (testItem.id == item.id) {
