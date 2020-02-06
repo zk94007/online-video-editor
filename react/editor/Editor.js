@@ -131,7 +131,7 @@ export default class Editor extends Component {
         },
         () => {
           if (value && item?.length) {
-            this.onPlayBtnClick();
+            // this.onPlayBtnClick();
           }
         }
       );

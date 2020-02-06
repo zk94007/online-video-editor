@@ -3,14 +3,12 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 const Play = ({ data, play = false, pause = false }) => {
   const video = useRef(null);
   const [value, setValue] = useState(null);
+  console.log("STate",pause);
   useEffect(() => {
     if (value && play && !pause) {
       value.play();
-    }
-  }, [play, pause]);
-  useEffect(() => {
-    if (value && pause && !play) {
-      value.pause();
+    } else if (value && pause) {
+        value.pause();
     }
   }, [play, pause]);
   const callVideo = () => {
@@ -19,11 +17,12 @@ const Play = ({ data, play = false, pause = false }) => {
       const type = data?.mimeType?.split("/")?.[0];
       let videoCtx = new window.VideoContext(canvas);
       if (type === "video") {
-        let videoNode2 = videoCtx.video(data?.url);
+        let videoNode2 = videoCtx.video(data?.url,0,0);
         videoNode2.connect(videoCtx.destination);
         videoNode2.start(0);
         if (play) {
           videoCtx.play();
+          setValue(videoCtx);
         } else {
           setValue(videoCtx);
         }
