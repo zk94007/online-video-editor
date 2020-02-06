@@ -17,8 +17,8 @@ import SideMenu from "./SideMenu/SideMenu";
 
 import { Container, EditSection, ProjectTitle, ProjectInput } from "./style";
 import axios from "axios";
-import Canvas from "./Canvas";
 import { isEqual } from "lodash";
+import Canvas from "./Play";
 
 export default class Editor extends Component {
   constructor(props) {
@@ -48,7 +48,10 @@ export default class Editor extends Component {
       logos: {},
       titleClicked: false,
       projectName: "",
-      videoSrc: []
+      videoSrc: "",
+      playing: false,
+      stop: true,
+      pause: false
     };
 
     this.loadData();
@@ -124,7 +127,7 @@ export default class Editor extends Component {
     if (!isEqual([item], this.state.item)) {
       this.setState(
         {
-          videoSrc: item ? [item] : []
+          videoSrc: item ? item : ""
         },
         () => {
           if (value && item?.length) {
@@ -136,24 +139,34 @@ export default class Editor extends Component {
   };
 
   onPauseBtnClick = e => {
-    const { video, timeline } = this.refs;
+    const { timeline } = this.refs;
     if (timeline && typeof timeline.pauseSeekBar == "function") {
-      if (video && typeof video.play == "function") {
-        video.pause();
-      }
-      timeline.pauseSeekBar();
+      this.setState(
+        {
+          playing: false,
+          pause: true
+        },
+        () => {
+          timeline.pauseSeekBar();
+        }
+      );
     }
   };
 
   onPlayBtnClick = e => {
-    const { video, timeline } = this.refs;
+    const { timeline } = this.refs;
     if (timeline && typeof timeline.playSeekBar == "function") {
       const data = timeline?.timeline?.itemsData?.get();
       if (!!data?.length) {
-        if (video && typeof video.play == "function") {
-          video.play();
-        }
-        timeline.playSeekBar();
+        this.setState(
+          {
+            playing: true,
+            pause: false
+          },
+          () => {
+            timeline.playSeekBar();
+          }
+        );
       }
     }
   };
@@ -163,7 +176,7 @@ export default class Editor extends Component {
     if (timeline && typeof timeline.stopSeekBar == "function") {
       this.setState(
         {
-          videoSrc: []
+          videoSrc: ""
         },
         () => {
           timeline.stopSeekBar();
@@ -173,7 +186,6 @@ export default class Editor extends Component {
   };
 
   render() {
-    console.log("Dataaaaaa", this.state);
     const items = [
       {
         name: "Add Media",
@@ -295,7 +307,17 @@ export default class Editor extends Component {
                     </i>
                     Preview
                   </h3>
-                  {!!this.state.videoSrc?.length ? (
+                  {this.state.videoSrc ? (
+                    <Canvas
+                      play={this.state.playing}
+                      pause={this.state.pause}
+                      data={this.state.videoSrc}
+                    />
+                  ) : (
+                    <canvas id="video" width={380} height={200} />
+                  )}
+
+                  {/* {!!this.state.videoSrc?.length ? (
                     <Canvas
                       id="video"
                       width={380}
@@ -307,7 +329,7 @@ export default class Editor extends Component {
                     />
                   ) : (
                     <canvas id="video" width={380} height={200} />
-                  )}
+                  )} */}
 
                   <br />
                   <div className="prev-toolbar">
